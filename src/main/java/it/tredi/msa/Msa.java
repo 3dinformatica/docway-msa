@@ -18,7 +18,7 @@ public class Msa {
 		
 	}
 	
-	private static void splashMessage() {
+	protected static void splashMessage() {
 		if (logger.isInfoEnabled()) {
 			logger.info("            ..--\"\"|");
 			logger.info("            |     |");
@@ -42,3 +42,35 @@ public class Msa {
 	}
 
 }
+
+
+/*
+https://javaee.github.io/javamail/
+
+
+Mailbox - bean contenente la configurazione della casella di posta
+Mail - bean con il messaggio di posta
+
+ConfigManager - legge dal file di property dove sono le configurazioni (contiene tutta la lista delle caselle di posta)
+ConfigReader - interfaccia (metodo per l'estrazione di caselle di posta)
+AclConfigReader - implementa interfaccia ConfigReader 
+
+MailboxManager (interfaccia)
+DocWayMailboxManager (salvataggio delle caselle di posta su docway)
+
+ExtraWayService (locator pattern?) con cache dato user e db (renderlo transizionale)
+
+Modulo per la persistenza delle statistiche (ogni metodo che viene chiamato lascia una traccia, ognugno implementa come vuole)
+
+
+Message
+
+
+
+
+
+
+
+
+
+*/
