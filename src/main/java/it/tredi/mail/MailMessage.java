@@ -5,6 +5,9 @@ import javax.mail.Message;
 
 public class MailMessage {
 	
+	//TODO - implement all methods
+	//TODO - add missing methods
+	
 	private Message message;
 	
 	public String getMessageId() {
