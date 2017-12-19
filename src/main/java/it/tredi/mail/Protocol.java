@@ -14,8 +14,6 @@ public enum Protocol {
 		s = s.toUpperCase();
 		s = s.replaceAll("-", "_");
 		return Protocol.valueOf(s);
-		
-		//TODO - inserire controllo se protocollo non trovato
 	}
 	
 }
