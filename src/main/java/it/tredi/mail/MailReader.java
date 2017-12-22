@@ -1,18 +1,29 @@
 package it.tredi.mail;
 
 import java.util.Properties;
+
+import javax.mail.Flags;
 import javax.mail.Folder;
+import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Store;
+import javax.mail.internet.MimeMessage;
 
 public class MailReader extends MailClient {
 	
-	//TODO - implement all methods
-	//TODO - add missing methods	
+	//TODO - JAVADOC + CLIENT USAGE SAMPLES
 	
 	private boolean imap;
 	private Folder folder;
 	private Store store;
+	
+	public final static String INBOX = "INBOX";
+	public final static String NO_DEFAULT_FOLDER_IN_STORE_MESSAGE = "Default folder not found in store";
+	public static final String POP3_UNSUPPORTED_FOLDER_MESSAGE = "Invalid folder name. POP3 supports only INBOX folder";
+	public static final String UNEXISTING_FOLDER_MESSAGE = "Invalid folder name";
+	public static final String POP3_UNSUPPORTED_OPERATION_MESSAGE = "Operation not supported using POP3";
+	public static final String UNSUPPORTED_OPERATION_DELETE_NOT_EMPTY_FOLDER_MESSAGE = "Non-empty folder deletion not supported";
+	public static final String UNSUPPORTED_OPERATION_OPENED_FOLDER_DELETION_MESSAGE = "Opened folder deletion not supported";
 	
 	public MailReader() {
 	}
@@ -38,6 +49,10 @@ public class MailReader extends MailClient {
      		store.connect(account.getHost(), account.getPort(), account.getUserName(), account.getPassword());
      	else
      		store.connect(account.getHost(), account.getUserName(), account.getPassword());
+     	
+     	folder = store.getDefaultFolder();
+     	if (!folder.exists())
+     		throw new MessagingException(NO_DEFAULT_FOLDER_IN_STORE_MESSAGE);
 	}
 	
 	@SuppressWarnings("incomplete-switch")
@@ -84,10 +99,8 @@ public class MailReader extends MailClient {
 
 	@Override
 	public void disconnect() throws MessagingException {
-		if (folder != null && folder.isOpen()) {
-			folder.expunge();
-			folder.close();
-		}
+		closeFolder();
+		store.close();
 		store = null;
 	}
 
@@ -95,32 +108,104 @@ public class MailReader extends MailClient {
 		return store;
 	}
 
-	public void openFolder() {
-		
+	public Folder getFolder() {
+		return folder;
 	}
 	
-	public void createFolder() {
-		
+	public void openInboxFolder() throws MessagingException {
+		openFolder(INBOX);
 	}
 	
-	public boolean existsFolder() {
+	public void openFolder(String folderName) throws MessagingException {
+		closeFolder(); //close current folder before open another one
+		if (!isImap() && !folderName.equalsIgnoreCase(INBOX)) //POP3
+			throw new MessagingException(POP3_UNSUPPORTED_FOLDER_MESSAGE);
+		folder = store.getFolder(folderName); //1st try - store child
+		if (!folder.exists())
+			throw new MessagingException(UNEXISTING_FOLDER_MESSAGE);
+		folder.open(Folder.READ_WRITE);
+	}
+	
+	public void closeFolder() throws MessagingException {
+		if (folder.exists() && folder.isOpen()) {
+			if (isImap())
+				folder.expunge();
+			folder.close(true); //close with expunge the flag set to true
+			folder = store.getDefaultFolder();
+		}		
+	}
+	
+	public boolean createFolder(String folderName) throws MessagingException {
+		if (!isImap()) //POP3
+			throw new MessagingException(POP3_UNSUPPORTED_OPERATION_MESSAGE);
+		Folder _folder = store.getFolder(folderName);
+		if (!_folder.exists())
+			return _folder.create(Folder.HOLDS_MESSAGES);
 		return false;
 	}
 	
-	public void getMessages() {
-		
+	public boolean deleteFolder(String folderName) throws MessagingException {
+		if (!isImap()) //POP3
+			throw new MessagingException(POP3_UNSUPPORTED_OPERATION_MESSAGE);
+		if (folder.getFullName().equalsIgnoreCase(folderName))
+			throw new MessagingException(UNSUPPORTED_OPERATION_OPENED_FOLDER_DELETION_MESSAGE);		
+		Folder _folder = store.getFolder(folderName);
+		if (_folder.exists()) {
+			_folder.open(Folder.READ_WRITE);
+			if (_folder.getMessageCount() > 0) {
+				_folder.close();
+				throw new MessagingException(UNSUPPORTED_OPERATION_DELETE_NOT_EMPTY_FOLDER_MESSAGE);
+			}
+			_folder.close();
+			return _folder.delete(false);
+		}
+		return false;
 	}
 	
-	public void deleteMessage() {
+	public Message []getMessages() throws MessagingException {
+		/*
+		if (!openFolderCalled)
+			openInboxFolder();
+		MessageUtils []messages = new MessageUtils[folder.getMessageCount()];
+		for (int i=1; i<=folder.getMessageCount(); i++)
+				messages[i-1] = new MessageUtils(folder.getMessage(i));
+		return messages;
+		*/
+		return folder.getMessages();
 		
+//TODO - implement
+//TODO - probabilmente deve diventare getHeaders e avere a che fare con l'ultimo metodi di ricerca -> farne uno solo
 	}
 	
-	public void copyMessageToFolder() {
+	public MimeMessage loadFullMessage(Message message) throws MessagingException {
+		return new MimeMessage((MimeMessage)message);
 		
+//TODO - TEST THIS ONE
+	}
+	
+	public void deleteMessage(Message message) throws MessagingException {
+		message.setFlag(Flags.Flag.DELETED, true);
+		/*
+		 * Gmail does not follow the normal IMAP conventions for deleting messages. Marking a message as deleted and then expunging the folder simply removes the 
+		 * current folder's "label" from the message. 
+		 * The message will still appear in the "[Gmail]/All Mail" folder. To delete a message, copy the message to the "[Gmail]/Trash" folder, 
+		 * which will immediately remove the message from the current folder. To permanently remove a message, open the "[Gmail]/Trash" folder, 
+		 * mark the message deleted (msg.setFlag(Flags.Flag.DELETED, true);), and expunge the folder (folder.close(true);). 
+		 */
+	}
+	
+	public void copyMessageToFolder(Message message, String destinationFolderName) throws MessagingException {
+		if (!isImap()) //POP3
+			throw new MessagingException(POP3_UNSUPPORTED_OPERATION_MESSAGE);		
+		Folder _folder = store.getFolder(destinationFolderName);
+		if (!_folder.exists())
+			throw new MessagingException(UNEXISTING_FOLDER_MESSAGE);
+		Message []_messages = {message};
+		_folder.appendMessages(_messages);
 	}
 	
 	public void queryMessagesInFolder() {
-		
+		//TODO - implement
 	}
 
 }

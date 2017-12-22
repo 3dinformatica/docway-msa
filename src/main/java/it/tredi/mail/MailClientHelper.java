@@ -12,6 +12,8 @@ import javax.mail.util.ByteArrayDataSource;
 
 public class MailClientHelper {
 	
+	//TODO - JAVADOC
+	
 	public static MailReader createMailReader(String host, int port, String protocol) {
 		return createMailReader(host, port, null, null, protocol);
 	}		

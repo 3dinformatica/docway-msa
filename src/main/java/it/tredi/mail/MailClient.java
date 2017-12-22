@@ -10,7 +10,7 @@ public abstract class MailClient {
 	
 	private final static long SOCKET_TIMEOUT =  10000; //10 secs
 	private final static long CONNECTION_TIMEOUT =  60000; //60 sec
-	
+
 	protected MailAccount account;
 	protected Session session;
 	protected Properties sessionProperties;
@@ -43,6 +43,7 @@ public abstract class MailClient {
 				disconnect();
 			}
 			catch (Exception e) {
+//TODO - log warning				
 				;
 			}
 		}

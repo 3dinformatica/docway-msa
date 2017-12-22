@@ -16,6 +16,8 @@ import javax.mail.internet.MimeMultipart;
 public class MailSender extends MailClient {
 	private Transport transport;
 	
+	//TODO - JAVADOC + CLIENT USAGE SAMPLES
+	
 	public MailSender() {
 	}
 

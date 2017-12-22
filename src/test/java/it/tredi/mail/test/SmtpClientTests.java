@@ -1,6 +1,8 @@
 package it.tredi.mail.test;
 
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
+
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
 
@@ -8,7 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
-import javax.activation.DataHandler;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -16,11 +17,12 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
 
-public class SmtpTests {
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+public class SmtpClientTests {
 	
 	private static String fromAddress;
 	private static String fromPersonal;
@@ -34,7 +36,7 @@ public class SmtpTests {
 	static {
 		Properties properties = new Properties();
 		try {
-			properties.load(SmtpTests.class.getResourceAsStream("smtp.properties"));
+			properties.load(ImapClientTests.class.getResourceAsStream("smtp.properties"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -52,12 +54,12 @@ public class SmtpTests {
 	//MailSender Creation Tests
 
 	@Test(expected=java.lang.IllegalArgumentException.class)
-	public void testMailSenderCreationOnIllegalProtocol() throws MessagingException {
+	public void test_001_mailSenderCreationOnIllegalProtocol() throws MessagingException {
 		MailClientHelper.createMailSender("", -1, "", "", "foo");
 	}	
 
 	@Test
-	public void testMailSenderCreationOnLegalProtocols() throws MessagingException {
+	public void test_002_mailSenderCreationOnLegalProtocols() throws MessagingException {
 		String []legalProtocols = {"smtp", "smtp-tls", "smtp-tls-ssl"};
 		for (String protocol: legalProtocols)
 			MailClientHelper.createMailSender("", -1, "", "", protocol);
@@ -66,13 +68,13 @@ public class SmtpTests {
 	//Connection Test
 	
 	@Test(expected=com.sun.mail.util.MailConnectException.class)
-	public void testConnectionOnFailure() throws MessagingException {
+	public void test_003_connectionOnFailure() throws MessagingException {
 		MailSender mailSender = MailClientHelper.createMailSender("", -1, "", "", "smtp");
 		mailSender.testConnection();
 	}
 
 	@Test
-	public void testConnection() throws MessagingException, IOException {
+	public void test_004_connection() throws MessagingException, IOException {
 		MailSender mailSender = MailClientHelper.createMailSender(host, port, userName, password, protocol);
 		mailSender.testConnection();
 	}
@@ -80,7 +82,7 @@ public class SmtpTests {
 	//SendaMail Tests
 	
 	@Test
-	public void testSendMail() throws MessagingException, IOException {
+	public void test_005_sendMail() throws MessagingException, IOException {
 		MailSender mailSender = MailClientHelper.createMailSender(host, port, userName, password, protocol);
 		mailSender.connect();
 		mailSender.sendMail(fromAddress, fromPersonal, toAddress, "simple mail with plain text body", "plain text");
@@ -88,7 +90,7 @@ public class SmtpTests {
 	}
 
 	@Test
-	public void testSendMailWithAttachments() throws MessagingException, IOException {
+	public void test_006_sendMailWithAttachments() throws MessagingException, IOException {
 		MailSender mailSender = MailClientHelper.createMailSender(host, port, userName, password, protocol);
 		mailSender.connect();
 		
@@ -101,7 +103,7 @@ public class SmtpTests {
         MimeBodyPart attach1 = MailClientHelper.createAttachmentBodyPart("simple text attachment".getBytes(), "text/plain", "readMe.txt");
 
         //attachment 2
-        MimeBodyPart attach2 = MailClientHelper.createAttachmentBodyPart(new File(SmtpTests.class.getResource("readMe.pdf").getFile()), "application/pdf", "readMe.pdf");
+        MimeBodyPart attach2 = MailClientHelper.createAttachmentBodyPart(new File(ImapClientTests.class.getResource("readMe.pdf").getFile()), "application/pdf", "readMe.pdf");
         
         MimeBodyPart []mimeBodyParts = {htmlBody, attach1, attach2};
         
@@ -110,7 +112,7 @@ public class SmtpTests {
 	}	
 	
 	@Test
-	public void testSendCustomMail() throws MessagingException, IOException {
+	public void test_007_sendCustomMail() throws MessagingException, IOException {
 		MailSender mailSender = MailClientHelper.createMailSender(host, port, userName, password, protocol);
 		mailSender.connect();
 		MimeMessage message = new MimeMessage(mailSender.getSession());
