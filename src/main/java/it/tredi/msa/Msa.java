@@ -114,36 +114,6 @@ hj propone un oggetto received che parsa il messaggio e restiuisce ad esempio la
 		}
 	}    
 	
-	
-	
-	Session session = Session.getInstance(System.getProperties(), null);
-        	if (protocol != null)
-    			store = session.getStore(protocol);
-    		else
-    			store = session.getStore();
-    				    		if (protocol.equals("imap") || protocol.equals("imaps"))
-    			isImap = true;            
-    		
-    		if (port.length() == 0)
-    			store.connect(host, user, password);
-    		else
-    			store.connect(host, Integer.parseInt(port), user, password);
-    		if (inboxFolderName == null || inboxFolderName.equals(""))
-    			inboxFolderName = INBOX_FOLDER_NAME;
-    		
-    		//chiediamo prima la defaultFolder visto che con alcuni fornitori di mail (es. Google)
-    		//chiedere direttamente la cartella specifica genera un errore.
-    		folder = store.getDefaultFolder();
-    		if (folder == null)
-    			throw new Exception("MailReader: no default folder");
-    		folder = store.getFolder(inboxFolderName);
-    		if (folder == null)
-    			throw new Exception("MailReader: invalid folder: " + inboxFolderName);
-    		
-    		folder.open(Folder.READ_WRITE);    
-    
-
-
     public Object executeQuery(String query) throws Exception {
 		if (folder != null  && folder.isOpen())
 			folder.close(true);
