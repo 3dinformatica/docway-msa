@@ -27,7 +27,9 @@ public class Msa {
 			if (logger.isInfoEnabled())
 				logger.info("MSA Service Started!");
 
-			/* */
+			loadConfiguration();
+			
+			//start executor
 			executor = Executors.newScheduledThreadPool(2);
 	        task1 = tasks[0] = new Task ("Task 1");
 	        task2 = tasks[1] = new Task ("Task 2");
@@ -39,27 +41,11 @@ public class Msa {
 	        
 	        executor.scheduleWithFixedDelay(task2, 0, 7, TimeUnit.SECONDS);
 	        executor.scheduleWithFixedDelay(task3, 0, 5, TimeUnit.SECONDS);			
-	        /* */
+	       //end executor
 	        
 	        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 	        executor.shutdown();
 	        
-	        /*
-			
-			while (true) {
-				Thread.sleep(10000);	
-				try {
-//TODO - check if Tasks are OK
-//teneer un array di ScheduledFuture e controllare che non siano in stato done (se done rieseguirli)					
-					//result.isDone()
-					
-		//TODO - add code
-				}
-				catch (Exception e) {
-//					logger.error("MSA: Got FATAL exception... " + e.getMessage() + "! Wait " + config.getFcaRefreshDelay() + " ms. and retry...", e);
-					//Thread.sleep(0); //config.getFcaRefreshDelay()
-				}
-			}*/
 		}	
 		catch (Exception e) {
 			logger.error("[FATAL ERROR] -> " + e.getMessage() + "... MSA service is down!", e);
@@ -79,6 +65,10 @@ public class Msa {
 			logger.error("Could not register shutdown hook... " + e.getMessage(), e);
 		}		
 	}	
+	
+	public void loadConfiguration() {
+		Services.getConfigurationService().getMSAConfiguration();
+	}
 
 	/**
 	 * Called on shutdown. This gives use a chance to store the keys and to optimize even if the cache manager's shutdown method was not called
