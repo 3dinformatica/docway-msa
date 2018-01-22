@@ -6,7 +6,7 @@ public class MSAConfiguration {
 	
 	Properties rawData;
 	
-	private MailboxConfigurationReaderConfiguration []mailboxConfigurationReaderConfigurations;
+	//private MailboxConfigurationReaderConfiguration []mailboxConfigurationReaderConfigurations;
 
 
 }
