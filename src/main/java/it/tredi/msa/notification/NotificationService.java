@@ -19,7 +19,7 @@ public class NotificationService {
 	    return instance;
 	}
 
-	public void init() {
+	public void init() throws Exception {
 		notificationSender = ObjectFactory.createNotificationSender(Services.getConfigurationService().getMSAConfiguration().getNotificationSenderConfiguration());
 	}
 

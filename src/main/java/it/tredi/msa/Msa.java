@@ -27,7 +27,8 @@ public class Msa {
 			if (logger.isInfoEnabled())
 				logger.info("MSA Service Started!");
 
-			loadConfiguration();
+			//load configuration, init all services
+			init();
 			
 			//start executor
 			executor = Executors.newScheduledThreadPool(2);
@@ -66,8 +67,9 @@ public class Msa {
 		}		
 	}	
 	
-	public void loadConfiguration() {
-		Services.getConfigurationService().getMSAConfiguration();
+	public void init() throws Exception {
+		//init services
+		Services.init();
 	}
 
 	/**

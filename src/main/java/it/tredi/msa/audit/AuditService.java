@@ -19,7 +19,7 @@ public class AuditService {
 	    return instance;
 	}
 
-	public void init() {
+	public void init() throws Exception {
 		auditWriter = ObjectFactory.createAuditWriter(Services.getConfigurationService().getMSAConfiguration().getAuditWriterConfiguration());
 	}
 

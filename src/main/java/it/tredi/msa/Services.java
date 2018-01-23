@@ -19,7 +19,7 @@ public class Services {
 		return NotificationService.getInstance();
 	}
 	
-	public static void init() {
+	public static void init() throws Exception {
 		
 		//load MSAConfiguration
 		Services.getConfigurationService().getMSAConfiguration();

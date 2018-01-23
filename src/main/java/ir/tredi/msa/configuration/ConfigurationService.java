@@ -26,13 +26,13 @@ public class ConfigurationService {
 	//Lista dei 
 	
 	
-	public MSAConfiguration getMSAConfiguration() {
+	public MSAConfiguration getMSAConfiguration() throws Exception {
 		if (msaConfiguration == null)
 			msaConfiguration = new MSAConfigurationReader().read();
 		return msaConfiguration;
 	}
 	
-	public void init() {
+	public void init() throws Exception {
 		ObjectFactoryConfiguration []configurations = getMSAConfiguration().getMailboxConfigurationReadersConfiguration();
 		mailboxConfigurationReaders = new MailboxConfigurationReader[configurations.length];
 		for (int i=0; i<configurations.length; i++) {
