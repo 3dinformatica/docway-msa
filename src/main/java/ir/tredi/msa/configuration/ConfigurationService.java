@@ -1,5 +1,6 @@
 package ir.tredi.msa.configuration;
 
+import it.tredi.msa.ObjectFactoryConfiguration;
 import it.tredi.msa.entity.MSAConfiguration;
 
 public class ConfigurationService {
@@ -27,6 +28,11 @@ public class ConfigurationService {
 			msaConfiguration = new MSAConfigurationReader().read();
 		return msaConfiguration;
 	}
+	
+	public void init(ObjectFactoryConfiguration notificationSenderConfiguration) {
+	//	notificationSender = ObjectFactory.createNotificationSender(notificationSenderConfiguration);
+		//TODO - creare tutti i notification reader
+	}	
 
 }
 
