@@ -1,7 +1,7 @@
 package it.tredi.msa.notification;
 
 import it.tredi.msa.ObjectFactory;
-import it.tredi.msa.ObjectFactoryConfiguration;
+import it.tredi.msa.Services;
 
 public class NotificationService {
 	
@@ -19,8 +19,8 @@ public class NotificationService {
 	    return instance;
 	}
 
-	public void init(ObjectFactoryConfiguration notificationSenderConfiguration) {
-		notificationSender = ObjectFactory.createNotificationSender(notificationSenderConfiguration);
+	public void init() {
+		notificationSender = ObjectFactory.createNotificationSender(Services.getConfigurationService().getMSAConfiguration().getNotificationSenderConfiguration());
 	}
 
 	

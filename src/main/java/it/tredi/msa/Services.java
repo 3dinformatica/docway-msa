@@ -22,17 +22,16 @@ public class Services {
 	public static void init() {
 		
 		//load MSAConfiguration
-		MSAConfiguration msaConfiguration = getConfigurationService().getMSAConfiguration();
+		Services.getConfigurationService().getMSAConfiguration();
 		
 		//AuditService
-		getAuditService().init(msaConfiguration.getAuditWriterConfiguration());
+		Services.getAuditService().init();
 
 		//ConfigurationService
-		for (ObjectFactoryConfiguration configuration:msaConfiguration.getMailboxConfigurationReadersConfiguration())
-			getConfigurationService().init(configuration);
+		Services.getConfigurationService().init();
 		
 		//NotificationService
-		getNotificationService().init(msaConfiguration.getNotificationSenderConfiguration());
+		Services.getNotificationService().init();
 		
 	}
 

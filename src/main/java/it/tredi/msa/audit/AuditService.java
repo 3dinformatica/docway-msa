@@ -1,7 +1,7 @@
 package it.tredi.msa.audit;
 
 import it.tredi.msa.ObjectFactory;
-import it.tredi.msa.ObjectFactoryConfiguration;
+import it.tredi.msa.Services;
 
 public class AuditService {
 	
@@ -19,8 +19,8 @@ public class AuditService {
 	    return instance;
 	}
 
-	public void init(ObjectFactoryConfiguration auditWriterConfiguration) {
-		auditWriter = ObjectFactory.createAuditWriter(auditWriterConfiguration);
+	public void init() {
+		auditWriter = ObjectFactory.createAuditWriter(Services.getConfigurationService().getMSAConfiguration().getAuditWriterConfiguration());
 	}
 
 	

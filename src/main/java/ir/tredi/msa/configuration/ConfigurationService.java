@@ -1,5 +1,6 @@
 package ir.tredi.msa.configuration;
 
+import it.tredi.msa.ObjectFactory;
 import it.tredi.msa.ObjectFactoryConfiguration;
 import it.tredi.msa.entity.MSAConfiguration;
 
@@ -8,6 +9,8 @@ public class ConfigurationService {
 	private static ConfigurationService instance;
 	
 	private MSAConfiguration msaConfiguration;
+	
+	private MailboxConfigurationReader []mailboxConfigurationReaders;
 	
 	private ConfigurationService() {
 	}
@@ -29,9 +32,12 @@ public class ConfigurationService {
 		return msaConfiguration;
 	}
 	
-	public void init(ObjectFactoryConfiguration notificationSenderConfiguration) {
-	//	notificationSender = ObjectFactory.createNotificationSender(notificationSenderConfiguration);
-		//TODO - creare tutti i notification reader
+	public void init() {
+		ObjectFactoryConfiguration []configurations = getMSAConfiguration().getMailboxConfigurationReadersConfiguration();
+		mailboxConfigurationReaders = new MailboxConfigurationReader[configurations.length];
+		for (int i=0; i<configurations.length; i++) {
+			mailboxConfigurationReaders[i] = ObjectFactory.createMailboxConfigurationReader(configurations[i]);
+		}
 	}	
 
 }
