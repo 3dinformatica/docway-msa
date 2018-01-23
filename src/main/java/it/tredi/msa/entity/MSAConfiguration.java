@@ -45,7 +45,5 @@ public class MSAConfiguration {
 		this.notificationSenderConfiguration = notificationSenderConfiguration;
 	}
 	
-	//private MailboxConfigurationReaderConfiguration []mailboxConfigurationReaderConfigurations;
-
 
 }
