@@ -7,24 +7,24 @@ import it.tredi.msa.audit.AuditWriter;
 import it.tredi.msa.notification.NotificationSender;
 
 public class ObjectFactory {
-	
+
 	public static MailboxConfigurationReader createMailboxConfigurationReader(ObjectFactoryConfiguration mailboxConfigurationReaderConfiguration) throws Exception {
 		return (MailboxConfigurationReader)createObject(mailboxConfigurationReaderConfiguration);
-	}	
+	}
 
 	public static AuditWriter createAuditWriter(ObjectFactoryConfiguration auditWriterConfiguration) throws Exception {
 		return (AuditWriter)createObject(auditWriterConfiguration);
-	}	
-	
+	}
+
 	public static NotificationSender createNotificationSender(ObjectFactoryConfiguration notificationSenderConfiguration) throws Exception {
 		return (NotificationSender)createObject(notificationSenderConfiguration);
 	}
-	
+
 	private static Object createObject(ObjectFactoryConfiguration configuration) throws Exception {
 		Class<?> cls = Class.forName(configuration.getClassName());
 		Constructor<?> ct = cls.getConstructor();
 		Object object = ct.newInstance();
-		
+
 		/*
         Class partypes[] = new Class[2];
          partypes[0] = Integer.TYPE;
@@ -45,8 +45,7 @@ public class ObjectFactory {
 		arglist[1] = this;
 		Class<?> theClass = Class.forName(packageName + "." + className);
 		Object theObject = theClass.getConstructor(partypes).newInstance(arglist);         */
-         
-         
+
 		return object;
 	}
 
