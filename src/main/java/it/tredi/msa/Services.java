@@ -1,7 +1,7 @@
 package it.tredi.msa;
 
-import ir.tredi.msa.configuration.ConfigurationService;
 import it.tredi.msa.audit.AuditService;
+import it.tredi.msa.configuration.ConfigurationService;
 import it.tredi.msa.entity.MSAConfiguration;
 import it.tredi.msa.notification.NotificationService;
 
