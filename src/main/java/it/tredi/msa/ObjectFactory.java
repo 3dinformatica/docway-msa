@@ -4,8 +4,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 
-import ir.tredi.msa.configuration.MailboxConfigurationReader;
 import it.tredi.msa.audit.AuditWriter;
+import it.tredi.msa.configuration.MailboxConfigurationReader;
 import it.tredi.msa.notification.NotificationSender;
 
 public class ObjectFactory {

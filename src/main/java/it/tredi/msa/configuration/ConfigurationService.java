@@ -1,4 +1,4 @@
-package ir.tredi.msa.configuration;
+package it.tredi.msa.configuration;
 
 import it.tredi.msa.ObjectFactory;
 import it.tredi.msa.ObjectFactoryConfiguration;
