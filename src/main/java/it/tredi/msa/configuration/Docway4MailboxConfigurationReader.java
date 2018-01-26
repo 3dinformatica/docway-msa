@@ -8,8 +8,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	private String user;
 	private String password;
 	private String db;
-	private boolean query;
-	private boolean queryInterop;
+	private String query;
+	private String queryInterop;
 	private String XPathInfo;
 	
 	public String getHost() {
@@ -56,28 +56,20 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		this.db = db;
 	}
 	
-	public boolean getQuery() {
+	public String getQuery() {
 		return query;
 	}
 	
-	public void setQuery(boolean query) {
+	public void setQuery(String query) {
 		this.query = query;
 	}
 	
-	public void setQuery(String query) {
-		this.setQuery(Boolean.parseBoolean(query));
-	}
-	
-	public boolean getQueryInterop() {
+	public String getQueryInterop() {
 		return queryInterop;
 	}
 	
-	public void setQueryInterop(boolean queryInterop) {
-		this.queryInterop = queryInterop;
-	}
-	
 	public void setQueryInterop(String queryInterop) {
-		this.setQueryInterop(Boolean.parseBoolean(queryInterop));
+		this.queryInterop = queryInterop;
 	}
 	
 	public String getXPathInfo() {
