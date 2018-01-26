@@ -12,27 +12,20 @@ public class MSAConfigurationReader {
 	private final static String MAILBOXCONFIGURATION_READERS_PROPERTY = "mailboxconfiguration.readers";
 
 	public MSAConfiguration read() throws Exception {
-		//try {
-			PropertiesReader propertiesReader = new PropertiesReader(PROPERTIES_FILENAME);
-			
-			MSAConfiguration msaConfiguration = new MSAConfiguration();
-			
-			//AuditWriter configuration
-			msaConfiguration.setAuditWriterConfiguration(readConfiguration(propertiesReader, AUDIT_WRITER_PROPERTY));
-			
-			//NotificationSender configuration
-			msaConfiguration.setNotificationSenderConfiguration(readConfiguration(propertiesReader, NOTIFICATION_SENDER__PROPERTY));
-			
-			//MailboxConfigurationReader(s) configuration
-			msaConfiguration.setMailboxConfigurationReadersConfiguration(readConfigurations(propertiesReader, MAILBOXCONFIGURATION_READERS_PROPERTY));
-			
-			return msaConfiguration;			
-		//}
-		//catch (Exception e) {
-//TODO - generare una ConfigurationException indicando l'errore esatto
-		//}
-		//return null;
-
+		PropertiesReader propertiesReader = new PropertiesReader(PROPERTIES_FILENAME);
+		
+		MSAConfiguration msaConfiguration = new MSAConfiguration();
+		
+		//AuditWriter configuration
+		msaConfiguration.setAuditWriterConfiguration(readConfiguration(propertiesReader, AUDIT_WRITER_PROPERTY));
+		
+		//NotificationSender configuration
+		msaConfiguration.setNotificationSenderConfiguration(readConfiguration(propertiesReader, NOTIFICATION_SENDER__PROPERTY));
+		
+		//MailboxConfigurationReader(s) configuration
+		msaConfiguration.setMailboxConfigurationReadersConfiguration(readConfigurations(propertiesReader, MAILBOXCONFIGURATION_READERS_PROPERTY));
+		
+		return msaConfiguration;			
 	}
 	
 	public ObjectFactoryConfiguration readConfiguration(PropertiesReader propertiesReader, String property) throws Exception {
@@ -49,12 +42,12 @@ public class MSAConfigurationReader {
 		for (String name:names) {
 			name = name.trim();
 			if (name.isEmpty())
-				throw new Exception("Wrong MSA configuration. Property not found or empty: " + property);
+				throw new Exception("Wrong MSA configuration. Property not configured correctly: " + property);
 			String className = propertiesReader.getProperty(name + ".class", "");
 			if (className.isEmpty())
 				throw new Exception("Wrong MSA configuration. Property not found or empty: " + name + ".class");
 			String params = propertiesReader.getProperty(name + ".params", "");
-			if (className.isEmpty())
+			if (params.isEmpty())
 				throw new Exception("Wrong MSA configuration. Property not found or empty: " + name + ".params");
 			configurations[i++] = new ObjectFactoryConfiguration(className, params);
 		}
