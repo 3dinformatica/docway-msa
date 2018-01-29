@@ -4,7 +4,7 @@ public abstract class NotificationSender {
 	
 	private boolean notifyRemainingError;
 	
-	public abstract void notifiyAdmin(String message);
+	public abstract boolean notifiyError(String message) throws Exception;
 
 	public boolean isNotifyRemainingError() {
 		return notifyRemainingError;

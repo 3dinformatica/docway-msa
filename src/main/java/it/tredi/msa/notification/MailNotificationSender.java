@@ -1,23 +1,29 @@
 package it.tredi.msa.notification;
 
+import it.tredi.mail.MailClientHelper;
+import it.tredi.mail.MailSender;
+
 public class MailNotificationSender extends NotificationSender {
+	
+	private final static String SUBJECT_ERROR = "Mail Storage Agent Error";
 
 	private String host;
 	private int port;
 	private String protocol;
+	private String user;
 	private String password;
 	private String senderAdress;
-	private String admEmailAddress;
+	private String senderPersonal;
+	private String []admEmailAddresses;
 	private int socketTimeout;
 	private int connectionTimeout;
-	private boolean javamailDebug;
 	
 	public String getHost() {
 		return host;
 	}
 
 	public void setHost(String host) {
-		this.host = host;
+		this.host = host.trim();
 	}
 
 	public int getPort() {
@@ -25,6 +31,9 @@ public class MailNotificationSender extends NotificationSender {
 	}
 	
 	public void setPort(String port) {
+		port = port.trim();
+		if (port.isEmpty())
+			port = "-1";
 		this.setPort(Integer.parseInt(port));
 	}
 
@@ -37,15 +46,23 @@ public class MailNotificationSender extends NotificationSender {
 	}
 
 	public void setProtocol(String protocol) {
-		this.protocol = protocol;
+		this.protocol = protocol.trim();
 	}
 
+	public String getUser() {
+		return user;
+	}
+
+	public void setUser(String user) {
+		this.user = user.trim();
+	}	
+	
 	public String getPassword() {
 		return password;
 	}
 
 	public void setPassword(String password) {
-		this.password = password;
+		this.password = password.trim();
 	}
 
 	public String getSenderAdress() {
@@ -53,22 +70,37 @@ public class MailNotificationSender extends NotificationSender {
 	}
 
 	public void setSenderAdress(String senderAdress) {
-		this.senderAdress = senderAdress;
+		this.senderAdress = senderAdress.trim();
 	}
 
-	public String getAdmEmailAddress() {
-		return admEmailAddress;
+	public String getSenderPersonal() {
+		return senderPersonal;
 	}
 
-	public void setAdmEmailAddress(String admEmailAddress) {
-		this.admEmailAddress = admEmailAddress;
+	public void setSenderPersonal(String senderPersonal) {
+		this.senderPersonal = senderPersonal.trim();
 	}
+
+	public String []getAdmEmailAddresses() {
+		return admEmailAddresses;
+	}
+
+	public void setAdmEmailAddresses(String []admEmailAddresses) {
+		this.admEmailAddresses = admEmailAddresses;
+	}
+	
+	public void setAdmEmailAddresses(String admEmailAddresses) {
+		this.admEmailAddresses = admEmailAddresses.trim().split(";");
+	}	
 
 	public int getSocketTimeout() {
 		return socketTimeout;
 	}
 
 	public void setSocketTimeout(String socketTimeout) {
+		socketTimeout = socketTimeout.trim();
+		if (socketTimeout.isEmpty())
+			socketTimeout = "-1";
 		this.setSocketTimeout(Integer.parseInt(socketTimeout));
 	}
 	
@@ -81,6 +113,9 @@ public class MailNotificationSender extends NotificationSender {
 	}
 
 	public void setConnectionTimeout(String connectionTimeout) {
+		connectionTimeout = connectionTimeout.trim();
+		if (connectionTimeout.isEmpty())
+			connectionTimeout = "-1";
 		this.setConnectionTimeout(Integer.parseInt(connectionTimeout));
 	}	
 	
@@ -88,22 +123,22 @@ public class MailNotificationSender extends NotificationSender {
 		this.connectionTimeout = connectionTimeout;
 	}
 
-	public boolean isJavamailDebug() {
-		return javamailDebug;
-	}
-
-	public void setJavamailDebug(String javamailDebug) {
-		this.setJavamailDebug(Boolean.parseBoolean(javamailDebug));
-	}	
-	
-	public void setJavamailDebug(boolean javamailDebug) {
-		this.javamailDebug = javamailDebug;
-	}
-
 	@Override
-	public void notifiyAdmin(String message) {
-		// TODO Auto-generated method stub
-		
+	public boolean notifiyError(String message) throws Exception {
+		boolean done = false;
+		MailSender mailSender = MailClientHelper.createMailSender(host, port, user, password, protocol);
+		mailSender.connect();
+		for (String toAddress: admEmailAddresses) {
+			try {
+				mailSender.sendMail(senderAdress, senderPersonal, toAddress, SUBJECT_ERROR, message);
+				done = true;
+			}
+			catch (Exception e) {
+//TODO - log error
+			}			
+		}
+		mailSender.disconnect();
+		return done;
 	}
 
 }
