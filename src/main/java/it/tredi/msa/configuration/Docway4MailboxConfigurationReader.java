@@ -1,5 +1,6 @@
 package it.tredi.msa.configuration;
 
+import it.tredi.msa.entity.MailboxConfiguration;
 
 public class Docway4MailboxConfigurationReader extends MailboxConfigurationReader {
 	
@@ -85,10 +86,11 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	@Override
-	public Docway4MailboxConfigurationReader readConfiguration() {
+	public MailboxConfiguration[] readMailboxConfigurations() {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
 }

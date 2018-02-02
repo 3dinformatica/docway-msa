@@ -3,6 +3,7 @@ package it.tredi.msa.configuration;
 import it.tredi.msa.ObjectFactory;
 import it.tredi.msa.ObjectFactoryConfiguration;
 import it.tredi.msa.entity.MSAConfiguration;
+import it.tredi.msa.entity.MailboxConfiguration;
 
 public class ConfigurationService {
 	
@@ -39,5 +40,9 @@ public class ConfigurationService {
 			mailboxConfigurationReaders[i] = ObjectFactory.createMailboxConfigurationReader(configurations[i]);
 		}
 	}	
+	
+	public MailboxConfiguration []readMailboxConfigurations() throws Exception {
+		return null;
+	}
 
 }

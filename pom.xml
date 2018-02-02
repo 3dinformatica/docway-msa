@@ -61,6 +61,11 @@
   			<groupId>it.tredi</groupId>
   			<artifactId>mail</artifactId>
   			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>it.tredi</groupId>
+			<artifactId>broker</artifactId>
+			<version>2.0.2</version>
 		</dependency>		
 	</dependencies>
 	

@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import it.tredi.msa.entity.MailboxConfiguration;
+
 
 public class Msa {
 	
@@ -27,8 +29,11 @@ public class Msa {
 			if (logger.isInfoEnabled())
 				logger.info("MSA Service Started!");
 
-			//load configuration, init all services
-			init();
+			//load msa configuration and init all services
+			Services.init();
+
+			//load mailbox configurations (via MailboxConfigurationReader(s))
+			MailboxConfiguration []mailboxconfigurations = Services.getConfigurationService().readMailboxConfigurations();
 			
 			//start executor
 			executor = Executors.newScheduledThreadPool(2);
@@ -66,11 +71,6 @@ public class Msa {
 			logger.error("Could not register shutdown hook... " + e.getMessage(), e);
 		}		
 	}	
-	
-	public void init() throws Exception {
-		//init services
-		Services.init();
-	}
 
 	/**
 	 * Called on shutdown. This gives use a chance to store the keys and to optimize even if the cache manager's shutdown method was not called
