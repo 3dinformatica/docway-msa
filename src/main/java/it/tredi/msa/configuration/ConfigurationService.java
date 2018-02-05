@@ -1,5 +1,7 @@
 package it.tredi.msa.configuration;
 
+import java.util.Arrays;
+
 import it.tredi.msa.ObjectFactory;
 import it.tredi.msa.ObjectFactoryConfiguration;
 import it.tredi.msa.entity.MSAConfiguration;
@@ -42,7 +44,14 @@ public class ConfigurationService {
 	}	
 	
 	public MailboxConfiguration []readMailboxConfigurations() throws Exception {
-		return null;
+		MailboxConfiguration []ret = {};
+		for (MailboxConfigurationReader mailboxConfigurationReader:mailboxConfigurationReaders) {
+			MailboxConfiguration []confs = mailboxConfigurationReader.readMailboxConfigurations();
+			int offset = ret.length;
+			ret = Arrays.copyOf(ret, ret.length + confs.length);	
+			System.arraycopy(confs, 0, ret, offset, confs.length);
+		}
+		return ret;
 	}
-
+	
 }

@@ -3,6 +3,11 @@ package it.tredi.msa.configuration;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.dom4j.Document;
+import org.dom4j.Element;
+
+import it.tredi.extraway.ExtrawayClient;
+import it.tredi.msa.entity.DocwayMailboxconfiguration;
 import it.tredi.msa.entity.MailboxConfiguration;
 
 public class Docway4MailboxConfigurationReader extends MailboxConfigurationReader {
@@ -91,37 +96,39 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	}
 
 	@Override
-	public MailboxConfiguration[] readMailboxConfigurations() {
+	public MailboxConfiguration[] readMailboxConfigurations() throws Exception {
 		List<MailboxConfiguration> mailboxConfigurations = new ArrayList<MailboxConfiguration>();
 		
-		//read normal mailboxes
+		//connect to extraway server
+		ExtrawayClient xwClient = new ExtrawayClient(host, port, db, user, password);
+		xwClient.connect();
+		
+		//read standard mailboxes
+		int count = xwClient.search(query);
+		for (int i=0; i<count; i++) { //iterate xw selection
+			Document xmlDocument = xwClient.loadDocByQueryResult(i);
+			
+			//every doc in the selection could contain more mailboxes info (see xPathInfo)
+			String []xpaths = XPathInfo.split(";");
+			for (String xpath:xpaths) { //iterate xpaths
+	            List<Element> elsL = xmlDocument.selectNodes(xpath + "[./mailbox_in/@host!='']");
+	            for (Element casellaEl:elsL) { //for each mailbox relative to the current xpath
+	            	DocwayMailboxconfiguration conf = new DocwayMailboxconfiguration();
+	            	mailboxConfigurations.add(conf);
+	            	conf.setName(casellaEl.attributeValue("nome"));
 
-		/**
-		 * 
-    private static Vector<String> getMbmsFromDoc(String xml, String xPath) throws Exception {
-        Vector<String> v = new Vector<String>();
-        XMLDocumento document = new XMLDocumento(xml);
-
-        Vector<?> v1 = it.tredi.utils.string.Text.split(xPath, ",");
-        for (int j = 0; j < v1.size(); j++) { //for each xpath specified in property file
-            //sstagni - 28 Feb 2006 - escludo le mailbox vuote
-            List<?> l = document.selectNodes(v1.get(j) + "[./mailbox_in/@host!='']");
-            for (int i = 0; i < l.size(); i++) { //for each mailbox relative to the current xpath
-            	Element l3 = (Element)l.get(i);
-                v.add(l3.asXML());
-                logger.debug("new MBM: " + l3.asXML());
-            }
-
-        }
-
-        return v;
-    }
-		 * 
-		 */
+//TODO - RIEMPIRE l'OGGETTO CONF
+	            	
+	            }				
+			}
+			
+		}
+		
+		xwClient.disconnect();
 		
 		//read interoperabilità mailboxes
 		
-		return (MailboxConfiguration[]) mailboxConfigurations.toArray();
+		return mailboxConfigurations.toArray(new MailboxConfiguration[mailboxConfigurations.size()]);
 	}
 	
 }
