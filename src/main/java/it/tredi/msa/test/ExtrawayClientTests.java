@@ -40,6 +40,7 @@ public class ExtrawayClientTests {
 		db = properties.getProperty("extraway.db");
 		query = properties.getProperty("extraway.query");
 	}
+	
 	@Test
 	public void test_001_connect() throws Exception {
 		client = new ExtrawayClient(host, port, db, user, password);
@@ -62,7 +63,6 @@ public class ExtrawayClientTests {
 	@Test
 	public void test_999_disconnect() throws Exception {
 		client.disconnect();
-		
 	}		
-	
+
 }
