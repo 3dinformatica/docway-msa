@@ -95,6 +95,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public MailboxConfiguration[] readMailboxConfigurations() throws Exception {
 		List<MailboxConfiguration> mailboxConfigurations = new ArrayList<MailboxConfiguration>();
@@ -116,6 +117,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	            	DocwayMailboxconfiguration conf = new DocwayMailboxconfiguration();
 	            	mailboxConfigurations.add(conf);
 	            	conf.setName(casellaEl.attributeValue("nome"));
+	            	conf.setMailboxManagerClassName("it.tredi.msa.mailboxmanager.Docway4MailboxManager");
 
 //TODO - RIEMPIRE l'OGGETTO CONF
 	            	
