@@ -1,24 +1,14 @@
 package it.tredi.msa.entity;
 
-import java.util.Properties;
-
 import it.tredi.msa.ObjectFactoryConfiguration;
 
 public class MSAConfiguration {
 	
-	Properties rawData;
-	
-	ObjectFactoryConfiguration []mailboxConfigurationReadersConfiguration;
-	ObjectFactoryConfiguration auditWriterConfiguration;
-	ObjectFactoryConfiguration notificationSenderConfiguration;
-	
-	public Properties getRawData() {
-		return rawData;
-	}
-	
-	public void setRawData(Properties rawData) {
-		this.rawData = rawData;
-	}
+	private ObjectFactoryConfiguration []mailboxConfigurationReadersConfiguration;
+	private ObjectFactoryConfiguration auditWriterConfiguration;
+	private ObjectFactoryConfiguration notificationSenderConfiguration;
+	private int mailboxManagersDelay;
+	private int mailboxManagersPoolsize;
 	
 	public ObjectFactoryConfiguration[] getMailboxConfigurationReadersConfiguration() {
 		return mailboxConfigurationReadersConfiguration;
@@ -44,6 +34,21 @@ public class MSAConfiguration {
 	public void setNotificationSenderConfiguration(ObjectFactoryConfiguration notificationSenderConfiguration) {
 		this.notificationSenderConfiguration = notificationSenderConfiguration;
 	}
-	
 
+	public int getMailboxManagersDelay() {
+		return mailboxManagersDelay;
+	}
+
+	public void setMailboxManagersDelay(int mailboxManagersDelay) {
+		this.mailboxManagersDelay = mailboxManagersDelay;
+	}
+
+	public int getMailboxManagersPoolsize() {
+		return mailboxManagersPoolsize;
+	}
+
+	public void setMailboxManagersPoolsize(int mailboxManagersPoolsize) {
+		this.mailboxManagersPoolsize = mailboxManagersPoolsize;
+	}
+	
 }

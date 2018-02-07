@@ -10,11 +10,17 @@ public class MSAConfigurationReader {
 	private final static String AUDIT_WRITER_PROPERTY = "audit.writer";
 	private final static String NOTIFICATION_SENDER__PROPERTY = "notification.sender";
 	private final static String MAILBOXCONFIGURATION_READERS_PROPERTY = "mailboxconfiguration.readers";
+	private final static String MAILBOXMANAGERS_DELAY_PROPERTY = "mailboxmanagers.delay";
+	private final static String MAILBOXMANAGERS_POOLSIZE_PROPERTY = "mailboxmanagers.poolsize";
 
 	public MSAConfiguration read() throws Exception {
 		PropertiesReader propertiesReader = new PropertiesReader(PROPERTIES_FILENAME);
 		
 		MSAConfiguration msaConfiguration = new MSAConfiguration();
+
+		//default params
+		msaConfiguration.setMailboxManagersDelay(propertiesReader.getIntProperty(MAILBOXMANAGERS_DELAY_PROPERTY, 600));
+		msaConfiguration.setMailboxManagersPoolsize(propertiesReader.getIntProperty(MAILBOXMANAGERS_POOLSIZE_PROPERTY, 1));
 		
 		//AuditWriter configuration
 		msaConfiguration.setAuditWriterConfiguration(readConfiguration(propertiesReader, AUDIT_WRITER_PROPERTY));

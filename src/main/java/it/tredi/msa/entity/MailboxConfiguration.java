@@ -14,6 +14,7 @@ public abstract class MailboxConfiguration {
 	private String address;
 	private int mailserverSocketTimeout;
 	private int mailserverConnectionTimeout;
+	private int delay = -1;
 	
 	public String getName() {
 		return name;
@@ -95,7 +96,14 @@ public abstract class MailboxConfiguration {
 		this.mailserverConnectionTimeout = mailserverConnectionTimeout;
 	}
 
-	
+	public int getDelay() {
+		return delay;
+	}
+
+	public void setDelay(int delay) {
+		this.delay = delay;
+	}
+
 	
 	/*
 	-removeFromServer
@@ -103,6 +111,7 @@ public abstract class MailboxConfiguration {
 	notifyRemainingError
 
 	javamailDebug=false	
+	
 	*/
 	
 }

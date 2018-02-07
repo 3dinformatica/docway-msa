@@ -1,16 +1,16 @@
 package it.tredi.msa;
 
 import java.security.AccessControlException;
-import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import it.tredi.msa.entity.MailboxConfiguration;
+import it.tredi.msa.mailboxmanager.MailboxManager;
+import it.tredi.msa.mailboxmanager.MailboxManagerFactory;
 
 
 public class Msa {
@@ -18,9 +18,7 @@ public class Msa {
 	private static final Logger logger = LogManager.getLogger(Msa.class.getName());
 	private MsaShutdownHook shutdownHook;
 	
-	ScheduledExecutorService executor;
-	Task []tasks = new Task[3];
-	Task task1, task2, task3;
+	private MailboxManager []mailboxManagers;
 	
 	protected void run() throws Exception {
 		registerShutdownHook();
@@ -33,25 +31,21 @@ public class Msa {
 			Services.init();
 
 			//load mailbox configurations (via MailboxConfigurationReader(s))
-			MailboxConfiguration []mailboxconfigurations = Services.getConfigurationService().readMailboxConfigurations();
+			MailboxConfiguration []mailboxConfigurations = Services.getConfigurationService().readMailboxConfigurations();
 			
-			//start executor
-			executor = Executors.newScheduledThreadPool(2);
-	        task1 = tasks[0] = new Task ("Task 1");
-	        task2 = tasks[1] = new Task ("Task 2");
-	        task3 = tasks[2] = new Task ("Task 3");
+			//create mailbox managers
+			mailboxManagers = MailboxManagerFactory.createMailboxManagers(mailboxConfigurations);
 
-	        logger.info("The time is : " + new Date());
-	         
-	        executor.scheduleWithFixedDelay(task1, 0, 5, TimeUnit.SECONDS);
-	        
-	        executor.scheduleWithFixedDelay(task2, 0, 7, TimeUnit.SECONDS);
-	        executor.scheduleWithFixedDelay(task3, 0, 5, TimeUnit.SECONDS);			
-	       //end executor
-	        
+			//start exexutor
+			ScheduledExecutorService executor = Executors.newScheduledThreadPool(Services.getConfigurationService().getMSAConfiguration().getMailboxManagersPoolsize());
+			int i = 0;
+			for (MailboxManager mailboxManager:mailboxManagers) {
+				int delay = mailboxManager.getConfiguration().getDelay() == -1? Services.getConfigurationService().getMSAConfiguration().getMailboxManagersDelay() : mailboxManager.getConfiguration().getDelay();
+				executor.scheduleWithFixedDelay(mailboxManager, 5*i++, delay, TimeUnit.SECONDS);
+			}
+				
 	        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 	        executor.shutdown();
-	        
 		}	
 		catch (Exception e) {
 			logger.error("[FATAL ERROR] -> " + e.getMessage() + "... MSA service is down!", e);
@@ -99,8 +93,8 @@ public class Msa {
 	private void shutdown() {
 		logger.info("shutdown() called");
 		
-		for (int i=0; i<tasks.length; i++)
-			tasks[i].shutdown();
+		for (MailboxManager mailboxManager:mailboxManagers)
+			mailboxManager.shutdown();
 		
 		logger.info("shutdown() successfully completed");
 	}
