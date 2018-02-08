@@ -6,12 +6,13 @@ import it.tredi.utils.properties.PropertiesReader;
 
 public class MSAConfigurationReader {
 	
-	private final static String PROPERTIES_FILENAME = "it.tredi.msa.properties";
-	private final static String AUDIT_WRITER_PROPERTY = "audit.writer";
-	private final static String NOTIFICATION_SENDER__PROPERTY = "notification.sender";
-	private final static String MAILBOXCONFIGURATION_READERS_PROPERTY = "mailboxconfiguration.readers";
-	private final static String MAILBOXMANAGERS_DELAY_PROPERTY = "mailboxmanagers.delay";
-	private final static String MAILBOXMANAGERS_POOLSIZE_PROPERTY = "mailboxmanagers.poolsize";
+	public final static String PROPERTIES_FILENAME = "it.tredi.msa.properties";
+	public final static String AUDIT_WRITER_PROPERTY = "audit.writer";
+	public final static String NOTIFICATION_SENDER__PROPERTY = "notification.sender";
+	public final static String MAILBOXCONFIGURATION_READERS_PROPERTY = "mailboxconfiguration.readers";
+	public final static String MAILBOXMANAGERS_DELAY_PROPERTY = "mailboxmanagers.delay";
+	public final static String MAILBOXMANAGERS_POOLSIZE_PROPERTY = "mailboxmanagers.poolsize";
+	public final static String MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES = "mailboxmanagers.allow-email-duplicates";
 
 	public MSAConfiguration read() throws Exception {
 		PropertiesReader propertiesReader = new PropertiesReader(PROPERTIES_FILENAME);
@@ -21,6 +22,7 @@ public class MSAConfigurationReader {
 		//default params
 		msaConfiguration.setMailboxManagersDelay(propertiesReader.getIntProperty(MAILBOXMANAGERS_DELAY_PROPERTY, 600));
 		msaConfiguration.setMailboxManagersPoolsize(propertiesReader.getIntProperty(MAILBOXMANAGERS_POOLSIZE_PROPERTY, 1));
+		msaConfiguration.setAllowEmailDuplicates(propertiesReader.getBooleanProperty(MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES, false));
 		
 		//AuditWriter configuration
 		msaConfiguration.setAuditWriterConfiguration(readConfiguration(propertiesReader, AUDIT_WRITER_PROPERTY));

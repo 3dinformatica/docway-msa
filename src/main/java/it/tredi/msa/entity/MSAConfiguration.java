@@ -9,6 +9,7 @@ public class MSAConfiguration {
 	private ObjectFactoryConfiguration notificationSenderConfiguration;
 	private int mailboxManagersDelay;
 	private int mailboxManagersPoolsize;
+	private boolean allowEmailDuplicates;
 	
 	public ObjectFactoryConfiguration[] getMailboxConfigurationReadersConfiguration() {
 		return mailboxConfigurationReadersConfiguration;
@@ -49,6 +50,14 @@ public class MSAConfiguration {
 
 	public void setMailboxManagersPoolsize(int mailboxManagersPoolsize) {
 		this.mailboxManagersPoolsize = mailboxManagersPoolsize;
+	}
+
+	public boolean isAllowEmailDuplicates() {
+		return allowEmailDuplicates;
+	}
+
+	public void setAllowEmailDuplicates(boolean allowEmailDuplicates) {
+		this.allowEmailDuplicates = allowEmailDuplicates;
 	}
 	
 }
