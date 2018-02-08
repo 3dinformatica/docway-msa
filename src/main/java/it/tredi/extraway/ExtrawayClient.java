@@ -36,7 +36,7 @@ public class ExtrawayClient {
         try {
             broker.Connect(connId, host, port, db, -1, user, password, "", "");
         }
-        catch (java.sql.SQLException e) {
+        catch (SQLException e) {
             disconnect();
             throw e;
         }			
@@ -49,11 +49,11 @@ public class ExtrawayClient {
 		}
 	}
 	
-	public int search(String query) throws java.sql.SQLException {
+	public int search(String query) throws SQLException {
 		return this.search(query, null, "", 0, -1);
 	}
 	
-    public int search(String query, String selToRefine, String sort, int hwQOpts, int adj) throws java.sql.SQLException {
+    public int search(String query, String selToRefine, String sort, int hwQOpts, int adj) throws SQLException {
         hwQOpts |= (sort != null && sort.length() > 0 ? it.highwaytech.broker.ServerCommand.find_SORT : 0);
         if (selToRefine != null && !selToRefine.isEmpty()) {
             query += " AND [?SEL]=\"" + selToRefine + "\"";

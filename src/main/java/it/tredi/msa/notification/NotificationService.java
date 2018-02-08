@@ -11,7 +11,8 @@ public class NotificationService {
 	
 	private static NotificationService instance;
 	private NotificationSender notificationSender;
-	private final static String NOTIFICATION_ERROR_MESSAGE = "Errore durante la notifica del messaggio";
+	public final static String NOTIFICATION_ERROR_MESSAGE = "Errore durante la notifica del messaggio: '%s'";
+	public final static String NOTIFICATION_ERROR_MESSAGE_DEST = "Errore durante la notifica del messaggio a '%s': '%s'";
 	private static final Logger logger = LogManager.getLogger(NotificationService.class.getName());
 	
 	private NotificationService() {
@@ -30,10 +31,12 @@ public class NotificationService {
 
 	public void notifyError(String message) {
 		try {
-			notificationSender.notifiyError(message);	
+			boolean sucess = notificationSender.notifiyError(message);
+			if (!sucess)
+				throw new Exception(NOTIFICATION_ERROR_MESSAGE);
 		}
 		catch (Exception e) {
-			logger.error(NOTIFICATION_ERROR_MESSAGE + ": " + message, e);
+			logger.error(String.format(NOTIFICATION_ERROR_MESSAGE, message), e);
 		}
 	}
 

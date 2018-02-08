@@ -1,11 +1,15 @@
 package it.tredi.msa.notification;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
 
 public class MailNotificationSender extends NotificationSender {
 	
 	private final static String SUBJECT_ERROR = "Mail Storage Agent Error";
+	private static final Logger logger = LogManager.getLogger(MailNotificationSender.class.getName());
 
 	private String host;
 	private int port;
@@ -134,7 +138,7 @@ public class MailNotificationSender extends NotificationSender {
 				done = true;
 			}
 			catch (Exception e) {
-//TODO - log error
+				logger.warn(String.format(NotificationService.NOTIFICATION_ERROR_MESSAGE_DEST, toAddress, message), e);
 			}			
 		}
 		mailSender.disconnect();

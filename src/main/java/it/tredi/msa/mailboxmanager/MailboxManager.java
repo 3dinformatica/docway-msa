@@ -1,7 +1,6 @@
 package it.tredi.msa.mailboxmanager;
 
 import javax.mail.Message;
-import javax.mail.MessagingException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

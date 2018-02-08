@@ -25,10 +25,6 @@ public class ConfigurationService {
 	    return instance;
 	}
 	
-	//MsaConfigurationReader -> MsaConfiguration (config dell'archiviatore compreso tempo polling default e lista dei mailboxconfigurationreader da utilizzare)
-	//Lista dei 
-	
-	
 	public MSAConfiguration getMSAConfiguration() throws Exception {
 		if (msaConfiguration == null)
 			msaConfiguration = new MSAConfigurationReader().read();
