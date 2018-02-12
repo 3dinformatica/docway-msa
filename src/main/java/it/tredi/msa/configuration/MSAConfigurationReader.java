@@ -12,17 +12,20 @@ public class MSAConfigurationReader {
 	public final static String MAILBOXCONFIGURATION_READERS_PROPERTY = "mailboxconfiguration.readers";
 	public final static String MAILBOXMANAGERS_DELAY_PROPERTY = "mailboxmanagers.delay";
 	public final static String MAILBOXMANAGERS_POOLSIZE_PROPERTY = "mailboxmanagers.poolsize";
-	public final static String MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES = "mailboxmanagers.allow-email-duplicates";
+	public final static String MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES_PROPERTY = "mailboxmanagers.allow-email-duplicates";
 
 	public MSAConfiguration read() throws Exception {
 		PropertiesReader propertiesReader = new PropertiesReader(PROPERTIES_FILENAME);
 		
 		MSAConfiguration msaConfiguration = new MSAConfiguration();
+		
+		//raw data
+		msaConfiguration.setRawData(propertiesReader);
 
 		//default params
 		msaConfiguration.setMailboxManagersDelay(propertiesReader.getIntProperty(MAILBOXMANAGERS_DELAY_PROPERTY, 600));
 		msaConfiguration.setMailboxManagersPoolsize(propertiesReader.getIntProperty(MAILBOXMANAGERS_POOLSIZE_PROPERTY, 1));
-		msaConfiguration.setAllowEmailDuplicates(propertiesReader.getBooleanProperty(MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES, false));
+		msaConfiguration.setAllowEmailDuplicates(propertiesReader.getBooleanProperty(MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES_PROPERTY, false));
 		
 		//AuditWriter configuration
 		msaConfiguration.setAuditWriterConfiguration(readConfiguration(propertiesReader, AUDIT_WRITER_PROPERTY));

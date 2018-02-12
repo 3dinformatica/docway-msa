@@ -10,6 +10,7 @@ public class MSAConfiguration {
 	private int mailboxManagersDelay;
 	private int mailboxManagersPoolsize;
 	private boolean allowEmailDuplicates;
+	Object rawData;
 	
 	public ObjectFactoryConfiguration[] getMailboxConfigurationReadersConfiguration() {
 		return mailboxConfigurationReadersConfiguration;
@@ -58,6 +59,14 @@ public class MSAConfiguration {
 
 	public void setAllowEmailDuplicates(boolean allowEmailDuplicates) {
 		this.allowEmailDuplicates = allowEmailDuplicates;
+	}
+
+	public Object getRawData() {
+		return rawData;
+	}
+
+	public void setRawData(Object rawData) {
+		this.rawData = rawData;
 	}
 	
 }

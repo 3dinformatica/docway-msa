@@ -13,7 +13,7 @@ public class ConfigurationService {
 	private static ConfigurationService instance;
 	private MSAConfiguration msaConfiguration;
 	private MailboxConfigurationReader []mailboxConfigurationReaders;
-	private final static String EMAIL_DUPLICATES_NOT_ALLOWED = "Indirizzi email duplicati non concessi: '%s'. Qualora non si tratti di un errore di configurazione è possibile forzare il funzionamento tramite la property '" + MSAConfigurationReader.MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES + "'";
+	private final static String EMAIL_DUPLICATES_NOT_ALLOWED = "Indirizzi email duplicati non concessi: '%s'. Qualora non si tratti di un errore di configurazione è possibile forzare il funzionamento tramite la property '" + MSAConfigurationReader.MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES_PROPERTY + "'";
 	
 	private ConfigurationService() {
 	}

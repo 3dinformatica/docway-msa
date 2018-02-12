@@ -14,12 +14,18 @@ import org.dom4j.Element;
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
 import it.tredi.msa.Services;
-import it.tredi.msa.entity.DocwayMailboxconfiguration;
+import it.tredi.msa.entity.DocwayMailboxConfiguration;
 import it.tredi.msa.entity.MailboxConfiguration;
+import it.tredi.utils.properties.PropertiesReader;
 
 public class Docway4MailboxConfigurationReader extends MailboxConfigurationReader {
 	
 	private static final String MAILBOX_MSA_CRYPTOR_KEY = "Th3S3cR3tTr3d1M41lb0xKey"; 
+	
+	public final static String DOCWAY4MAILBOXMANAGER_XW_HOST_PROPERTY = "docway4mailboxmanager.xw.host";
+	public final static String DOCWAY4MAILBOXMANAGER_XW_PORT_PROPERTY = "docway4mailboxmanager.xw.port";
+	public final static String DOCWAY4MAILBOXMANAGER_XW_USER_PROPERTY = "docway4mailboxmanager.xw.user";
+	public final static String DOCWAY4MAILBOXMANAGER_XW_PASSWORD_PROPERTY = "docway4mailboxmanager.xw.password";
 	
 	private String host;
 	private int port;
@@ -127,7 +133,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 			for (String xpath:xpaths) { //iterate xpaths
 	            List<Element> elsL = xmlDocument.selectNodes(xpath + "[./mailbox_in/@host!='']");
 	            for (Element casellaEl:elsL) { //for each mailbox relative to the current xpath
-	            	DocwayMailboxconfiguration conf = new DocwayMailboxconfiguration();
+	            	DocwayMailboxConfiguration conf = new DocwayMailboxConfiguration();
 	            	mailboxConfigurations.add(conf);
 	            	
 	            	//className
@@ -155,8 +161,15 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	            	//protocol
 	            	conf.setProtocol(mailboxInEl.attributeValue("protocol"));
 	            	
-
+	            	//default xw params (xwHost, xwPort, xwUser, xwPassword)
+	            	PropertiesReader propertiesReader = (PropertiesReader)Services.getConfigurationService().getMSAConfiguration().getRawData();
+	            	conf.setXwHost(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_HOST_PROPERTY, "localhost"));
+	            	conf.setXwPort(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_XW_PORT_PROPERTY, -1));
+	            	conf.setXwUser(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_USER_PROPERTY, "lettore"));
+	            	conf.setXwPassword(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_PASSWORD_PROPERTY, "reader"));
 	            	
+	            	
+//TODO - leggere i parametri di XW da configurazione generale
 	            	
 	            	
 	        		//parse documentModel
@@ -191,11 +204,14 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
         return new String(passwordB);        
 	}
 	
-	public void parseDocumentModel(DocwayMailboxconfiguration conf, Document dmDocument) {
+	public void parseDocumentModel(DocwayMailboxConfiguration conf, Document dmDocument) {
 		
 		//tipo doc
 		String tipoDoc = ((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@tipo']")).attributeValue("value");
 		conf.setTipoDoc(tipoDoc);
+		
+    	//xwDb
+    	conf.setXwDb(dmDocument.getRootElement().attributeValue("db"));
 
 //TODO - continuare ad analizzare il documentModel
 		
