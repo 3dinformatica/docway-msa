@@ -9,6 +9,8 @@ public class DocwayMailboxconfiguration extends MailboxConfiguration {
 	private int xwUser;
 	private int xwPassword;
 	
+	private String tipoDoc; //arrivo, partenza, interno, varie
+	
 	public boolean isStoreEml() {
 		return storeEml;
 	}
@@ -47,6 +49,14 @@ public class DocwayMailboxconfiguration extends MailboxConfiguration {
 	
 	public void setXwPassword(int xwPassword) {
 		this.xwPassword = xwPassword;
+	}
+
+	public String getTipoDoc() {
+		return tipoDoc;
+	}
+
+	public void setTipoDoc(String tipoDoc) {
+		this.tipoDoc = tipoDoc;
 	}
 	
 

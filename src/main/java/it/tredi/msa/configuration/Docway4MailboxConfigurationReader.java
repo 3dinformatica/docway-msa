@@ -11,6 +11,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
 import it.tredi.msa.Services;
 import it.tredi.msa.entity.DocwayMailboxconfiguration;
@@ -116,7 +117,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		
 		//read standard mailboxes
 		int count = xwClient.search(query);
+		QueryResult qr = xwClient.getQueryResult();
 		for (int i=0; i<count; i++) { //iterate xw selection
+			xwClient.setQueryResult(qr); //fix - inner documentModel search changes current query result
 			Document xmlDocument = xwClient.loadDocByQueryResult(i);
 			
 			//every doc in the selection could contain more mailboxes info (see xPathInfo)
@@ -152,6 +155,15 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	            	//protocol
 	            	conf.setProtocol(mailboxInEl.attributeValue("protocol"));
 	            	
+
+	            	
+	            	
+	            	
+	        		//parse documentModel
+	    			if (xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel")) > 0) {
+	    				Document dmDocument = xwClient.loadDocByQueryResult(0);
+	    				parseDocumentModel(conf, dmDocument);	
+	    			}
 	            	
 	            	
 //TODO - RIEMPIRE l'OGGETTO CONF
@@ -160,6 +172,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 			}
 			
 		}
+		
+
+		
 		
 		xwClient.disconnect();
 		
@@ -174,6 +189,17 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
         cipher.init(Cipher.DECRYPT_MODE, key);
         byte[] passwordB = cipher.doFinal(new Base64().decode(encPassword.getBytes()));
         return new String(passwordB);        
+	}
+	
+	public void parseDocumentModel(DocwayMailboxconfiguration conf, Document dmDocument) {
+		
+		//tipo doc
+		String tipoDoc = ((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@tipo']")).attributeValue("value");
+		conf.setTipoDoc(tipoDoc);
+
+//TODO - continuare ad analizzare il documentModel
+		
+		
 	}
 	
 }
@@ -204,4 +230,63 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	
 <assegnatario	 	intervento = "no" />
 </assegnazione_cc>
+
+
+
+<documentModel    db="xdocwaydoc" name="bozze_arrivo" nrecord="90000003">
+  <notify cc="true" httpHost="http://localhost:8080" rpa="true" uri="/DocWay4/docway/loadtitles.pf"/>
+  <item value="arrivo" xpath="doc/@tipo"/>
+  <item value="si" xpath="doc/@bozza"/>
+  <item value="getXPathValue(/casellaPostaElettronica/@cod_amm)" xpath="doc/@cod_amm_aoo"/>
+  <item value="getXPathValue(/casellaPostaElettronica/@cod_aoo)" xpath="doc/@cod_amm_aoo"/>
+  <item value="." xpath="doc/@nrecord"/>
+  <item value="" xpath="doc/@anno"/>
+  <item value="getDate()" xpath="doc/@data_prot"/>
+  <item value="" xpath="doc/@num_prot"/>
+  <item value="no" xpath="doc/@annullato"/>
+  <item value="getSubject()" xpath="doc/oggetto"/>
+  <item value="preserve" xpath="doc/oggetto/@xml:space"/>
+  <item value="getSubject()" xpath="doc/postit"/>
+  <item value="TEST" xpath="doc/postit/@cod_operatore"/>
+  <item value="getDate()" xpath="doc/postit/@data"/>
+  <item value="TEST TSET" xpath="doc/postit/@operatore"/>
+  <item value="E-mail" xpath="doc/tipologia/@cod"/>
+  <item value="addSenderFromACLLookup(/doc/rif_esterni/rif)" xpath=""/>
+  <item value="addAllegatoForEmailAttachs()" xpath=""/>
+  <item value="addStoriaCreazione()" xpath=""/>
+  <item value="addRPA()" xpath=""/>
+  <item value="addCC()" xpath=""/>
+  <item value="From: " xpath="doc/note"/>
+  <item value="getFromName()" xpath="doc/note"/>
+  <item value="newLine()" xpath="doc/note"/>
+  <item value="To: " xpath="doc/note"/>
+  <item value="getTo()" xpath="doc/note"/>
+  <item value="newLine()" xpath="doc/note"/>
+  <item value="Cc: " xpath="doc/note"/>
+  <item value="getCc()" xpath="doc/note"/>
+  <item value="newLine()" xpath="doc/note"/>
+  <item value="Sent: " xpath="doc/note"/>
+  <item value="getHeader(Date)" xpath="doc/note"/>
+  <item value="newLine()" xpath="doc/note"/>
+  <item value="Subject: " xpath="doc/note"/>
+  <item value="getSubject()" xpath="doc/note"/>
+  <item value="newLine()" xpath="doc/note"/>
+  <item value="newLine()" xpath="doc/note"/>
+  <item value="getMailBody(TEXT)" xpath="doc/note"/>
+  <item value="preserve" xpath="doc/note/@xml:space"/>
+  <attach_item value="addAndUploadEmailBodyAttach(/doc/files,TEXT,testo email,.txt)" xpath=""/>
+  <attach_item value="addAndUploadEmailBodyAttach(/doc/files,HTML,testo email html,.html)" xpath=""/>
+  <attach_item value="addAndUploadEmailAttachFiles(/doc/files)" xpath=""/>
+  <attach_item value="addAndUploadEmailAttachImages(/doc/immagini)" xpath=""/>
+  <attach_item value="computeAndAddFootprint(/doc/impronta)" xpath=""/>
+  <attach_item value="assignChkin()" xpath=""/><?xw-meta Dbms="ExtraWay" DbmsVer="25.9.4" OrgNam="3D Informatica" OrgVer="22.3.1.6" Classif="1.0" ManGest="1.0" ManTec="0.0.4" InsUser="unknown" InsTime="20151023170419" ModUser="admin" ModTime="20171220150550"?>
+<?xw-crc key32=f1759431-50910104?>
+
+</documentModel>
+*
 **/
+
+
+
+
+

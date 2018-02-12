@@ -79,5 +79,15 @@ public class ExtrawayClient {
         Document document = DocumentHelper.parseText(doc.XML());
         return document;
     }
-    
+
+	public QueryResult getQueryResult() {
+		return queryResult;
+	}
+
+	public void setQueryResult(QueryResult queryResult) {
+		this.queryResult = queryResult;
+	}
+
+	
+	
 }

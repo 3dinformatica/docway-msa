@@ -43,7 +43,10 @@ public class Msa {
 				int delay = mailboxManager.getConfiguration().getDelay() == -1? Services.getConfigurationService().getMSAConfiguration().getMailboxManagersDelay() : mailboxManager.getConfiguration().getDelay();
 				executor.scheduleWithFixedDelay(mailboxManager, 5*i++, delay, TimeUnit.SECONDS);
 			}
-				
+			
+//TODO - eccorre trovare un nuovo per ricaricare nuove configurazioni ad intervalli di tempo regolari (potrebbe essere un task stesso dell'executor)
+//è sufficiente aggiungere le nuove caselle. Il fatto di cancellare quelle esistenti non è importante anche se potrebbe essere fatto facendo shutdow del mailboxmanager che non esiste più			
+
 	        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 	        executor.shutdown();
 		}	
