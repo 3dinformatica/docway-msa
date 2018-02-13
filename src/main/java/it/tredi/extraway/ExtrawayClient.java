@@ -1,11 +1,16 @@
 package it.tredi.extraway;
 
+import java.io.StringWriter;
 import java.sql.SQLException;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 
 import it.highwaytech.broker.Broker;
+import it.highwaytech.broker.XMLCommand;
 import it.highwaytech.db.Doc;
 import it.highwaytech.db.QueryResult;
 
@@ -87,7 +92,20 @@ public class ExtrawayClient {
 	public void setQueryResult(QueryResult queryResult) {
 		this.queryResult = queryResult;
 	}
-
 	
+	public int saveDocument(Document xmlDocument) throws Exception {
+		Element rootEl = xmlDocument.getRootElement();
+		StringWriter sw = new StringWriter();
+		OutputFormat outformat = OutputFormat.createPrettyPrint();
+		outformat.setEncoding("ISO-8859-1");
+        XMLWriter writer = new XMLWriter(sw, outformat);
+        writer.write(rootEl);
+ 		
+//TODO - come gestire encoding UTF-8???              
+                
+        XMLCommand theCommand = new XMLCommand(XMLCommand.SaveDocument, XMLCommand.SaveDocument_Save, 0, sw.toString(), rootEl.getName(), "", null);
+        String result = broker.XMLCommand(connId, db, theCommand.toString());
+        return Integer.parseInt(XMLCommand.getDval(result, "ndoc"));
+	}
 	
 }

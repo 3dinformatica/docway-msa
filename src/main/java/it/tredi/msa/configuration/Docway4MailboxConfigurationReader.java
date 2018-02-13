@@ -177,8 +177,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	    				Document dmDocument = xwClient.loadDocByQueryResult(0);
 	    				parseDocumentModel(conf, dmDocument);	
 	    			}
-	            	
-	            	
+//TODO - cosa fare se il documentModel non viene trovato???	            	
+
+	    			
 //TODO - RIEMPIRE l'OGGETTO CONF
 	            	
 	            }				

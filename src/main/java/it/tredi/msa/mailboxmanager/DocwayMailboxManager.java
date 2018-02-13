@@ -18,11 +18,17 @@ public abstract class DocwayMailboxManager extends MailboxManager {
     public void storeMessage(Message message) throws Exception {
 //TODO - realizzare lo store del messaggio
 		
+		//build new Docway document
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		DocwayDocument doc = new DocwayDocument();
+		
+		//tipo doc
 		doc.setTipo(conf.getTipoDoc());
 
-		//saveDoc
+		//oggetto
+		doc.setOggetto(message.getSubject());
+		
+		//save new document
 		saveNewDocument(doc);
 		
 	}	
