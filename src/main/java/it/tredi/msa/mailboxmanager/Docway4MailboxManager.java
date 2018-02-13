@@ -61,6 +61,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		
 		//messageId
 		
+		//recipientEmail
+		
 		//oggetto
 		Element oggettoEl = DocumentHelper.createElement("oggetto");
 		docEl.add(oggettoEl);
