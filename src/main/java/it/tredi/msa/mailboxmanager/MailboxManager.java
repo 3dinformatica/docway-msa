@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import it.tredi.mail.MailReader;
 import it.tredi.msa.entity.MailboxConfiguration;
+import it.tredi.msa.entity.ParsedMessage;
 
 public abstract class MailboxManager implements Runnable {
 
@@ -62,13 +63,15 @@ public abstract class MailboxManager implements Runnable {
         	for (Message message:messages) {
         		if (shutdown)
         			return;        		
+        		//TEMPLATE STEP - parsedMessage
+        		ParsedMessage parsedMessage = parseMessage(message);
         		try {
         			//TEMPLATE STEP - processMessage
-        			processMessage(message);	
+        			processMessage(parsedMessage);
         		}
         		catch (Exception e) {
         			//TEMPLATE STEP - handleError
-        			handleError(e, message); 
+        			handleError(e, parsedMessage); 
         		}
         	}
     	}
@@ -99,22 +102,26 @@ public abstract class MailboxManager implements Runnable {
 		}    	
     }    
     
-    public void processMessage(Message message) throws Exception {
+    public ParsedMessage parseMessage(Message message) {
+    	return new ParsedMessage(message);
+    }
+    
+    public void processMessage(ParsedMessage parsedMessage) throws Exception {
     	//TEMPLATE STEP - isMessageStorable
-    	if (isMessageStorable(message)) {
+    	if (isMessageStorable(parsedMessage)) {
     		//TEMPLATE STEP - storeMessage
-    		storeMessage(message);
+    		storeMessage(parsedMessage);
     		
     		//TEMPLATE STEP - messageStored
-    		messageStored(message);
+    		messageStored(parsedMessage);
     	}
     	else {
     		//TEMPLATE STEP - skipMessage
-    		skipMessage(message);
+    		skipMessage(parsedMessage);
     	}
     }
 
-    public void handleError(Throwable t, Message message) {
+    public void handleError(Throwable t, ParsedMessage parsedMessage) {
     	if (shutdown)
     		logger.warn(configuration.getName() + " - aborted during shutdown", t);
     	else
@@ -123,23 +130,22 @@ public abstract class MailboxManager implements Runnable {
     	//TODO - notificare l'errore con il NOTIFICATION SERVICE (INSERIRE QUA LA LOGICA SE NOTIFICARE O MENO L'ERRORE UTILIZZANDO L'AUDIT (se message != null))
     }
     
-    public void storeMessage(Message message) throws Exception {
-    	logger.info("storing message " + message.getSubject());
+    public void storeMessage(ParsedMessage parsedMessage) throws Exception {
+    	logger.info("storing message " + parsedMessage.getSubject());
     }
     
-    public void skipMessage(Message message) throws Exception {
-    	logger.info("message skipped: " + message.getSubject());
+    public void skipMessage(ParsedMessage parsedMessage) throws Exception {
+    	logger.info("message skipped: " + parsedMessage.getSubject());
     }
     
-    public boolean isMessageStorable(Message message) {
+    public boolean isMessageStorable(ParsedMessage parsedMessage) {
     	return true;
     }
     
-    public void messageStored(Message message) throws Exception {
+    public void messageStored(ParsedMessage parsedMessage) throws Exception {
     	//TODO //gestione cancellazione / spostamento
 //TODO - COMPLETARE!!!!    	
-    	//mailReader.deleteMessage(message);
-    	
+    	//mailReader.deleteMessage(parsedMessage.getMessage());
     }
  
 }

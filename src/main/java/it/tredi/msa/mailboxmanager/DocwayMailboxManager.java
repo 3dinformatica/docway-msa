@@ -4,18 +4,19 @@ import javax.mail.Message;
 
 import it.tredi.msa.entity.DocwayDocument;
 import it.tredi.msa.entity.DocwayMailboxConfiguration;
+import it.tredi.msa.entity.ParsedMessage;
 
 public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	
 	@Override
-    public boolean isMessageStorable(Message message) {
+    public boolean isMessageStorable(ParsedMessage parsedMessage) {
     	return true;
 //TODO - per ora true    	
     }
 	
 	@Override
-    public void storeMessage(Message message) throws Exception {
+    public void storeMessage(ParsedMessage parsedMessage) throws Exception {
 //TODO - realizzare lo store del messaggio
 		
 		//build new Docway document
@@ -26,7 +27,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		doc.setTipo(conf.getTipoDoc());
 
 		//oggetto
-		doc.setOggetto(message.getSubject());
+		doc.setOggetto(parsedMessage.getSubject());
 		
 		//save new document
 		saveNewDocument(doc);
