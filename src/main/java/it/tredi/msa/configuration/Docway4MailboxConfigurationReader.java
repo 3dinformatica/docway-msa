@@ -161,16 +161,18 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	            	//protocol
 	            	conf.setProtocol(mailboxInEl.attributeValue("protocol"));
 	            	
+	            	//email
+	            	conf.setEmail(mailboxInEl.attributeValue("email"));
+	            	
+	            	//cod_amm_aoo
+	            	conf.setCodAmmAoo(casellaEl.attributeValue("cod_amm") + casellaEl.attributeValue("cod_aoo"));
+	            	
 	            	//default xw params (xwHost, xwPort, xwUser, xwPassword)
 	            	PropertiesReader propertiesReader = (PropertiesReader)Services.getConfigurationService().getMSAConfiguration().getRawData();
 	            	conf.setXwHost(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_HOST_PROPERTY, "localhost"));
 	            	conf.setXwPort(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_XW_PORT_PROPERTY, -1));
 	            	conf.setXwUser(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_USER_PROPERTY, "lettore"));
 	            	conf.setXwPassword(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_PASSWORD_PROPERTY, "reader"));
-	            	
-	            	
-//TODO - leggere i parametri di XW da configurazione generale
-	            	
 	            	
 	        		//parse documentModel
 	    			if (xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel")) > 0) {
@@ -207,12 +209,32 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	
 	public void parseDocumentModel(DocwayMailboxConfiguration conf, Document dmDocument) {
 		
+    	//xwDb
+    	conf.setXwDb(dmDocument.getRootElement().attributeValue("db"));
+    	
 		//tipo doc
 		String tipoDoc = ((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@tipo']")).attributeValue("value");
 		conf.setTipoDoc(tipoDoc);
 		
-    	//xwDb
-    	conf.setXwDb(dmDocument.getRootElement().attributeValue("db"));
+		//bozza
+		String bozzaS = ((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@bozza']")).attributeValue("value");
+		conf.setBozza(bozzaS.equalsIgnoreCase("si"));
+
+		//data prot
+		conf.setCurrentDate(((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@data_prot']")).attributeValue("value").equals("getDate()")? true : false);
+		
+		//anno
+		conf.setCurrentYear(((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@anno']")).attributeValue("value").equals("getYear()")? true : false);
+		
+		//tipologia
+		Element itemEl = (Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/tipologia/@cod']");
+		if (itemEl != null)
+			conf.setTipologia(itemEl.attributeValue("value"));
+		
+		//mezzo trasmissione
+		itemEl = (Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/mezzo_trasmissione/@cod']");
+		if (itemEl != null)
+			conf.setMezzoTrasmissione(itemEl.attributeValue("value"));
 
 //TODO - continuare ad analizzare il documentModel
 		

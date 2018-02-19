@@ -2,12 +2,19 @@ package it.tredi.msa.entity;
 
 public class DocwayDocument {
 	
-	String tipo;
-	String oggetto;
+	private String tipo;
+	private String oggetto;
 	boolean bozza;
-	String note;
-	String tipologia;
-	String mezzo_trasmissione;
+	private String note;
+	private String tipologia;
+	private String mezzoTrasmissione;
+	private String codAmmAoo;
+	private String anno;
+	private String dataProt;
+	private String numProt;
+	private boolean annullato;
+	private String messageId;
+	private String recipientEmail;
 	
 	public String getTipo() {
 		return tipo;
@@ -48,14 +55,69 @@ public class DocwayDocument {
 	public void setTipologia(String tipologia) {
 		this.tipologia = tipologia;
 	}
-	
-	public String getMezzo_trasmissione() {
-		return mezzo_trasmissione;
-	}
-	
-	public void setMezzo_trasmissione(String mezzo_trasmissione) {
-		this.mezzo_trasmissione = mezzo_trasmissione;
+
+	public String getMezzoTrasmissione() {
+		return mezzoTrasmissione;
 	}
 
+	public void setMezzoTrasmissione(String mezzoTrasmissione) {
+		this.mezzoTrasmissione = mezzoTrasmissione;
+	}
+
+	public String getCodAmmAoo() {
+		return codAmmAoo;
+	}
+
+	public void setCodAmmAoo(String codAmmAoo) {
+		this.codAmmAoo = codAmmAoo;
+	}
+
+	public String getAnno() {
+		return anno;
+	}
+
+	public void setAnno(String anno) {
+		this.anno = anno;
+	}
+
+	public boolean isAnnullato() {
+		return annullato;
+	}
+
+	public void setAnnullato(boolean annullato) {
+		this.annullato = annullato;
+	}
+
+	public String getDataProt() {
+		return dataProt;
+	}
+
+	public void setDataProt(String dataProt) {
+		this.dataProt = dataProt;
+	}
+
+	public String getNumProt() {
+		return numProt;
+	}
+
+	public void setNumProt(String numProt) {
+		this.numProt = numProt;
+	}
+
+	public String getMessageId() {
+		return messageId;
+	}
+
+	public void setMessageId(String messageId) {
+		this.messageId = messageId;
+	}
+
+	public String getRecipientEmail() {
+		return recipientEmail;
+	}
+
+	public void setRecipientEmail(String recipientEmail) {
+		this.recipientEmail = recipientEmail;
+	}
 	
 }

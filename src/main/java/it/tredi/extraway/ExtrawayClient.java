@@ -24,6 +24,7 @@ public class ExtrawayClient {
 	private String password;
 	private int connId;
 	private QueryResult queryResult;
+	private final String ENCODING = "UTF-8";
 	
 	public ExtrawayClient(String host, int port, String db, String user, String password) {
 		this.broker = new Broker();
@@ -97,15 +98,54 @@ public class ExtrawayClient {
 		Element rootEl = xmlDocument.getRootElement();
 		StringWriter sw = new StringWriter();
 		OutputFormat outformat = OutputFormat.createPrettyPrint();
-		outformat.setEncoding("ISO-8859-1");
+		outformat.setEncoding(ENCODING);
         XMLWriter writer = new XMLWriter(sw, outformat);
         writer.write(rootEl);
- 		
-//TODO - come gestire encoding UTF-8???              
-                
         XMLCommand theCommand = new XMLCommand(XMLCommand.SaveDocument, XMLCommand.SaveDocument_Save, 0, sw.toString(), rootEl.getName(), "", null);
+        theCommand.encoding = ENCODING;
         String result = broker.XMLCommand(connId, db, theCommand.toString());
         return Integer.parseInt(XMLCommand.getDval(result, "ndoc"));
 	}
+
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(String host) {
+		this.host = host;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public void setPort(int port) {
+		this.port = port;
+	}
+
+	public String getDb() {
+		return db;
+	}
+
+	public void setDb(String db) {
+		this.db = db;
+	}
+
+	public String getUser() {
+		return user;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
 	
 }

@@ -4,6 +4,9 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	
 	private boolean storeEml = false;
 	
+	private String email;
+	
+	//xw
 	private String xwHost;
 	private int xwPort;
 	private String xwUser;
@@ -11,6 +14,12 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String xwDb;
 	
 	private String tipoDoc; //arrivo, partenza, interno, varie
+	private boolean bozza;
+	private String codAmmAoo;
+	private String tipologia;
+	private String mezzoTrasmissione;
+	private boolean currentYear;
+	private boolean currentDate;
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -20,6 +29,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 		this.storeEml = storeEml;
 	}
 	
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
 	public String getXwHost() {
 		return xwHost;
 	}
@@ -68,7 +85,53 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 		this.tipoDoc = tipoDoc;
 	}
 	
+	public boolean isBozza() {
+		return bozza;
+	}
 
+	public void setBozza(boolean bozza) {
+		this.bozza = bozza;
+	}
+
+	public String getCodAmmAoo() {
+		return codAmmAoo;
+	}
+
+	public void setCodAmmAoo(String codAmmAoo) {
+		this.codAmmAoo = codAmmAoo;
+	}
+
+	public String getTipologia() {
+		return tipologia;
+	}
+
+	public void setTipologia(String tipologia) {
+		this.tipologia = tipologia;
+	}
+
+	public String getMezzoTrasmissione() {
+		return mezzoTrasmissione;
+	}
+
+	public void setMezzoTrasmissione(String mezzoTrasmissione) {
+		this.mezzoTrasmissione = mezzoTrasmissione;
+	}
+
+	public boolean isCurrentYear() {
+		return currentYear;
+	}
+
+	public void setCurrentYear(boolean currentYear) {
+		this.currentYear = currentYear;
+	}
+
+	public boolean isCurrentDate() {
+		return currentDate;
+	}
+
+	public void setCurrentDate(boolean currentDate) {
+		this.currentDate = currentDate;
+	}
 	
 	
 	/**
