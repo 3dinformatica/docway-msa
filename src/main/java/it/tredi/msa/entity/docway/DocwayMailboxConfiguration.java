@@ -1,4 +1,6 @@
-package it.tredi.msa.entity;
+package it.tredi.msa.entity.docway;
+
+import it.tredi.msa.entity.MailboxConfiguration;
 
 public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	

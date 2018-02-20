@@ -1,4 +1,4 @@
-package it.tredi.msa.mailboxmanager;
+package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -6,9 +6,10 @@ import java.util.Date;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
-import it.tredi.msa.entity.DocwayDocument;
-import it.tredi.msa.entity.DocwayMailboxConfiguration;
 import it.tredi.msa.entity.ParsedMessage;
+import it.tredi.msa.entity.docway.DocwayDocument;
+import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
+import it.tredi.msa.mailboxmanager.MailboxManager;
 
 public abstract class DocwayMailboxManager extends MailboxManager {
 	

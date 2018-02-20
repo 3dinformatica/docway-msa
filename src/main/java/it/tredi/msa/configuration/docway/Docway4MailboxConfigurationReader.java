@@ -1,4 +1,4 @@
-package it.tredi.msa.configuration;
+package it.tredi.msa.configuration.docway;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,8 +14,9 @@ import org.dom4j.Element;
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
 import it.tredi.msa.Services;
-import it.tredi.msa.entity.DocwayMailboxConfiguration;
+import it.tredi.msa.configuration.MailboxConfigurationReader;
 import it.tredi.msa.entity.MailboxConfiguration;
+import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
 import it.tredi.utils.properties.PropertiesReader;
 
 public class Docway4MailboxConfigurationReader extends MailboxConfigurationReader {
@@ -137,7 +138,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	            	mailboxConfigurations.add(conf);
 	            	
 	            	//className
-	            	conf.setMailboxManagerClassName("it.tredi.msa.mailboxmanager.Docway4MailboxManager");
+	            	conf.setMailboxManagerClassName("it.tredi.msa.mailboxmanager.docway.Docway4MailboxManager");
 
 	            	//name
 	            	conf.setName(casellaEl.attributeValue("nome"));

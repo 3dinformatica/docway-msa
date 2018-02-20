@@ -44,14 +44,14 @@ public class Msa {
 				executor.scheduleWithFixedDelay(mailboxManager, 5*i++, delay, TimeUnit.SECONDS);
 			}
 			
-//TODO - eccorre trovare un nuovo per ricaricare nuove configurazioni ad intervalli di tempo regolari (potrebbe essere un task stesso dell'executor)
+//TODO - occorre trovare un modo per ricaricare nuove configurazioni ad intervalli di tempo regolari (potrebbe essere un task stesso dell'executor)
 //è sufficiente aggiungere le nuove caselle. Il fatto di cancellare quelle esistenti non è importante anche se potrebbe essere fatto facendo shutdow del mailboxmanager che non esiste più			
 
 	        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 	        executor.shutdown();
 		}	
 		catch (Exception e) {
-			logger.error("[FATAL ERROR] -> " + e.getMessage() + "... MSA service is down!", e);
+			logger.fatal("[FATAL ERROR] -> " + e.getMessage() + "... MSA service is down!", e);
 			throw e;
 		}
 		

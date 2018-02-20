@@ -1,4 +1,4 @@
-package it.tredi.msa.mailboxmanager;
+package it.tredi.msa.mailboxmanager.docway;
 
 import java.util.List;
 
@@ -9,8 +9,8 @@ import org.dom4j.Element;
 
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
-import it.tredi.msa.entity.DocwayDocument;
-import it.tredi.msa.entity.DocwayMailboxConfiguration;
+import it.tredi.msa.entity.docway.DocwayDocument;
+import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
 
 public class Docway4MailboxManager extends DocwayMailboxManager {
 
