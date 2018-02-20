@@ -167,12 +167,17 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	            	//cod_amm_aoo
 	            	conf.setCodAmmAoo(casellaEl.attributeValue("cod_amm") + casellaEl.attributeValue("cod_aoo"));
 	            	
+	            	//oper, uff_oper
+	            	conf.setOper(casellaEl.attributeValue("oper"));
+	            	conf.setUffOper(casellaEl.attributeValue("uff_oper"));
+	            	
 	            	//default xw params (xwHost, xwPort, xwUser, xwPassword)
 	            	PropertiesReader propertiesReader = (PropertiesReader)Services.getConfigurationService().getMSAConfiguration().getRawData();
 	            	conf.setXwHost(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_HOST_PROPERTY, "localhost"));
 	            	conf.setXwPort(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_XW_PORT_PROPERTY, -1));
 	            	conf.setXwUser(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_USER_PROPERTY, "lettore"));
 	            	conf.setXwPassword(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_PASSWORD_PROPERTY, "reader"));
+	            	conf.setAclDb(db);
 	            	
 	        		//parse documentModel
 	    			if (xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel")) > 0) {
@@ -236,6 +241,14 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		if (itemEl != null)
 			conf.setMezzoTrasmissione(itemEl.attributeValue("value"));
 
+		//classificazione
+		itemEl = (Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/classif/@cod']");
+		if (itemEl != null) {
+			conf.setClassifCod(itemEl.attributeValue("value"));
+			String classif = ((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/classif']")).attributeValue("value");
+			conf.setClassif(classif);
+		}
+		
 //TODO - continuare ad analizzare il documentModel
 		
 		

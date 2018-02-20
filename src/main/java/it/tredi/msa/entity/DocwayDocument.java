@@ -15,6 +15,9 @@ public class DocwayDocument {
 	private boolean annullato;
 	private String messageId;
 	private String recipientEmail;
+	private String classif;
+	private String classifCod;
+	//private StoriaItem creazione;
 	
 	public String getTipo() {
 		return tipo;
@@ -118,6 +121,22 @@ public class DocwayDocument {
 
 	public void setRecipientEmail(String recipientEmail) {
 		this.recipientEmail = recipientEmail;
+	}
+
+	public String getClassif() {
+		return classif;
+	}
+
+	public void setClassif(String classif) {
+		this.classif = classif;
+	}
+
+	public String getClassifCod() {
+		return classifCod;
+	}
+
+	public void setClassifCod(String classifCod) {
+		this.classifCod = classifCod;
 	}
 	
 }

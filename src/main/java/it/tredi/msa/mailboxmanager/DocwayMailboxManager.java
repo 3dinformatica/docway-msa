@@ -13,6 +13,7 @@ import it.tredi.msa.entity.ParsedMessage;
 public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	private Date currentDate;
+	protected ParsedMessage parsedMessage;
 	
 	@Override
     public boolean isMessageStorable(ParsedMessage parsedMessage) {
@@ -23,16 +24,16 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	@Override
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
 		this.currentDate = new Date();
+		this.parsedMessage = parsedMessage;
 		
 //TODO - realizzare lo store del messaggio
 //inserire tutta la logica di archiviazione
 		
 		//build new Docway document
 		DocwayDocument doc = buildDocwayDocument(parsedMessage);
-		
+
 		//save new document
 		saveNewDocument(doc);
-		
 	}	
 	
 	private DocwayDocument buildDocwayDocument(ParsedMessage  parsedMessage) throws Exception {
@@ -74,6 +75,12 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//mezzo trasmissione
 		doc.setMezzoTrasmissione(conf.getMezzoTrasmissione());
+		
+		//classif
+		doc.setClassif(conf.getClassif());
+		doc.setClassifCod(conf.getClassifCod());
+		
+		//storia
 
 		return doc;
 	}

@@ -12,6 +12,7 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String xwUser;
 	private String xwPassword;
 	private String xwDb;
+	private String aclDb;
 	
 	private String tipoDoc; //arrivo, partenza, interno, varie
 	private boolean bozza;
@@ -20,6 +21,10 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String mezzoTrasmissione;
 	private boolean currentYear;
 	private boolean currentDate;
+	private String classif;
+	private String classifCod;	
+	private String oper;
+	private String uffOper;
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -75,6 +80,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setXwDb(String xwDb) {
 		this.xwDb = xwDb;
+	}
+	
+	public String getAclDb() {
+		return aclDb;
+	}
+
+	public void setAclDb(String aclDb) {
+		this.aclDb = aclDb;
 	}
 
 	public String getTipoDoc() {
@@ -132,6 +145,39 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public void setCurrentDate(boolean currentDate) {
 		this.currentDate = currentDate;
 	}
+
+	public String getClassif() {
+		return classif;
+	}
+
+	public void setClassif(String classif) {
+		this.classif = classif;
+	}
+
+	public String getClassifCod() {
+		return classifCod;
+	}
+
+	public void setClassifCod(String classifCod) {
+		this.classifCod = classifCod;
+	}
+
+	public String getOper() {
+		return oper;
+	}
+
+	public void setOper(String oper) {
+		this.oper = oper;
+	}
+
+	public String getUffOper() {
+		return uffOper;
+	}
+
+	public void setUffOper(String uffOper) {
+		this.uffOper = uffOper;
+	}
+	
 	
 	
 	/**
