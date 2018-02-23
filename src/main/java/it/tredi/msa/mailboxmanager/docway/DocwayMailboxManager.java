@@ -9,11 +9,12 @@ import javax.mail.MessagingException;
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.docway.DocwayDocument;
 import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
+import it.tredi.msa.entity.docway.StoriaItem;
 import it.tredi.msa.mailboxmanager.MailboxManager;
 
 public abstract class DocwayMailboxManager extends MailboxManager {
 	
-	private Date currentDate;
+	protected Date currentDate;
 	protected ParsedMessage parsedMessage;
 	
 	@Override
@@ -67,6 +68,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//annullato
 		doc.setAnnullato(false);
+		
+		//autore
+		if (doc.getTipo().toUpperCase().equals("VARIE"))
+			doc.setAutore(parsedMessage.getFromPersonal().isEmpty()? parsedMessage.getFromAddress() : parsedMessage.getFromPersonal());
 
 		//oggetto
 		doc.setOggetto(parsedMessage.getSubject());
@@ -77,12 +82,38 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//mezzo trasmissione
 		doc.setMezzoTrasmissione(conf.getMezzoTrasmissione());
 		
+		//voce di indice
+		doc.setVoceIndice(conf.getVoceIndice());
+		
 		//classif
 		doc.setClassif(conf.getClassif());
 		doc.setClassifCod(conf.getClassifCod());
 		
-		//storia
+		//repertorio
+		doc.setRepertorio(conf.getRepertorio());
+		doc.setRepertorioCod(conf.getRepertorioCod());
+		
+		//note
+		if (conf.isNoteAutomatiche()) {
+			String note = "From: " + parsedMessage.getFromAddress() + "\n";
+			note += "To: " + parsedMessage.getToAddressesAsString() + "\n";
+			note += "Cc: " + parsedMessage.getCcAddressesAsString() + "\n";
+			note += "Sent: " + parsedMessage.getSentDate() + "\n";
+			note += "Subject: " + parsedMessage.getSubject() + "\n\n";
 
+//TODO - aggiungere getMailBody(TEXT)			
+			
+			doc.setNote(note);
+		}
+		
+		//storia creazione
+		StoriaItem creazione = new StoriaItem("creazione");
+		creazione.setOper(conf.getOper());
+		creazione.setUffOper(conf.getUffOper());
+		creazione.setData(currentDate);
+		creazione.setOra(currentDate);
+		doc.addStoriaItem(creazione);
+		
 		return doc;
 	}
 	

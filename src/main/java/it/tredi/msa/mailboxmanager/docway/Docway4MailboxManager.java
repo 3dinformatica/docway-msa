@@ -1,5 +1,6 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import org.dom4j.Attribute;
@@ -11,6 +12,7 @@ import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
 import it.tredi.msa.entity.docway.DocwayDocument;
 import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
+import it.tredi.msa.entity.docway.StoriaItem;
 
 public class Docway4MailboxManager extends DocwayMailboxManager {
 
@@ -87,36 +89,49 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		docEl.add(archiviatoreEl);
 		archiviatoreEl.addAttribute("recipientEmail", doc.getRecipientEmail());
 		
+		//autore
+		if (doc.getAutore() != null && !doc.getAutore().isEmpty()) {
+			Element autoreEl = DocumentHelper.createElement("autore");
+			docEl.add(autoreEl);
+			autoreEl.addAttribute("xml:space", "preserve");
+			autoreEl.setText(doc.getAutore());			
+		}			
+		
+		//tipologia
+		if (doc.getTipologia() != null && !doc.getTipologia().isEmpty()) {
+			Element tipologiaEl = DocumentHelper.createElement("tipologia");
+			docEl.add(tipologiaEl);
+			tipologiaEl.addAttribute("cod", doc.getTipologia());
+		}
+		
+		//mezzo_trasmissione
+		if (doc.getMezzoTrasmissione() != null && !doc.getMezzoTrasmissione().isEmpty()) {
+			Element mezzoTrasmissioneEl = DocumentHelper.createElement("mezzo_trasmissione");
+			docEl.add(mezzoTrasmissioneEl);
+			mezzoTrasmissioneEl.addAttribute("cod", doc.getMezzoTrasmissione());			
+		}
+
+		//rif_esterni
+		if (doc.getTipo().toUpperCase().equals("ARRIVO"))
+			addRifExtFromACLLookup("/doc/rif_esterni/rif", super.parsedMessage.getFromPersonal(), super.parsedMessage.getFromAddress(), xmlDocument);		
+		else if (doc.getTipo().toUpperCase().equals("PARTENZA"))
+			;
+//TODO - gestire rif_esterni per i doc in partenza
+		
 		//oggetto
 		Element oggettoEl = DocumentHelper.createElement("oggetto");
 		docEl.add(oggettoEl);
 		oggettoEl.addAttribute("xml:space", "preserve");
 //TODO - effettuare la pulizia dell'oggetto - vedi vecchio archiviatore
-		oggettoEl.setText(doc.getOggetto());
-		
-		//tipologia
-		Element tipologiaEl = DocumentHelper.createElement("tipologia");
-		docEl.add(tipologiaEl);
-		tipologiaEl.addAttribute("cod", doc.getTipologia());
-		
-		//mezzo_trasmissione
-		Element mezzoTrasmissioneEl = DocumentHelper.createElement("mezzo_trasmissione");
-		docEl.add(mezzoTrasmissioneEl);
-		mezzoTrasmissioneEl.addAttribute("cod", doc.getMezzoTrasmissione());
-		
-		//allegato
-		
-		//rif_esterni
-		if (doc.getTipo().toUpperCase().equals("ARRIVO"))
-			addRifExtFromACLLookup("/doc/rif_esterni/rif", super.parsedMessage.getFromPersonal(), super.parsedMessage.getFromAddress(), xmlDocument);
-		
-		//storia
-		
-		//rif_interni
-		
-		//note
-		
-		//repertorio
+		oggettoEl.setText(doc.getOggetto());		
+
+		//voce_indice
+		if (doc.getVoceIndice() != null && !doc.getVoceIndice().isEmpty()) {
+			Element voceIndicefEl = DocumentHelper.createElement("voce_indice");
+			docEl.add(voceIndicefEl);
+			voceIndicefEl.addAttribute("xml:space", "preserve");
+			voceIndicefEl.setText(doc.getVoceIndice());
+		}		
 		
 		//classificazione
 		if (doc.getClassifCod() != null && !doc.getClassifCod().isEmpty()) {
@@ -126,20 +141,83 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			classifEl.setText(doc.getClassif());
 			classifEl.addAttribute("cod", doc.getClassifCod());
 		}
+
+		//rif_interni
 		
+		//allegato
+		
+		//fascicolo
+
+		//note
+		if (doc.getNote() != null && !doc.getNote().isEmpty()) {
+			Element noteEl = DocumentHelper.createElement("note");
+			docEl.add(noteEl);
+			noteEl.addAttribute("xml:space", "preserve");
+			noteEl.setText(doc.getNote());			
+		}
+		
+		//repertorio
+		if (doc.getRepertorioCod() != null && !doc.getRepertorioCod().isEmpty()) {
+			Element repertorioEl = DocumentHelper.createElement("repertorio");
+			docEl.add(repertorioEl);
+			repertorioEl.setText(doc.getRepertorio());
+			repertorioEl.addAttribute("cod", doc.getRepertorioCod());
+			if (doc.isBozza())
+				repertorioEl.addAttribute("numero", "");
+			else
+				repertorioEl.addAttribute("numero", doc.getRepertorioCod() + "^" + doc.getCodAmmAoo() + "-" + (new SimpleDateFormat("yyyy")).format(super.currentDate) + ".");
+		}
+
 		//scarto
-		
-		//autore
 		
 		//postit
 		
+		//storia
+		Element storiaEl = DocumentHelper.createElement("storia");
+		docEl.add(storiaEl);
+		for (StoriaItem storiaItem:doc.getStoria())
+			storiaEl.add(storiaItemToXml(storiaItem));
+		
 		//save in Extraway
-//		lastSavedDocumentPhysDoc = xwClient.saveDocument(xmlDocument);
+		lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
 //TODO - attualmente il salvataggio è disabilitato
+		
+		Document document = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc);
+		document.getRootElement().element("oggetto").setText("Oggetto modificato");
+		xwClient.saveDocument(document, lastSavedDocumentPhysDoc);
 		
 		int ret = 0;
 		ret++;
 
+	}
+	
+	private Element storiaItemToXml(StoriaItem storiaItem) {
+		Element el = DocumentHelper.createElement(storiaItem.getType());
+		if (storiaItem.getOper() != null && !storiaItem.getOper().isEmpty())
+			el.addAttribute("oper", storiaItem.getOper());
+		if (storiaItem.getCodOper() != null && !storiaItem.getCodOper().isEmpty())
+			el.addAttribute("cod_oper", storiaItem.getCodOper());		
+		if (storiaItem.getUffOper() != null && !storiaItem.getUffOper().isEmpty())
+			el.addAttribute("uff_oper", storiaItem.getUffOper());
+		if (storiaItem.getCodUffOper() != null && !storiaItem.getCodUffOper().isEmpty())
+			el.addAttribute("cod_uff_oper", storiaItem.getCodUffOper());
+		if (storiaItem.getNomePersona() != null && !storiaItem.getNomePersona().isEmpty())
+			el.addAttribute("nome_persona", storiaItem.getNomePersona());
+		if (storiaItem.getCodPersona() != null && !storiaItem.getCodPersona().isEmpty())
+			el.addAttribute("cod_persona", storiaItem.getCodPersona());		
+		if (storiaItem.getNomeUff() != null && !storiaItem.getNomeUff().isEmpty())
+			el.addAttribute("nome_uff", storiaItem.getNomeUff());
+		if (storiaItem.getCodUff() != null && !storiaItem.getCodUff().isEmpty())
+			el.addAttribute("cod_uff", storiaItem.getCodUff());		
+		if (storiaItem.getOperatore() != null && !storiaItem.getOperatore().isEmpty())
+			el.addAttribute("operatore", storiaItem.getOperatore());
+		if (storiaItem.getCodOperatore() != null && !storiaItem.getCodOperatore().isEmpty())
+			el.addAttribute("cod_operatore", storiaItem.getCodOperatore());
+		if (storiaItem.getData() != null && !storiaItem.getData().isEmpty())
+			el.addAttribute("data", storiaItem.getData());
+		if (storiaItem.getOra() != null && !storiaItem.getOra().isEmpty())
+			el.addAttribute("ora", storiaItem.getOra());
+		return el;
 	}
 
 	

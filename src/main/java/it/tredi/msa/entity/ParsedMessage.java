@@ -54,4 +54,22 @@ public class ParsedMessage {
 		return messageId;
 	}
 	
+	public String getToAddressesAsString() throws Exception {
+		return stringArrayToString(MessageUtils.getToAddresses(message));
+	}
+	
+	public String getCcAddressesAsString() throws Exception {
+		return stringArrayToString(MessageUtils.getCcAddresses(message));
+	}
+	
+	private String stringArrayToString(String []array) throws Exception {
+		String ret = "";
+		for (String entry:array)
+			ret += ", " + entry;
+		if (ret.length() >= 2)
+			return ret.substring(2);
+		else
+			return "";
+	}	
+	
 }

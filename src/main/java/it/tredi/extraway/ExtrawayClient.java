@@ -25,6 +25,7 @@ public class ExtrawayClient {
 	private int connId;
 	private QueryResult queryResult;
 	private final String ENCODING = "UTF-8";
+	private String theLock;
 	
 	public ExtrawayClient(String host, int port, String db, String user, String password) {
 		this.broker = new Broker();
@@ -94,14 +95,20 @@ public class ExtrawayClient {
 		this.queryResult = queryResult;
 	}
 	
-	public int saveDocument(Document xmlDocument) throws Exception {
+	public int saveNewDocument(Document xmlDocument) throws Exception {
+		return saveDocument(xmlDocument, 0);
+	}
+	
+	public int saveDocument(Document xmlDocument, int docNum) throws Exception {
 		Element rootEl = xmlDocument.getRootElement();
 		StringWriter sw = new StringWriter();
 		OutputFormat outformat = OutputFormat.createPrettyPrint();
 		outformat.setEncoding(ENCODING);
         XMLWriter writer = new XMLWriter(sw, outformat);
         writer.write(rootEl);
-        XMLCommand theCommand = new XMLCommand(XMLCommand.SaveDocument, XMLCommand.SaveDocument_Save, 0, sw.toString(), rootEl.getName(), "", null);
+//TODO - non mantiene la formattazione degli xml:space=preserve 
+//xmlDocument ha i newline mentre sw.toString() NO        
+        XMLCommand theCommand = new XMLCommand(XMLCommand.SaveDocument, XMLCommand.SaveDocument_Save, docNum, sw.toString(), rootEl.getName(), "", docNum == 0? null : theLock);
         theCommand.encoding = ENCODING;
         String result = broker.XMLCommand(connId, db, theCommand.toString());
         return Integer.parseInt(XMLCommand.getDval(result, "ndoc"));
@@ -110,6 +117,34 @@ public class ExtrawayClient {
 	public String getUniqueRuleDb(String udName) {
 		return broker.getUniqueRuleDb(connId, db, udName);	
 	}
+
+	public int getPhysdocByQueryResult(int position) throws SQLException {
+		return broker.getNumDoc(connId, db, queryResult, position);
+	}
 	
+	public Document loadAndLockDocument(int physdoc) throws Exception {
+		return loadAndLockDocument(physdoc, 1, 0);
+	}
+	
+	public Document loadAndLockDocument(int physdoc, int attempts, long delay) throws Exception {
+        XMLCommand theCommand = new XMLCommand(it.highwaytech.broker.XMLCommand.LoadDocument, XMLCommand.LoadDocument_Lock, physdoc);
+        String xresponse = null;
+        for (int i = 0; (i < attempts); i++) {
+            try {
+                xresponse = broker.XMLCommand(connId, db, theCommand.toString());
+                break;
+            }
+            catch (Exception e) {
+                Thread.sleep(delay);
+                if (i+1 == attempts)
+                    throw e;
+            }
+        } //end-for
+        
+        this.theLock = XMLCommand.getLockCode(xresponse);
+        String theContent = xresponse.substring(XMLCommand.getBstContentStartOffset(xresponse), XMLCommand.getBstContentStopOffset(xresponse));        
+        Document document = DocumentHelper.parseText(theContent);
+        return document;
+	}
 	
 }

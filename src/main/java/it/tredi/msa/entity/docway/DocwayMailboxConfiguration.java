@@ -27,6 +27,10 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String classifCod;	
 	private String oper;
 	private String uffOper;
+	private boolean noteAutomatiche;
+	private String voceIndice;
+	private String repertorio;
+	private String repertorioCod;
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -179,7 +183,38 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public void setUffOper(String uffOper) {
 		this.uffOper = uffOper;
 	}
-	
+
+	public boolean isNoteAutomatiche() {
+		return noteAutomatiche;
+	}
+
+	public void setNoteAutomatiche(boolean noteAutomatiche) {
+		this.noteAutomatiche = noteAutomatiche;
+	}
+
+	public String getVoceIndice() {
+		return voceIndice;
+	}
+
+	public void setVoceIndice(String voceIndice) {
+		this.voceIndice = voceIndice;
+	}
+
+	public String getRepertorio() {
+		return repertorio;
+	}
+
+	public void setRepertorio(String repertorio) {
+		this.repertorio = repertorio;
+	}
+
+	public String getRepertorioCod() {
+		return repertorioCod;
+	}
+
+	public void setRepertorioCod(String repertorioCod) {
+		this.repertorioCod = repertorioCod;
+	}
 	
 	
 	/**

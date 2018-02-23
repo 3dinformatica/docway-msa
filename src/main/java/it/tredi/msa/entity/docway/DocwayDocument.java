@@ -1,5 +1,8 @@
 package it.tredi.msa.entity.docway;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DocwayDocument {
 	
 	private String tipo;
@@ -17,8 +20,16 @@ public class DocwayDocument {
 	private String recipientEmail;
 	private String classif;
 	private String classifCod;
-	//private StoriaItem creazione;
+	private String autore;
+	private String voceIndice;
+	private String repertorio;
+	private String repertorioCod;
+	private List<StoriaItem> storia;
 	
+	public DocwayDocument() {
+		this.storia = new ArrayList<StoriaItem>();
+	}
+
 	public String getTipo() {
 		return tipo;
 	}
@@ -137,6 +148,50 @@ public class DocwayDocument {
 
 	public void setClassifCod(String classifCod) {
 		this.classifCod = classifCod;
+	}
+
+	public String getAutore() {
+		return autore;
+	}
+
+	public void setAutore(String autore) {
+		this.autore = autore;
+	}
+	
+	public String getVoceIndice() {
+		return voceIndice;
+	}
+
+	public void setVoceIndice(String voceIndice) {
+		this.voceIndice = voceIndice;
+	}
+
+	public String getRepertorio() {
+		return repertorio;
+	}
+
+	public void setRepertorio(String repertorio) {
+		this.repertorio = repertorio;
+	}
+
+	public String getRepertorioCod() {
+		return repertorioCod;
+	}
+
+	public void setRepertorioCod(String repertorioCod) {
+		this.repertorioCod = repertorioCod;
+	}
+
+	public List<StoriaItem> getStoria() {
+		return storia;
+	}
+
+	public void setStoria(List<StoriaItem> storia) {
+		this.storia = storia;
+	}
+	
+	public void addStoriaItem(StoriaItem storiaItem) {
+		storia.add(storiaItem);
 	}
 	
 }

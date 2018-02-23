@@ -250,6 +250,25 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 			conf.setClassif(classif);
 		}
 		
+		//note automatiche
+		if (dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/note'][@value='From: ']") != null && dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/note'][@value='getMailBody(TEXT)']") != null)
+			conf.setNoteAutomatiche(true);
+		else
+			conf.setNoteAutomatiche(false);
+
+		//voce_indice
+		itemEl = (Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/voce_indice']");
+		if (itemEl != null)
+			conf.setVoceIndice(itemEl.attributeValue("value"));
+		
+		//repertorio
+		itemEl = (Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/repertorio/@cod']");
+		if (itemEl != null) {
+			conf.setRepertorioCod(itemEl.attributeValue("value"));
+			String repertorio = ((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/repertorio']")).attributeValue("value");
+			conf.setRepertorio(repertorio);
+		}		
+		
 //TODO - continuare ad analizzare il documentModel
 		
 		
