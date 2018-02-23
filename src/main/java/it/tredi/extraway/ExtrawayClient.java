@@ -102,12 +102,10 @@ public class ExtrawayClient {
 	public int saveDocument(Document xmlDocument, int docNum) throws Exception {
 		Element rootEl = xmlDocument.getRootElement();
 		StringWriter sw = new StringWriter();
-		OutputFormat outformat = OutputFormat.createPrettyPrint();
+		OutputFormat outformat = new OutputFormat("  ", true, ENCODING);
 		outformat.setEncoding(ENCODING);
         XMLWriter writer = new XMLWriter(sw, outformat);
         writer.write(rootEl);
-//TODO - non mantiene la formattazione degli xml:space=preserve 
-//xmlDocument ha i newline mentre sw.toString() NO        
         XMLCommand theCommand = new XMLCommand(XMLCommand.SaveDocument, XMLCommand.SaveDocument_Save, docNum, sw.toString(), rootEl.getName(), "", docNum == 0? null : theLock);
         theCommand.encoding = ENCODING;
         String result = broker.XMLCommand(connId, db, theCommand.toString());
