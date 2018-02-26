@@ -13,7 +13,6 @@ public class RifEsterno {
 	private String tel;
 	private String referenteNominativo;
 	private String referenteCod;
-	private String referenteRuolo;
 	
 	public String getNome() {
 		return nome;
@@ -101,14 +100,6 @@ public class RifEsterno {
 	
 	public void setReferenteCod(String referenteCod) {
 		this.referenteCod = referenteCod;
-	}
-
-	public String getReferenteRuolo() {
-		return referenteRuolo;
-	}
-
-	public void setReferenteRuolo(String referenteRuolo) {
-		this.referenteRuolo = referenteRuolo;
 	}
 	
 }

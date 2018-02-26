@@ -292,10 +292,6 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			//cod
 			if (rifEsterno.getReferenteCod() != null && !rifEsterno.getReferenteCod().isEmpty())
 				referenteEl.addAttribute("cod", rifEsterno.getReferenteCod());
-			
-			//ruolo
-			if (rifEsterno.getReferenteRuolo() != null && !rifEsterno.getReferenteRuolo().isEmpty())
-				referenteEl.addAttribute("ruolo", rifEsterno.getReferenteRuolo());
 		}
 		
 			
@@ -336,15 +332,14 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
         int count = aclClient.search(query, null, "ud(xpart:/xw/@UdType)", 0, 0);
         if (count == 0) { // sender is not present in ACL
             rifEsterno.setNome(name);
-//TODO            MailStorageAgent.logger.info("\t\t no document matching '" + rifExtEmail + "'");
         }
         else { // extract sender info from ACL
             Document document = aclClient.loadDocByQueryResult(0);
             if (document.getRootElement().getName().equals("struttura_esterna")) { // struttura_esterna
-//TODO                MailStorageAgent.logger.info("\t\t found " + count + " 'struttura_esterna' matching '" + rifExtEmail + "'");
-//TODO                MailStorageAgent.logger.info("\t\t ...first chosen");
                 rifEsterno.setNome(document.getRootElement().element("nome").getText());
                 rifEsterno.setCod(document.getRootElement().attributeValue("cod_uff"));
+                rifEsterno.setCodiceFiscale(document.getRootElement().attributeValue("codice_fiscale") == null? "" : document.getRootElement().attributeValue("codice_fiscale"));
+                rifEsterno.setPartitaIva(document.getRootElement().attributeValue("partita_iva") == null? "" : document.getRootElement().attributeValue("partita_iva"));
                 // MASSIMILIANO 02/07/2013: l'email ce l'abbiamo gia'
                 //email = document.getAttributeValue("/struttura_esterna/email/@addr", "");
                 Attribute tempAttr = (Attribute)document.selectSingleNode("/struttura_esterna/email_certificata/@addr");
@@ -372,10 +367,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                 rifEsterno.setIndirizzo(indirizzo);
             }
             else { // persona_esterna
-//TODO                MailStorageAgent.logger.info("\t\t found " + count + " 'persona_esterna' matching '" + rifExtEmail + "'");
-//TODO                MailStorageAgent.logger.info("\t\t ...first chosen");
                 rifEsterno.setNome(document.getRootElement().attributeValue("cognome") + " " + document.getRootElement().attributeValue("nome"));
                 rifEsterno.setCod(document.getRootElement().attributeValue("matricola"));
+                rifEsterno.setCodiceFiscale(document.getRootElement().attributeValue("codice_fiscale") == null? "" : document.getRootElement().attributeValue("codice_fiscale"));
+                rifEsterno.setPartitaIva("");
                 // MASSIMILIANO 02/07/2013: l'email ce l'abbiamo gia'
                 //email = document.getAttributeValue("/persona_esterna/recapito/email/@addr", "");
                 Attribute tempAttr = (Attribute)document.selectSingleNode("/persona_esterna/recapito/email_certificata/@addr");
@@ -411,8 +406,6 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                     appartenenze = appartenenze.substring(3);
                 if (appartenenze.length() > 0) {
 
-                	// mbernardini 28/10/2015 : restrizione su AOO.
-                	// Recupero cod_amm_aoo da persona esterna in caso di caricamento della struttura di appartenenza
                 	String cod_amm = document.getRootElement().attributeValue("cod_amm", "");
                 	String cod_aoo = document.getRootElement().attributeValue("cod_amm", "");
 
@@ -423,17 +416,13 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                 	QueryResult selezione = aclClient.getQueryResult();
 
                     if (count > 0) { // at least one struttura_esterna found
-//TODO                        MailStorageAgent.logger.info("\t\t found " + selezione.getCount() + " related 'struttura_esterna'");
                         if (count > 1) {
                             String emailDomain = address.substring(address.indexOf("@"));
-//TODO                            MailStorageAgent.logger.info("\t\t searching 'struttura_esterna' with email matching " + emailDomain + "...");
                             queryStruest = "[struest_emailaddr]=\"*" + emailDomain + "\"";
                             if (!cod_amm.isEmpty() && !cod_aoo.isEmpty())
                         		queryStruest += " AND [/struttura_esterna/#cod_ammaoo]=\"" + cod_amm + cod_aoo + "\"";
 
                             int count1 = aclClient.search(queryStruest, selezione.id, "", 0, 0);
-                            
-//TODO                            MailStorageAgent.logger.info("\t\t ..." + selezione1.getCount() + " found");
                             if (count1 > 0) {
                                 ; //uso la nuova selezione (quella raffinata)
                             }
@@ -441,7 +430,6 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                             	aclClient.setQueryResult(selezione);
                             }
                         }
-//TODO                        MailStorageAgent.logger.info("\t\t ...first chosen");
                         document = aclClient.loadDocByQueryResult(0);
 
                         rifEsterno.setReferenteNominativo(rifEsterno.getNome());
@@ -450,9 +438,11 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                         rifEsterno.setNome(document.getRootElement().element("nome").getText());
                         rifEsterno.setCod(document.getRootElement().attributeValue("cod_uff"));
 
-                        // MASSIMILIANO 02/07/2013: l'email ce l'abbiamo gia'
-                        //if (email.length() == 0)
-                        //    email = document.getAttributeValue("/struttura_esterna/email/@addr", "");
+                        if (rifEsterno.getCodiceFiscale().isEmpty())
+                        	rifEsterno.setCodiceFiscale(document.getRootElement().attributeValue("codice_fiscale") == null? "" : document.getRootElement().attributeValue("codice_fiscale"));
+
+                    	rifEsterno.setPartitaIva(document.getRootElement().attributeValue("partita_iva") == null? "" : document.getRootElement().attributeValue("partita_iva"));
+                        
                         if (rifEsterno.getTel().length() == 0) {
                         	tempAttr = (Attribute)document.selectSingleNode("/struttura_esterna/telefono[@tipo='tel']/@num");
                         	rifEsterno.setTel(tempAttr == null? "" : tempAttr.getValue());
@@ -487,28 +477,6 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
         }
         
         return rifEsterno;
-
-        /*
-    	doc/rif_esterni/rif/nome - ragione sociale o cognome e nome del riferimento esterno + el1.addAttribute("xml:space", "preserve");
-    	doc/rif_esterni/rif/nome/@cod - codice identificativo in ACL del riferimento esterno
-
-    	doc/rif_esterni/rif/email_certificata/@addr - indirizzo di posta elettronica certificata
-    	doc/rif_esterni/rif/@codice_fiscale - codice fiscale (NUOVO - METTERE???)
-    	doc/rif_esterni/rif/@partita_iva -partitra iva (NUOVO - METTERE???)
-    	
-    	doc/rif_esterni/rif/indirizzo - indirizzo vero e proprio (xml:space)
-    	doc/rif_esterni/rif/indirizzo/@email - indirizzo email
-    	doc/rif_esterni/rif/indirizzo/@fax - fax
-    	doc/rif_esterni/rif/indirizzo/@tel - numero telefonico
-
-    	doc/rif_esterni/rif/referente/@cod - codice identificativo univoco della persona_esterna
-    	doc/rif_esterni/rif/referente/@nominativo - cognome e nome della persona_esterna
-    	doc/rif_esterni/rif/referente/@ruolo - eventuale ruolo ricoperto dalla persona_esterna all’interno della struttura_esterna (NUOVO - METTERE???)
-
-    */  
-
-//TODO - manca la gestione di RUOLO, CODICE_FISCALE, PARTITA_IVA
-        
     }	
 
     
@@ -539,7 +507,12 @@ Sent: Tue, 13 Feb 2018 08:46:38 +0100
 Subject: aaa
 
 aaaa
-</note>  <archiviatore recipientEmail="test-archiviatore-xw@libero.it"/>  <files>    <xw:file name="48582.txt" title="testo email" size="136" impronta="2omIAODJriZH0XRbYa98d26qNlSalLuGSAwA7AMLNZc=" tipoImpronta="SHA256" index="yes" agent.meta="ignore">      <chkin operatore="Archiviatore Email(Protocollo)" cod_operatore="" data="20180213" ora="08:46:46"/>    </xw:file>    <xw:file name="48583.eml" title="MessaggioOriginale.eml" readonly="si" size="3973" impronta="TPTshu0cSaM66SyPPzPXPfCRfrgzyctpJoBv80zEVPQ=" tipoImpronta="SHA256" der_to="48584.txt" agent.meta="ignore">      <chkin operatore="Archiviatore Email(Protocollo)" cod_operatore="" data="20180213" ora="08:46:46"/>    </xw:file>    <xw:file name="48584.txt" title="MessaggioOriginale.txt" der_from="48583.eml" index="yes" size="8">      <chkin operatore="convertitore" cod_operatore="convertitore" data="20180213" ora="08:46:59"/>    </xw:file>  </files><?xw-meta Dbms="ExtraWay" DbmsVer="25.9.4" OrgNam="3D Informatica" OrgVer="22.3.1.6" Classif="1.0" ManGest="1.0" ManTec="0.0.4" InsUser="xw.msa" InsTime="20180213084646" ModUser="xw.docway-test.bo.priv.76.fcs" ModTime="20180213084659"?><?xw-crc key32=2491d4a5-10000051?></doc>
+</note>  <archiviatore recipientEmail="test-archiviatore-xw@libero.it"/>  <files>    <xw:file name="48582.txt" title="testo email" size="136" impronta="2omIAODJriZH0XRbYa98d26qNlSalLuGSAwA7AMLNZc=" tipoImpronta="SHA256" index="yes" agent.meta="ignore">    
+  <chkin operatore="Archiviatore Email(Protocollo)" cod_operatore="" data="20180213" ora="08:46:46"/>    </xw:file>  
+    <xw:file name="48583.eml" title="MessaggioOriginale.eml" readonly="si" size="3973" impronta="TPTshu0cSaM66SyPPzPXPfCRfrgzyctpJoBv80zEVPQ=" tipoImpronta="SHA256" der_to="48584.txt" agent.meta="ignore">     
+     <chkin operatore="Archiviatore Email(Protocollo)" cod_operatore="" data="20180213" ora="08:46:46"/>    </xw:file>    <xw:file name="48584.txt" title="MessaggioOriginale.txt" der_from="48583.eml" index="yes" size="8">    
+       <chkin operatore="convertitore" cod_operatore="convertitore" data="20180213" ora="08:46:59"/>    </xw:file>  </files>
+       </doc>
 	 * 
 	 */    
 	
