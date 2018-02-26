@@ -25,9 +25,11 @@ public class DocwayDocument {
 	private String repertorio;
 	private String repertorioCod;
 	private List<StoriaItem> storia;
+	private List<RifEsterno> rifEsterni;
 	
 	public DocwayDocument() {
 		this.storia = new ArrayList<StoriaItem>();
+		this.rifEsterni = new ArrayList<RifEsterno>();
 	}
 
 	public String getTipo() {
@@ -192,6 +194,18 @@ public class DocwayDocument {
 	
 	public void addStoriaItem(StoriaItem storiaItem) {
 		storia.add(storiaItem);
+	}
+
+	public List<RifEsterno> getRifEsterni() {
+		return rifEsterni;
+	}
+
+	public void setRifEsterni(List<RifEsterno> rifEsterni) {
+		this.rifEsterni = rifEsterni;
+	}
+	
+	public void addRifEsterno(RifEsterno rifEsterno) {
+		rifEsterni.add(rifEsterno);
 	}
 	
 }

@@ -9,6 +9,7 @@ import javax.mail.MessagingException;
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.docway.DocwayDocument;
 import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
+import it.tredi.msa.entity.docway.RifEsterno;
 import it.tredi.msa.entity.docway.StoriaItem;
 import it.tredi.msa.mailboxmanager.MailboxManager;
 
@@ -82,6 +83,13 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//mezzo trasmissione
 		doc.setMezzoTrasmissione(conf.getMezzoTrasmissione());
 		
+		//rif esterni
+		if (doc.getTipo().toUpperCase().equals("ARRIVO"))
+			doc.addRifEsterno(buildRifEsterno(parsedMessage.getFromPersonal(), parsedMessage.getFromAddress()));
+		else if (doc.getTipo().toUpperCase().equals("PARTENZA"))
+			;
+//TODO - gestire rif_esterni per i doc in partenza
+		
 		//voce di indice
 		doc.setVoceIndice(conf.getVoceIndice());
 		
@@ -118,6 +126,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	}
 	
 	protected abstract void saveNewDocument(DocwayDocument doc) throws Exception;
+	protected abstract RifEsterno buildRifEsterno(String name, String address) throws Exception;
 	
 
 }
