@@ -135,5 +135,21 @@ public class StoriaItem {
 		this.ora = ora;
 	}
 	
+	public static StoriaItem createFromRifInterno(RifInterno rifInterno) {
+		String type = "";
+		if (rifInterno.getDiritto().equalsIgnoreCase("RPA"))
+			type = "responsabilita";
+		else if (rifInterno.getDiritto().equalsIgnoreCase("CC"))
+			type = "assegnazione_cc";
+		else if (rifInterno.getDiritto().equalsIgnoreCase("CDS"))
+			type = "assegnazione_cds";
+		
+		StoriaItem storiaItem = new StoriaItem(type);
+		storiaItem.setNomePersona(rifInterno.getNomePersona());
+		storiaItem.setCodPersona(rifInterno.getCodPersona());
+		storiaItem.setNomeUff(rifInterno.getNomeUff());
+		storiaItem.setCodUff(rifInterno.getCodUff());
+		return storiaItem;
+	}
 	
 }

@@ -1,6 +1,7 @@
 package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.dom4j.Attribute;
@@ -10,9 +11,12 @@ import org.dom4j.Element;
 
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
+import it.tredi.msa.entity.ParsedMessage;
+import it.tredi.msa.entity.docway.AssegnatarioMailboxConfiguration;
 import it.tredi.msa.entity.docway.DocwayDocument;
 import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.entity.docway.RifEsterno;
+import it.tredi.msa.entity.docway.RifInterno;
 import it.tredi.msa.entity.docway.StoriaItem;
 
 public class Docway4MailboxManager extends DocwayMailboxManager {
@@ -53,6 +57,27 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	@Override
 	protected void saveNewDocument(DocwayDocument doc) throws Exception {
+		Document xmlDocument = docwayDocumentToXml(doc);
+		
+		//save in Extraway
+//		lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
+//TODO - attualmente il salvataggio è disabilitato
+		
+//TODO - upload allegati
+
+/*
+ * COMMENTATO TEMPORANEAMENTE IL CODICE PER LA MODIFICA DEL DOCUMENTO APPENA SALVATO
+		Document document = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc);
+		document.getRootElement().element("oggetto").setText("Oggetto modificato");
+		xwClient.saveDocument(document, lastSavedDocumentPhysDoc);
+*/	
+		
+		int ret = 0;
+		ret++;
+
+	}
+	
+	private Document docwayDocumentToXml(DocwayDocument doc) {
 		//DocwayDocument -> xml
 		Element docEl = DocumentHelper.createElement("doc");
 		Document xmlDocument =DocumentHelper.createDocument(docEl);
@@ -145,6 +170,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}
 
 		//rif_interni
+		if (doc.getRifInterni().size() > 0) {
+			Element rifIntEl = DocumentHelper.createElement("rif_interni");
+			docEl.add(rifIntEl);
+			for (RifInterno rifInterno:doc.getRifInterni())
+				rifIntEl.add(rifInternoToXml(rifInterno));
+		}		
 		
 		//allegato
 		
@@ -178,24 +209,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Element storiaEl = DocumentHelper.createElement("storia");
 		docEl.add(storiaEl);
 		for (StoriaItem storiaItem:doc.getStoria())
-			storiaEl.add(storiaItemToXml(storiaItem));
+			storiaEl.add(storiaItemToXml(storiaItem));		
 		
-		//save in Extraway
-//		lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
-//TODO - attualmente il salvataggio è disabilitato
-		
-		
-
-/*
- * COMMENTATO TEMPORANEAMENTE IL CODICE PER LA MODIFICA DEL DOCUMENTO APPENA SALVATO
-		Document document = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc);
-		document.getRootElement().element("oggetto").setText("Oggetto modificato");
-		xwClient.saveDocument(document, lastSavedDocumentPhysDoc);
-*/	
-		
-		int ret = 0;
-		ret++;
-
+		return xmlDocument;
 	}
 	
 	private Element storiaItemToXml(StoriaItem storiaItem) {
@@ -312,7 +328,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		return restrictions;
 	}
 	
-    public RifEsterno buildRifEsterno(String name, String address) throws Exception {
+    public RifEsterno createRifEsterno(String name, String address) throws Exception {
         RifEsterno rifEsterno = new RifEsterno();
         rifEsterno.setEmail(address);
 
@@ -320,11 +336,11 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
         String query = "[struest_emailaddr]=\"" + address + "\" OR [persest_recapitoemailaddr]=\"" + address + "\" OR " +
         		"[/struttura_esterna/email_certificata/@addr/]=\"" + address + "\" OR [/persona_esterna/recapito/email_certificata/@addr]=\"" + address + "\"";
         if (extRestrictionsOnAcl) {
-        	String codeSedeAoo = ((DocwayMailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
-        	if (codeSedeAoo != null && !codeSedeAoo.isEmpty()) {
-	        	query = "(([struest_emailaddr]=\"" + address + "\" OR [/struttura_esterna/email_certificata/@addr/]=\"" + address + "\") AND [/struttura_esterna/#cod_ammaoo]=\"" + codeSedeAoo + "\")"
+        	String codAmmAoo = ((DocwayMailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
+        	if (codAmmAoo != null && !codAmmAoo.isEmpty()) {
+	        	query = "(([struest_emailaddr]=\"" + address + "\" OR [/struttura_esterna/email_certificata/@addr/]=\"" + address + "\") AND [/struttura_esterna/#cod_ammaoo]=\"" + codAmmAoo + "\")"
 	        			+ " OR"
-	        			+ " (([persest_recapitoemailaddr]=\"" + address + "\" OR [/persona_esterna/recapito/email_certificata/@addr]=\"" + address + "\") AND [/persona_esterna/#cod_ammaoo]=\"" + codeSedeAoo + "\")";
+	        			+ " (([persest_recapitoemailaddr]=\"" + address + "\" OR [/persona_esterna/recapito/email_certificata/@addr]=\"" + address + "\") AND [/persona_esterna/#cod_ammaoo]=\"" + codAmmAoo + "\")";
         	}
         }
 
@@ -478,6 +494,109 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
         
         return rifEsterno;
     }	
+
+	private Element rifInternoToXml(RifInterno rifInterno) {
+		Element rifEl = DocumentHelper.createElement("rif");
+		rifEl.addAttribute("diritto", rifInterno.getDiritto());
+		rifEl.addAttribute("nome_persona", rifInterno.getNomePersona());
+		rifEl.addAttribute("cod_persona", rifInterno.getCodPersona());		
+		rifEl.addAttribute("nome_uff", rifInterno.getNomeUff());
+		rifEl.addAttribute("cod_uff", rifInterno.getCodUff());
+		
+		if (!rifInterno.getTipoUff().isEmpty())
+			rifEl.addAttribute("tipo_uff", rifInterno.getTipoUff());		
+
+		if (!rifInterno.getDiritto().equalsIgnoreCase("RPA"))
+			rifEl.addAttribute("intervento", rifInterno.isIntervento()? "si" : "no");
+		
+		if (rifInterno.getCodFasc() != null && !rifInterno.getCodFasc().isEmpty())
+			rifEl.addAttribute("cod_fasc", rifInterno.getCodFasc());
+		return rifEl;
+	}
+	
+	private boolean findPersonaForRifInt(RifInterno rifInterno, String query) throws Exception {
+		int count = aclClient.search(query);
+		if (count > 0) {
+	        Document document = aclClient.loadDocByQueryResult(0);
+	        String codPersona = ((Attribute)document.selectSingleNode("persona_interna/@matricola")).getValue();
+	        String nomePersona = ((Attribute)document.selectSingleNode("persona_interna/@cognome")).getValue() + " " + ((Attribute)document.selectSingleNode("persona_interna/@nome")).getValue();
+	        String codUff = ((Attribute)document.selectSingleNode("persona_interna/@cod_uff")).getValue();
+	        rifInterno.setCodPersona(codPersona);
+	        rifInterno.setNomePersona(nomePersona);
+	        rifInterno.setCodUff(codUff);
+	        return true;
+		}
+		return false;
+	}
+	
+	protected List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception {
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		List<RifInterno> rifInterni = new ArrayList<RifInterno>();
+		String codAmmAoo = ((DocwayMailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
+		
+		//RPA
+		AssegnatarioMailboxConfiguration assegnatario = conf.getResponsabile();
+		RifInterno rifInterno = new RifInterno();
+		rifInterni.add(rifInterno);
+		rifInterno.setDiritto("RPA");
+		rifInterno.setIntervento(true);
+		
+		boolean found = false;
+		
+		if (conf.isDaDestinatario()) {
+			String to = parsedMessage.getFromAddress();
+            to = to.substring(to.indexOf("+") + 1, to.indexOf("@"));
+            found = findPersonaForRifInt(rifInterno, "[persint_loginname]=\"" + to + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
+		}
+		
+		if (conf.isDaMittente() && !found) {
+			found = findPersonaForRifInt(rifInterno, "[persint_recapitoemailaddr]=\"" + parsedMessage.getFromAddress() + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
+		}
+		
+		if (found) { //estrazione nome ufficio
+			aclClient.search("[struint_coduff]=\"" + rifInterno.getCodUff() + "\" AND [/struttura_interna/#cod_ammaoo/]=\"" + codAmmAoo + "\"");
+	        Document document = aclClient.loadDocByQueryResult(0);
+	        String nomeUff = document.getRootElement().elementText("nome").trim();
+	        rifInterno.setNomeUff(nomeUff);
+		}
+		else { //usare assegnatari specificati nella configurazione della casella di posta
+			if (assegnatario.isRuolo()) {
+
+				//il nome del ruolo viene estratto tramite una ricerca in ACL (potrebbe essere stato cambiato)
+				String query = "[ruoli_id]=\"" + assegnatario.getCodRuolo() + "\" AND [/ruolo/#cod_ammaoo/]=\"" + codAmmAoo + "\"";
+				int count = aclClient.search(query);
+				if (count > 0) {
+			        Document document = aclClient.loadDocByQueryResult(0);
+			        String nomeRuolo = document.getRootElement().elementText("nome").trim();
+					rifInterno.setRuolo(nomeRuolo, assegnatario.getCodRuolo());
+					rifInterno.setIntervento(assegnatario.isIntervento());			        
+				}
+	//TODO - warning se non trovato ruolo			
+
+			}
+			else {
+				rifInterno.setCodPersona(assegnatario.getCodPersona());
+				rifInterno.setCodUff(assegnatario.getCodUff());
+				rifInterno.setIntervento(assegnatario.isIntervento());
+				
+				aclClient.search("[struint_coduff]=\"" + rifInterno.getCodUff() + "\" AND [/struttura_interna/#cod_ammaoo/]=\"" + codAmmAoo + "\"");
+		        Document document = aclClient.loadDocByQueryResult(0);
+		        String nomeUff = document.getRootElement().elementText("nome").trim();
+		        rifInterno.setNomeUff(nomeUff);				
+
+				aclClient.search("[/persona_interna/@matricola]=\"" + rifInterno.getCodPersona() + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
+		        document = aclClient.loadDocByQueryResult(0);
+		        String nomePersona = ((Attribute)document.selectSingleNode("persona_interna/@cognome")).getValue() + " " + ((Attribute)document.selectSingleNode("persona_interna/@nome")).getValue();
+				rifInterno.setNomePersona(nomePersona);
+				
+	//TODO - recuperare nome persona e nome ufficio da ACL (potrebbe essere stato modificato dopo il lookup)... in particolare il nome ufficio
+			}			
+		}
+		
+		//CC
+		
+		return rifInterni;
+	}
 
     
 	/**

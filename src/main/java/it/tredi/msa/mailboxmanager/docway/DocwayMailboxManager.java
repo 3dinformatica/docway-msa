@@ -2,14 +2,13 @@ package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
+import java.util.List;
 
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.docway.DocwayDocument;
 import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.entity.docway.RifEsterno;
+import it.tredi.msa.entity.docway.RifInterno;
 import it.tredi.msa.entity.docway.StoriaItem;
 import it.tredi.msa.mailboxmanager.MailboxManager;
 
@@ -33,13 +32,13 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 //inserire tutta la logica di archiviazione
 		
 		//build new Docway document
-		DocwayDocument doc = buildDocwayDocument(parsedMessage);
+		DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
 
 		//save new document
 		saveNewDocument(doc);
 	}	
 	
-	private DocwayDocument buildDocwayDocument(ParsedMessage  parsedMessage) throws Exception {
+	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		DocwayDocument doc = new DocwayDocument();
 		
@@ -85,7 +84,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//rif esterni
 		if (doc.getTipo().toUpperCase().equals("ARRIVO"))
-			doc.addRifEsterno(buildRifEsterno(parsedMessage.getFromPersonal(), parsedMessage.getFromAddress()));
+			doc.addRifEsterno(createRifEsterno(parsedMessage.getFromPersonal(), parsedMessage.getFromAddress()));
 		else if (doc.getTipo().toUpperCase().equals("PARTENZA"))
 			;
 //TODO - gestire rif_esterni per i doc in partenza
@@ -114,6 +113,11 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			doc.setNote(note);
 		}
 		
+		//rif interni
+		List<RifInterno> rifInterni = createRifInterni(parsedMessage);
+		for (RifInterno rifInterno:rifInterni)
+			doc.addRifInterno(rifInterno);
+		
 		//storia creazione
 		StoriaItem creazione = new StoriaItem("creazione");
 		creazione.setOper(conf.getOper());
@@ -122,11 +126,21 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		creazione.setOra(currentDate);
 		doc.addStoriaItem(creazione);
 		
+		//aggiunta in storia delle operazioni relative ai rif interni
+		for (RifInterno rifInterno:rifInterni) {
+			StoriaItem storiaItem = StoriaItem.createFromRifInterno(rifInterno);
+			storiaItem.setOperatore(conf.getOper() + "(" + conf.getUffOper() + ")");
+			storiaItem.setData(currentDate);
+			storiaItem.setOra(currentDate);
+			doc.addStoriaItem(storiaItem);
+		}
+		
 		return doc;
 	}
+
 	
 	protected abstract void saveNewDocument(DocwayDocument doc) throws Exception;
-	protected abstract RifEsterno buildRifEsterno(String name, String address) throws Exception;
-	
+	protected abstract RifEsterno createRifEsterno(String name, String address) throws Exception;
+	protected abstract List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception;
 
 }

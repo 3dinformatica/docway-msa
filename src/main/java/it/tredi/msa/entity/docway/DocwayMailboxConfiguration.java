@@ -1,5 +1,7 @@
 package it.tredi.msa.entity.docway;
 
+import java.util.List;
+
 import it.tredi.msa.entity.MailboxConfiguration;
 
 public class DocwayMailboxConfiguration extends MailboxConfiguration {
@@ -23,14 +25,27 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String mezzoTrasmissione;
 	private boolean currentYear;
 	private boolean currentDate;
+	
+	//classificazione
 	private String classif;
-	private String classifCod;	
+	private String classifCod;
+	private String voceIndice;
+	
+	//operatore
 	private String oper;
 	private String uffOper;
 	private boolean noteAutomatiche;
-	private String voceIndice;
+	
+	//repertorio
 	private String repertorio;
 	private String repertorioCod;
+	
+	//responsabile/assegnatari
+	private AssegnatarioMailboxConfiguration responsabile;
+	private boolean daDestinatario;
+	private boolean daMittente;
+	private List<AssegnatarioMailboxConfiguration> assegnatari;
+	private boolean daCopiaConoscenza;
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -215,7 +230,46 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public void setRepertorioCod(String repertorioCod) {
 		this.repertorioCod = repertorioCod;
 	}
-	
+
+	public AssegnatarioMailboxConfiguration getResponsabile() {
+		return responsabile;
+	}
+
+	public void setResponsabile(AssegnatarioMailboxConfiguration responsabile) {
+		this.responsabile = responsabile;
+	}
+
+	public boolean isDaDestinatario() {
+		return daDestinatario;
+	}
+
+	public void setDaDestinatario(boolean daDestinatario) {
+		this.daDestinatario = daDestinatario;
+	}
+
+	public boolean isDaMittente() {
+		return daMittente;
+	}
+
+	public void setDaMittente(boolean daMittente) {
+		this.daMittente = daMittente;
+	}
+
+	public List<AssegnatarioMailboxConfiguration> getAssegnatari() {
+		return assegnatari;
+	}
+
+	public void setAssegnatari(List<AssegnatarioMailboxConfiguration> assegnatari) {
+		this.assegnatari = assegnatari;
+	}
+
+	public boolean isDaCopiaConoscenza() {
+		return daCopiaConoscenza;
+	}
+
+	public void setDaCopiaConoscenza(boolean daCopiaConoscenza) {
+		this.daCopiaConoscenza = daCopiaConoscenza;
+	}
 	
 	/**
 	 * 
