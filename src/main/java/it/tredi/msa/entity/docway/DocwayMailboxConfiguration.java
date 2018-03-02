@@ -44,7 +44,7 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private AssegnatarioMailboxConfiguration responsabile;
 	private boolean daDestinatario;
 	private boolean daMittente;
-	private List<AssegnatarioMailboxConfiguration> assegnatari;
+	private List<AssegnatarioMailboxConfiguration> assegnatariCC;
 	private boolean daCopiaConoscenza;
 	
 	public boolean isStoreEml() {
@@ -255,12 +255,12 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 		this.daMittente = daMittente;
 	}
 
-	public List<AssegnatarioMailboxConfiguration> getAssegnatari() {
-		return assegnatari;
+	public List<AssegnatarioMailboxConfiguration> getAssegnatariCC() {
+		return assegnatariCC;
 	}
 
-	public void setAssegnatari(List<AssegnatarioMailboxConfiguration> assegnatari) {
-		this.assegnatari = assegnatari;
+	public void setAssegnatariCC(List<AssegnatarioMailboxConfiguration> assegnatariCC) {
+		this.assegnatariCC = assegnatariCC;
 	}
 
 	public boolean isDaCopiaConoscenza() {

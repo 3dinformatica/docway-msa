@@ -204,7 +204,16 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     		conf.setDaMittente(responsabileEl.attributeValue("daMittente", "no").equalsIgnoreCase("si"));
     		conf.setDaCopiaConoscenza(responsabileEl.attributeValue("daCopiaConoscenza", "no").equalsIgnoreCase("si"));
     	}
-//TODO - ciclo for per gli assegnatari in CC
+    	
+    	//assegnatari cc
+    	List<AssegnatarioMailboxConfiguration> ccS = new ArrayList<AssegnatarioMailboxConfiguration>();
+    	List<Element> ccElsL = casellaEl.element("assegnazione_cc").elements("assegnatario");
+    	for (Element ccEl:ccElsL) {
+    		AssegnatarioMailboxConfiguration cc = createAssegnatarioByConfig("CC", ccEl);
+    		if (!cc.getCodPersona().isEmpty() || !cc.getCodUff().isEmpty() || !cc.getCodRuolo().isEmpty()) //purtroppo nell'xml se non ci sono CC compare un assegnatario vuoto
+    			ccS.add(cc);
+    	}
+    	conf.setAssegnatariCC(ccS);
     	
     	//default xw params (xwHost, xwPort, xwUser, xwPassword)
     	PropertiesReader propertiesReader = (PropertiesReader)Services.getConfigurationService().getMSAConfiguration().getRawData();

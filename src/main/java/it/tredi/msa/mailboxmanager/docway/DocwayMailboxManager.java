@@ -135,6 +135,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			doc.addStoriaItem(storiaItem);
 		}
 		
+//TODO - effettuare la gestione delle email di notifica
+		
 		return doc;
 	}
 

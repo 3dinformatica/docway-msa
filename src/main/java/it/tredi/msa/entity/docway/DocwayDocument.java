@@ -219,7 +219,24 @@ public class DocwayDocument {
 	}
 	
 	public void addRifInterno(RifInterno rifInterno) {
-		rifInterni.add(rifInterno);
+		//check duplicati
+		RifInterno rif = getRifInterno(rifInterno);
+		if (rif == null)
+			rifInterni.add(rifInterno);
+		else
+			updateRifInterno(rif, rifInterno);
+	}
+	
+	private RifInterno getRifInterno(RifInterno rifInterno) {
+		for (RifInterno rif:rifInterni)
+			if (rif.getDiritto().equals(rifInterno.getDiritto()) && rif.getCodPersona().equals(rifInterno.getCodPersona()) && rif.getCodUff().equals(rifInterno.getCodUff())) 
+				return rif;
+		return null;
+	}
+	
+	private void updateRifInterno(RifInterno rifToUpdate, RifInterno rifInterno) {
+		 if (!rifToUpdate.isIntervento() && rifInterno.isIntervento())
+			 rifToUpdate.setIntervento(true);
 	}
 	
 }

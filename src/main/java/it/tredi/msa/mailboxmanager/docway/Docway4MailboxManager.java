@@ -514,19 +514,57 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		return rifEl;
 	}
 	
-	private boolean findPersonaForRifInt(RifInterno rifInterno, String query) throws Exception {
+	private List<RifInterno> createRifInterniByPersintQuery(String query) throws Exception {
+		List<RifInterno> rifsL = new ArrayList<RifInterno>();
 		int count = aclClient.search(query);
-		if (count > 0) {
-	        Document document = aclClient.loadDocByQueryResult(0);
+		if (count == 0)
+			return null;
+		for (int i=0; i<count; i++) { //per ogni persona interna
+			RifInterno rifInterno = new RifInterno();
+	        Document document = aclClient.loadDocByQueryResult(i);
 	        String codPersona = ((Attribute)document.selectSingleNode("persona_interna/@matricola")).getValue();
 	        String nomePersona = ((Attribute)document.selectSingleNode("persona_interna/@cognome")).getValue() + " " + ((Attribute)document.selectSingleNode("persona_interna/@nome")).getValue();
 	        String codUff = ((Attribute)document.selectSingleNode("persona_interna/@cod_uff")).getValue();
+	        String codAmmAoo = ((Attribute)document.selectSingleNode("persona_interna/@cod_amm")).getValue() + ((Attribute)document.selectSingleNode("persona_interna/@cod_aoo")).getValue();
 	        rifInterno.setCodPersona(codPersona);
 	        rifInterno.setNomePersona(nomePersona);
 	        rifInterno.setCodUff(codUff);
-	        return true;
+	        rifsL.add(rifInterno);
+			aclClient.search("[struint_coduff]=\"" + rifInterno.getCodUff() + "\" AND [/struttura_interna/#cod_ammaoo/]=\"" + codAmmAoo + "\""); //estrazione nome ufficio
+	        document = aclClient.loadDocByQueryResult(0);
+	        String nomeUff = document.getRootElement().elementText("nome").trim();
+	        rifInterno.setNomeUff(nomeUff);	        
 		}
-		return false;
+		return rifsL;
+	}
+	
+	public RifInterno createRifInternoByAssegnatario(AssegnatarioMailboxConfiguration assegnatario) throws Exception {
+		String codAmmAoo = ((DocwayMailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
+		RifInterno rifInterno = new RifInterno();
+		if (assegnatario.isRuolo()) { //ruolo
+			String query = "[ruoli_id]=\"" + assegnatario.getCodRuolo() + "\" AND [/ruolo/#cod_ammaoo/]=\"" + codAmmAoo + "\"";
+			aclClient.search(query);
+	        Document document = aclClient.loadDocByQueryResult(0);
+	        String nomeRuolo = document.getRootElement().elementText("nome").trim();
+			rifInterno.setRuolo(nomeRuolo, assegnatario.getCodRuolo());
+			rifInterno.setIntervento(assegnatario.isIntervento());			        
+		}
+		else { //persona-ufficio
+			rifInterno.setCodPersona(assegnatario.getCodPersona());
+			rifInterno.setCodUff(assegnatario.getCodUff());
+			rifInterno.setIntervento(assegnatario.isIntervento());
+			
+			aclClient.search("[struint_coduff]=\"" + rifInterno.getCodUff() + "\" AND [/struttura_interna/#cod_ammaoo/]=\"" + codAmmAoo + "\"");
+	        Document document = aclClient.loadDocByQueryResult(0);
+	        String nomeUff = document.getRootElement().elementText("nome").trim();
+	        rifInterno.setNomeUff(nomeUff);				
+
+			aclClient.search("[/persona_interna/@matricola]=\"" + rifInterno.getCodPersona() + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
+	        document = aclClient.loadDocByQueryResult(0);
+	        String nomePersona = ((Attribute)document.selectSingleNode("persona_interna/@cognome")).getValue() + " " + ((Attribute)document.selectSingleNode("persona_interna/@nome")).getValue();
+			rifInterno.setNomePersona(nomePersona);
+		}
+		return rifInterno;
 	}
 	
 	protected List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception {
@@ -535,65 +573,39 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		String codAmmAoo = ((DocwayMailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
 		
 		//RPA
-		AssegnatarioMailboxConfiguration assegnatario = conf.getResponsabile();
-		RifInterno rifInterno = new RifInterno();
-		rifInterni.add(rifInterno);
-		rifInterno.setDiritto("RPA");
-		rifInterno.setIntervento(true);
-		
-		boolean found = false;
-		
+		List<RifInterno> rifsL = null;
 		if (conf.isDaDestinatario()) {
 			String to = parsedMessage.getFromAddress();
             to = to.substring(to.indexOf("+") + 1, to.indexOf("@"));
-            found = findPersonaForRifInt(rifInterno, "[persint_loginname]=\"" + to + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
+            rifsL = createRifInterniByPersintQuery("[persint_loginname]=\"" + to + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
 		}
 		
-		if (conf.isDaMittente() && !found) {
-			found = findPersonaForRifInt(rifInterno, "[persint_recapitoemailaddr]=\"" + parsedMessage.getFromAddress() + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
+		if (conf.isDaMittente() && rifsL == null) {
+			rifsL = createRifInterniByPersintQuery("[persint_recapitoemailaddr]=\"" + parsedMessage.getFromAddress() + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
 		}
-		
-		if (found) { //estrazione nome ufficio
-			aclClient.search("[struint_coduff]=\"" + rifInterno.getCodUff() + "\" AND [/struttura_interna/#cod_ammaoo/]=\"" + codAmmAoo + "\"");
-	        Document document = aclClient.loadDocByQueryResult(0);
-	        String nomeUff = document.getRootElement().elementText("nome").trim();
-	        rifInterno.setNomeUff(nomeUff);
-		}
-		else { //usare assegnatari specificati nella configurazione della casella di posta
-			if (assegnatario.isRuolo()) {
 
-				//il nome del ruolo viene estratto tramite una ricerca in ACL (potrebbe essere stato cambiato)
-				String query = "[ruoli_id]=\"" + assegnatario.getCodRuolo() + "\" AND [/ruolo/#cod_ammaoo/]=\"" + codAmmAoo + "\"";
-				int count = aclClient.search(query);
-				if (count > 0) {
-			        Document document = aclClient.loadDocByQueryResult(0);
-			        String nomeRuolo = document.getRootElement().elementText("nome").trim();
-					rifInterno.setRuolo(nomeRuolo, assegnatario.getCodRuolo());
-					rifInterno.setIntervento(assegnatario.isIntervento());			        
-				}
-	//TODO - warning se non trovato ruolo			
-
-			}
-			else {
-				rifInterno.setCodPersona(assegnatario.getCodPersona());
-				rifInterno.setCodUff(assegnatario.getCodUff());
-				rifInterno.setIntervento(assegnatario.isIntervento());
-				
-				aclClient.search("[struint_coduff]=\"" + rifInterno.getCodUff() + "\" AND [/struttura_interna/#cod_ammaoo/]=\"" + codAmmAoo + "\"");
-		        Document document = aclClient.loadDocByQueryResult(0);
-		        String nomeUff = document.getRootElement().elementText("nome").trim();
-		        rifInterno.setNomeUff(nomeUff);				
-
-				aclClient.search("[/persona_interna/@matricola]=\"" + rifInterno.getCodPersona() + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
-		        document = aclClient.loadDocByQueryResult(0);
-		        String nomePersona = ((Attribute)document.selectSingleNode("persona_interna/@cognome")).getValue() + " " + ((Attribute)document.selectSingleNode("persona_interna/@nome")).getValue();
-				rifInterno.setNomePersona(nomePersona);
-				
-	//TODO - recuperare nome persona e nome ufficio da ACL (potrebbe essere stato modificato dopo il lookup)... in particolare il nome ufficio
-			}			
-		}
+		RifInterno rpa = (rifsL == null)? createRifInternoByAssegnatario(conf.getResponsabile()) : rifsL.get(0);
+		rpa.setDiritto("RPA");
+		rpa.setIntervento(true);
+		rifInterni.add(rpa);
 		
 		//CC
+		if (conf.isDaCopiaConoscenza()) {
+			String query = parsedMessage.getCcAddressesAsString().replaceAll(",", "\" OR \"");
+			if (!query.isEmpty()) {
+				rifsL = createRifInterniByPersintQuery("[persint_recapitoemailaddr]=\"" + parsedMessage.getFromAddress() + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
+				for (RifInterno cc:rifsL) {
+					cc.setDiritto("CC");
+					rifInterni.add(cc);
+				}
+			}
+		}
+		
+		for (AssegnatarioMailboxConfiguration assegnatario: conf.getAssegnatariCC()) {
+			RifInterno cc = createRifInternoByAssegnatario(assegnatario);
+			cc.setDiritto("CC");
+			rifInterni.add(cc);
+		}
 		
 		return rifInterni;
 	}
