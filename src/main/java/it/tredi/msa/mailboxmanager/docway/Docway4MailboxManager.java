@@ -13,8 +13,8 @@ import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.docway.AssegnatarioMailboxConfiguration;
+import it.tredi.msa.entity.docway.Docway4MailboxConfiguration;
 import it.tredi.msa.entity.docway.DocwayDocument;
-import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.entity.docway.RifEsterno;
 import it.tredi.msa.entity.docway.RifInterno;
 import it.tredi.msa.entity.docway.StoriaItem;
@@ -30,7 +30,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	@Override
     public void openSession() throws Exception {
 		super.openSession();
-		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		xwClient = new ExtrawayClient(conf.getXwHost(), conf.getXwPort(), conf.getXwDb(), conf.getXwUser(), conf.getXwPassword());
 		xwClient.connect();
 		aclClient = new ExtrawayClient(conf.getXwHost(), conf.getXwPort(), conf.getAclDb(), conf.getXwUser(), conf.getXwPassword());
@@ -336,7 +336,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
         String query = "[struest_emailaddr]=\"" + address + "\" OR [persest_recapitoemailaddr]=\"" + address + "\" OR " +
         		"[/struttura_esterna/email_certificata/@addr/]=\"" + address + "\" OR [/persona_esterna/recapito/email_certificata/@addr]=\"" + address + "\"";
         if (extRestrictionsOnAcl) {
-        	String codAmmAoo = ((DocwayMailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
+        	String codAmmAoo = ((Docway4MailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
         	if (codAmmAoo != null && !codAmmAoo.isEmpty()) {
 	        	query = "(([struest_emailaddr]=\"" + address + "\" OR [/struttura_esterna/email_certificata/@addr/]=\"" + address + "\") AND [/struttura_esterna/#cod_ammaoo]=\"" + codAmmAoo + "\")"
 	        			+ " OR"
@@ -539,7 +539,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	}
 	
 	public RifInterno createRifInternoByAssegnatario(AssegnatarioMailboxConfiguration assegnatario) throws Exception {
-		String codAmmAoo = ((DocwayMailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
+		String codAmmAoo = ((Docway4MailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
 		RifInterno rifInterno = new RifInterno();
 		if (assegnatario.isRuolo()) { //ruolo
 			String query = "[ruoli_id]=\"" + assegnatario.getCodRuolo() + "\" AND [/ruolo/#cod_ammaoo/]=\"" + codAmmAoo + "\"";
@@ -568,9 +568,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	}
 	
 	protected List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception {
-		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		List<RifInterno> rifInterni = new ArrayList<RifInterno>();
-		String codAmmAoo = ((DocwayMailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
+		String codAmmAoo = ((Docway4MailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
 		
 		//RPA
 		List<RifInterno> rifsL = null;
