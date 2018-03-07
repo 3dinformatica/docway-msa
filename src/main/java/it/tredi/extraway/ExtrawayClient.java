@@ -65,7 +65,7 @@ public class ExtrawayClient {
         if (selToRefine != null && !selToRefine.isEmpty()) {
             query += " AND [?SEL]=\"" + selToRefine + "\"";
         }
-        queryResult = broker.find(connId, db, query, sort, hwQOpts, adj ,0, null);
+        this.queryResult = broker.find(connId, db, query, sort, hwQOpts, adj ,0, null);
         return queryResult.elements;
     }	
 	

@@ -14,6 +14,7 @@ public class ConfigurationService {
 	private MSAConfiguration msaConfiguration;
 	private MailboxConfigurationReader []mailboxConfigurationReaders;
 	private final static String EMAIL_DUPLICATES_NOT_ALLOWED = "Indirizzi email duplicati non concessi: '%s'. Qualora non si tratti di un errore di configurazione è possibile forzare il funzionamento tramite la property '" + MSAConfigurationReader.MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES_PROPERTY + "'";
+	private final static String MAILBOX_NAME_DUPLICATES_NOT_ALLOWED = "Nome di casella di posta duplicato: '%s'";
 	
 	private ConfigurationService() {
 	}
@@ -48,19 +49,22 @@ public class ConfigurationService {
 			System.arraycopy(confs, 0, ret, offset, confs.length);
 		}
 		
+		//check for name duplicates
+		checkForduplicates(ret, true);
+		
 		//if email duplicates not allowed -> check for it
 		if (!getMSAConfiguration().isAllowEmailDuplicates())
-			checkForduplicates(ret);
+			checkForduplicates(ret, false);
 			
 		return ret;
 	}
 	
-	private void checkForduplicates(MailboxConfiguration []configurations) throws Exception {
+	private void checkForduplicates(MailboxConfiguration []configurations, boolean checkForName) throws Exception {
 		HashSet<String> set = new HashSet<>();
 		for (int i=0; i<configurations.length; i++) {
-			String key = configurations[i].getUser();
+			String key = checkForName? configurations[i].getName() : configurations[i].getUser();
 			if (set.add(key) == false) {
-		    	 throw new Exception(String.format(EMAIL_DUPLICATES_NOT_ALLOWED, key));
+		    	 throw new Exception(checkForName? String.format(MAILBOX_NAME_DUPLICATES_NOT_ALLOWED, key) : String.format(EMAIL_DUPLICATES_NOT_ALLOWED, key));
 			}
 		}
 	}
