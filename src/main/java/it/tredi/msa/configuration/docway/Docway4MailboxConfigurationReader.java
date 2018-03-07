@@ -17,7 +17,8 @@ import it.tredi.msa.Services;
 import it.tredi.msa.configuration.MailboxConfigurationReader;
 import it.tredi.msa.entity.MailboxConfiguration;
 import it.tredi.msa.entity.docway.AssegnatarioMailboxConfiguration;
-import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
+import it.tredi.msa.entity.docway.Docway4MailboxConfiguration;
+
 import it.tredi.utils.properties.PropertiesReader;
 
 public class Docway4MailboxConfigurationReader extends MailboxConfigurationReader {
@@ -135,7 +136,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 			for (String xpath:xpaths) { //iterate xpaths
 	            List<Element> elsL = xmlDocument.selectNodes(xpath + "[./mailbox_in/@host!='']");
 	            for (Element casellaEl:elsL) { //for each mailbox relative to the current xpath
-	            	DocwayMailboxConfiguration conf = createDocwayMailboxConfigurationByConfig(casellaEl);
+	            	Docway4MailboxConfiguration conf = createDocway4MailboxConfigurationByConfig(casellaEl);
 	            	mailboxConfigurations.add(conf);
 	            	
 	        		//parse documentModel
@@ -158,8 +159,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		return mailboxConfigurations.toArray(new MailboxConfiguration[mailboxConfigurations.size()]);
 	}
 	
-	private DocwayMailboxConfiguration createDocwayMailboxConfigurationByConfig(Element casellaEl) throws Exception {
-    	DocwayMailboxConfiguration conf = new DocwayMailboxConfiguration();
+	private Docway4MailboxConfiguration createDocway4MailboxConfigurationByConfig(Element casellaEl) throws Exception {
+    	Docway4MailboxConfiguration conf = new Docway4MailboxConfiguration();
     	
     	//className
     	conf.setMailboxManagerClassName("it.tredi.msa.mailboxmanager.docway.Docway4MailboxManager");
@@ -235,7 +236,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
         return new String(passwordB);        
 	}
 	
-	public void parseDocumentModel(DocwayMailboxConfiguration conf, Document dmDocument) {
+	public void parseDocumentModel(Docway4MailboxConfiguration conf, Document dmDocument) {
 		
     	//xwDb
     	conf.setXwDb(dmDocument.getRootElement().attributeValue("db"));
