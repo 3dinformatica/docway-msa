@@ -145,4 +145,24 @@ public class ExtrawayClient {
         return document;
 	}
 	
+	public String addAttach(String fileName, byte[] fileContent) throws Exception {
+		return addAttach(fileName, fileContent, 1, 0);
+	}
+	
+	public String addAttach(String fileName, byte[] fileContent, int attempts, long delay) throws Exception {
+        for (int i = 0; (i < attempts); i++) {
+            try {
+                return broker.addAttach(connId, db, fileContent, fileName);
+            }
+            catch (Exception e) {
+                Thread.sleep(delay);
+                if (i+1 == attempts)
+                    throw e;
+            }
+        } //end-for		
+        return null;
+	}	
+	
+	
+	
 }
