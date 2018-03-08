@@ -9,6 +9,7 @@ public class MSAConfiguration {
 	private ObjectFactoryConfiguration notificationSenderConfiguration;
 	private int mailboxManagersDelay;
 	private int mailboxManagersPoolsize;
+	private int mailboxManagersRefreshTime;
 	private boolean allowEmailDuplicates;
 	Object rawData;
 	
@@ -45,12 +46,21 @@ public class MSAConfiguration {
 		this.mailboxManagersDelay = mailboxManagersDelay;
 	}
 
+	
 	public int getMailboxManagersPoolsize() {
 		return mailboxManagersPoolsize;
 	}
 
 	public void setMailboxManagersPoolsize(int mailboxManagersPoolsize) {
 		this.mailboxManagersPoolsize = mailboxManagersPoolsize;
+	}
+	
+	public int getMailboxManagersRefreshTime() {
+		return mailboxManagersRefreshTime;
+	}
+
+	public void setMailboxManagersRefreshTime(int mailboxManagersPoolsize) {
+		this.mailboxManagersRefreshTime = mailboxManagersPoolsize;
 	}
 
 	public boolean isAllowEmailDuplicates() {

@@ -21,10 +21,10 @@ public class Tester extends Thread {
             executor.scheduleWithFixedDelay(test2, 0, 1, TimeUnit.SECONDS);
             executor.scheduleWithFixedDelay(test3, 0, 1, TimeUnit.SECONDS);
                
-
-            test2.shutdown();
+            ExecutorHandlerTest sleep = new ExecutorHandlerTest(test2);
             
-            Thread.sleep(50000); 
+            executor.scheduleWithFixedDelay(sleep, 0, 5, TimeUnit.SECONDS);
+           
             
             executor.awaitTermination(5, TimeUnit.SECONDS);
             executor.shutdown();
