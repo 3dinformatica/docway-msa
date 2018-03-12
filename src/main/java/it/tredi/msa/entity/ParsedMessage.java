@@ -1,10 +1,13 @@
 package it.tredi.msa.entity;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
-import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 
 import it.tredi.mail.MessageUtils;
 
@@ -12,6 +15,10 @@ public class ParsedMessage {
 	
 	private Message message;
 	private String messageId;
+	private List<Part> leafPartsL;
+	private List<Part> attachmentsL;
+	private String textParts;
+	private String htmlParts;
 	
 	public ParsedMessage(Message message) {
 		this.message = message;
@@ -71,5 +78,41 @@ public class ParsedMessage {
 		else
 			return "";
 	}	
+	
+	public List<Part> getLeafPartsL() throws MessagingException, IOException {
+		if (leafPartsL == null)	
+			leafPartsL = MessageUtils.getLeafParts(message);
+		return leafPartsL;
+	}
+	
+	public List<Part> getAttachments() throws MessagingException, IOException {
+		if (attachmentsL == null) {
+			attachmentsL = new ArrayList<Part>();
+			for (Part part:getLeafPartsL())
+				if (MessageUtils.isAttachmentPart(part))
+					attachmentsL.add(part);
+		}
+		return attachmentsL;
+	}
+	
+	public String getTextParts() throws MessagingException, IOException {
+		if (textParts == null) {
+			textParts = "";
+			for (Part part:getLeafPartsL()) 
+				if (MessageUtils.isTextPart(part))			
+					textParts += part.getContent();
+		}
+		return textParts;
+	}
+
+	public String getHtmlParts() throws MessagingException, IOException {
+		if (htmlParts == null) {
+			htmlParts = "";
+			for (Part part:getLeafPartsL()) 
+				if (MessageUtils.isHtmlPart(part))			
+					htmlParts += part.getContent();
+		}
+		return htmlParts;
+	}
 	
 }

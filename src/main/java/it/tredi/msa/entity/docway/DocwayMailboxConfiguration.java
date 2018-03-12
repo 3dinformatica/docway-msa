@@ -271,6 +271,10 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 		this.daCopiaConoscenza = daCopiaConoscenza;
 	}
 	
+	public String getOperatore() {
+		return oper + "(" + uffOper + ")";
+	}
+	
 	/**
 	 * 
 splitEmail.globalAttachments=daticert.xml,smime.p7s

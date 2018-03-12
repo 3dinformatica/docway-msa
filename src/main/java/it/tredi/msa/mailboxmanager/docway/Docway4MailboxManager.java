@@ -11,10 +11,12 @@ import org.dom4j.Element;
 
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
+import it.tredi.mail.MessageUtils;
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.docway.AssegnatarioMailboxConfiguration;
 import it.tredi.msa.entity.docway.Docway4MailboxConfiguration;
 import it.tredi.msa.entity.docway.DocwayDocument;
+import it.tredi.msa.entity.docway.DocwayFile;
 import it.tredi.msa.entity.docway.RifEsterno;
 import it.tredi.msa.entity.docway.RifInterno;
 import it.tredi.msa.entity.docway.StoriaItem;
@@ -26,7 +28,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	private int lastSavedDocumentPhysDoc;
 	private boolean extRestrictionsOnAcl;
 	
-
+	private final static int xwOpAttempts = 5;
+	private final static long xwOpDelay = 2000;
+	
 	@Override
     public void openSession() throws Exception {
 		super.openSession();
@@ -57,21 +61,36 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	@Override
 	protected void saveNewDocument(DocwayDocument doc) throws Exception {
+		
+		//save new document in Extraway
 		Document xmlDocument = docwayDocumentToXml(doc);
+		lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
 		
-		//save in Extraway
-//		lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
-//TODO - attualmente il salvataggio è disabilitato
-		
-//TODO - upload allegati
+		//upload files + immagini
+		boolean uploaded = false;
+		List<DocwayFile> docwayFiles = doc.getFiles();
+		docwayFiles.addAll(doc.getImmagini());
+		for (DocwayFile file:docwayFiles) {
+			file.setId(xwClient.addAttach(file.getName(), file.getContent(), xwOpAttempts, xwOpDelay));
+			uploaded = true;
+		}
 
-/*
- * COMMENTATO TEMPORANEAMENTE IL CODICE PER LA MODIFICA DEL DOCUMENTO APPENA SALVATO
-		Document document = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc);
-		document.getRootElement().element("oggetto").setText("Oggetto modificato");
-		xwClient.saveDocument(document, lastSavedDocumentPhysDoc);
-*/	
+		//update document with uploaded xw:file(s)
+		if (uploaded) {
+			xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc);
+			updateXmlWithDocwayFiles(xmlDocument, doc);
+			xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
+		}
+
+
+		/*
+		List<javax.mail.Part> l = parsedMessage.getAttachments();
 		
+		String text = parsedMessage.getTextParts();
+		String html = parsedMessage.getHtmlParts();
+		
+		List<javax.mail.Part> l1 = MessageUtils.getLeafParts(parsedMessage.getMessage());
+		*/
 		int ret = 0;
 		ret++;
 
@@ -213,6 +232,48 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		
 		return xmlDocument;
 	}
+	
+	private void updateXmlWithDocwayFiles(Document xmlDocument, DocwayDocument doc) {
+		
+		//files
+		List<DocwayFile> files = doc.getFiles();
+		if (files.size() > 0) {
+			Element filesEl = DocumentHelper.createElement("files");
+			xmlDocument.getRootElement().add(filesEl);
+			updateXmlWithDocwayFileList(filesEl, files);
+		}
+		
+		//immagini
+		List<DocwayFile> immagini = doc.getImmagini();
+		if (immagini.size() > 0) {
+			Element immaginiEl = DocumentHelper.createElement("immagini");
+			xmlDocument.getRootElement().add(immaginiEl);
+			updateXmlWithDocwayFileList(immaginiEl, immagini);
+		}		
+		
+	}
+
+	private void updateXmlWithDocwayFileList(Element filesContinerEl, List<DocwayFile> files) {
+		for (DocwayFile file:files) {
+			
+			//xw:file
+			Element xwFileEl = DocumentHelper.createElement("xw:file");
+			filesContinerEl.add(xwFileEl);
+			xwFileEl.addAttribute("name", file.getId());
+			xwFileEl.addAttribute("title", file.getName());
+			if (file.isConvert())
+				xwFileEl.addAttribute("convert", "yes");
+			
+			//checkin
+			Element chkinEl = DocumentHelper.createElement("chkin");
+			xwFileEl.add(chkinEl);
+			chkinEl.addAttribute("operatore", file.getOperatore());
+			chkinEl.addAttribute("cod_operatore", file.getCodOperatore());
+			chkinEl.addAttribute("data", file.getData());
+			chkinEl.addAttribute("ora", file.getOra());
+		}
+	}	
+	
 	
 	private Element storiaItemToXml(StoriaItem storiaItem) {
 		Element el = DocumentHelper.createElement(storiaItem.getType());

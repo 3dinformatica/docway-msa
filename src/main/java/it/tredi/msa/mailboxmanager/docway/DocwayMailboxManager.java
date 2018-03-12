@@ -1,11 +1,17 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import javax.mail.MessagingException;
+import javax.mail.Part;
+
 import it.tredi.msa.entity.ParsedMessage;
+import it.tredi.msa.entity.PartContentProvider;
 import it.tredi.msa.entity.docway.DocwayDocument;
+import it.tredi.msa.entity.docway.DocwayFile;
 import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.entity.docway.RifEsterno;
 import it.tredi.msa.entity.docway.RifInterno;
@@ -129,17 +135,40 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//aggiunta in storia delle operazioni relative ai rif interni
 		for (RifInterno rifInterno:rifInterni) {
 			StoriaItem storiaItem = StoriaItem.createFromRifInterno(rifInterno);
-			storiaItem.setOperatore(conf.getOper() + "(" + conf.getUffOper() + ")");
+			storiaItem.setOperatore(conf.getOperatore());
 			storiaItem.setData(currentDate);
 			storiaItem.setOra(currentDate);
 			doc.addStoriaItem(storiaItem);
 		}
+		
+		//files + immagini
+		createDocwayFiles(parsedMessage, doc);
 		
 //TODO - effettuare la gestione delle email di notifica
 		
 		return doc;
 	}
 
+	private void createDocwayFiles(ParsedMessage parsedMessage, DocwayDocument doc) throws MessagingException, IOException {
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+
+		//email attachments (files + immagini)
+		List<Part> attachments = parsedMessage.getAttachments();
+		for (Part attachment:attachments) {
+			DocwayFile file = new DocwayFile();
+			doc.addFile(file);
+//TODO - occorre fare la distinzione tra file e immagini			
+			file.setContentProvider(new PartContentProvider(attachment));
+			file.setName(attachment.getFileName());
+			file.setOperatore(conf.getOperatore());
+			file.setCodOperatore("");
+			file.setData(currentDate);
+			file.setOra(currentDate);
+			file.setConvert(true);
+//TODO - CONVERT YES SOLO PER LE IMMAGINI			
+		}
+
+	}
 	
 	protected abstract void saveNewDocument(DocwayDocument doc) throws Exception;
 	protected abstract RifEsterno createRifEsterno(String name, String address) throws Exception;

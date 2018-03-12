@@ -27,11 +27,15 @@ public class DocwayDocument {
 	private List<StoriaItem> storia;
 	private List<RifEsterno> rifEsterni;
 	private List<RifInterno> rifInterni;
+	private List<DocwayFile> files;
+	private List<DocwayFile> immagini;
 	
 	public DocwayDocument() {
 		this.storia = new ArrayList<StoriaItem>();
 		this.rifEsterni = new ArrayList<RifEsterno>();
 		this.rifInterni = new ArrayList<RifInterno>();
+		this.files = new ArrayList<DocwayFile>();
+		this.immagini = new ArrayList<DocwayFile>();
 	}
 
 	public String getTipo() {
@@ -237,6 +241,30 @@ public class DocwayDocument {
 	private void updateRifInterno(RifInterno rifToUpdate, RifInterno rifInterno) {
 		 if (!rifToUpdate.isIntervento() && rifInterno.isIntervento())
 			 rifToUpdate.setIntervento(true);
+	}
+
+	public List<DocwayFile> getFiles() {
+		return files;
+	}
+
+	public void setFiles(List<DocwayFile> files) {
+		this.files = files;
+	}
+
+	public void addFile(DocwayFile file) {
+		files.add(file);
+	}	
+	
+	public List<DocwayFile> getImmagini() {
+		return immagini;
+	}
+
+	public void setImmagini(List<DocwayFile> immagini) {
+		this.immagini = immagini;
+	}
+
+	public void addImmagine(DocwayFile file) {
+		immagini.add(file);
 	}
 	
 }

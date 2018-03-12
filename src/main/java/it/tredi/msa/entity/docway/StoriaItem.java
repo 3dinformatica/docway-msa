@@ -117,7 +117,7 @@ public class StoriaItem {
 	
 	public void setData(Date date) {
 		this.data = new SimpleDateFormat("yyyyMMdd").format(date);
-	}	
+	}
 	
 	public void setData(String data) {
 		this.data = data;
