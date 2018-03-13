@@ -8,17 +8,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import it.tredi.msa.entity.MailboxConfiguration;
-import it.tredi.msa.mailboxmanager.MailboxManager;
-import it.tredi.msa.mailboxmanager.MailboxManagerFactory;
-
-
 public class Msa {
 	
 	private static final Logger logger = LogManager.getLogger(Msa.class.getName());
 	private MsaShutdownHook shutdownHook;
 	
-	private MailboxManager []mailboxManagers;
+	private ExecutorServiceHandler executorServiceHandler;
 	
 	protected void run() throws Exception {
 		registerShutdownHook();
@@ -30,22 +25,10 @@ public class Msa {
 			//load msa configuration and init all services
 			Services.init();
 
-			//load mailbox configurations (via MailboxConfigurationReader(s))
-			MailboxConfiguration []mailboxConfigurations = Services.getConfigurationService().readMailboxConfigurations();
-			
-			//create mailbox managers
-			mailboxManagers = MailboxManagerFactory.createMailboxManagers(mailboxConfigurations);
-
 			//start exexutor
 			ScheduledExecutorService executor = Executors.newScheduledThreadPool(Services.getConfigurationService().getMSAConfiguration().getMailboxManagersPoolsize());
-			int i = 0;
-			for (MailboxManager mailboxManager:mailboxManagers) {
-				int delay = mailboxManager.getConfiguration().getDelay() == -1? Services.getConfigurationService().getMSAConfiguration().getMailboxManagersDelay() : mailboxManager.getConfiguration().getDelay();
-				executor.scheduleWithFixedDelay(mailboxManager, 5*i++, delay, TimeUnit.SECONDS);
-			}
-			
-//TODO - occorre trovare un modo per ricaricare nuove configurazioni ad intervalli di tempo regolari (potrebbe essere un task stesso dell'executor)
-//è sufficiente aggiungere le nuove caselle. Il fatto di cancellare quelle esistenti non è importante anche se potrebbe essere fatto facendo shutdow del mailboxmanager che non esiste più			
+			executorServiceHandler = new ExecutorServiceHandler(executor);
+			executor.scheduleWithFixedDelay(executorServiceHandler, 0, Services.getConfigurationService().getMSAConfiguration().getMailboxManagersRefreshTime(), TimeUnit.SECONDS);
 
 	        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 	        executor.shutdown();
@@ -92,12 +75,10 @@ public class Msa {
 		}
 	}		
 	
-	
 	private void shutdown() {
 		logger.info("shutdown() called");
 		
-		for (MailboxManager mailboxManager:mailboxManagers)
-			mailboxManager.shutdown();
+		executorServiceHandler.shutdown();
 		
 		logger.info("shutdown() successfully completed");
 	}
