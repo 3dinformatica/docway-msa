@@ -145,6 +145,11 @@ public class ExtrawayClient {
         return document;
 	}
 	
+	public void unlockDocument(int physdoc) throws Exception {
+        XMLCommand theCommand = new XMLCommand(physdoc, theLock);
+        broker.XMLCommand(connId, db, theCommand.toString());
+	}
+	
 	public String addAttach(String fileName, byte[] fileContent) throws Exception {
 		return addAttach(fileName, fileContent, 1, 0);
 	}

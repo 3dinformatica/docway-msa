@@ -61,15 +61,15 @@ public class ParsedMessage {
 		return messageId;
 	}
 	
-	public String getToAddressesAsString() throws Exception {
+	public String getToAddressesAsString() throws MessagingException {
 		return stringArrayToString(MessageUtils.getToAddresses(message));
 	}
 	
-	public String getCcAddressesAsString() throws Exception {
+	public String getCcAddressesAsString() throws MessagingException {
 		return stringArrayToString(MessageUtils.getCcAddresses(message));
 	}
 	
-	private String stringArrayToString(String []array) throws Exception {
+	private String stringArrayToString(String []array) {
 		String ret = "";
 		for (String entry:array)
 			ret += ", " + entry;
@@ -101,6 +101,7 @@ public class ParsedMessage {
 			for (Part part:getLeafPartsL()) 
 				if (MessageUtils.isTextPart(part))			
 					textParts += part.getContent();
+			textParts = textParts.trim();
 		}
 		return textParts;
 	}
@@ -111,8 +112,20 @@ public class ParsedMessage {
 			for (Part part:getLeafPartsL()) 
 				if (MessageUtils.isHtmlPart(part))			
 					htmlParts += part.getContent();
+			htmlParts = htmlParts.trim();
 		}
 		return htmlParts;
+	}
+	
+	public String getTextPartsWithHeaders() throws MessagingException, IOException {
+		if (getTextParts().isEmpty())
+			return "";
+		String headers = "From: " + getFromAddress() + "\n";
+		headers += "To: " + getToAddressesAsString() + "\n";
+		headers += "Cc: " + getCcAddressesAsString() + "\n";
+		headers += "Sent: " + getSentDate() + "\n";
+		headers += "Subject: " + getSubject() + "\n\n";
+		return headers + getTextParts();
 	}
 	
 }

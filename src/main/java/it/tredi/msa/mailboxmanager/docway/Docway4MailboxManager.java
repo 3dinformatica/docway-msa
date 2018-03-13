@@ -66,31 +66,31 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Document xmlDocument = docwayDocumentToXml(doc);
 		lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
 		
-		//upload files + immagini
+		//load and lock document
+		xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc);
+		
+		//upload files
 		boolean uploaded = false;
-		List<DocwayFile> docwayFiles = doc.getFiles();
-		docwayFiles.addAll(doc.getImmagini());
-		for (DocwayFile file:docwayFiles) {
+		for (DocwayFile file:doc.getFiles()) {
 			file.setId(xwClient.addAttach(file.getName(), file.getContent(), xwOpAttempts, xwOpDelay));
 			uploaded = true;
 		}
 
+		//upload immagini
+		for (DocwayFile file:doc.getImmagini()) {
+			file.setId(xwClient.addAttach(file.getName(), file.getContent(), xwOpAttempts, xwOpDelay));
+			uploaded = true;
+		}		
+		
 		//update document with uploaded xw:file(s)
 		if (uploaded) {
-			xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc);
 			updateXmlWithDocwayFiles(xmlDocument, doc);
 			xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
 		}
+		else { //no filed uploaded -> unlock document
+			xwClient.unlockDocument(lastSavedDocumentPhysDoc);
+		}
 
-
-		/*
-		List<javax.mail.Part> l = parsedMessage.getAttachments();
-		
-		String text = parsedMessage.getTextParts();
-		String html = parsedMessage.getHtmlParts();
-		
-		List<javax.mail.Part> l1 = MessageUtils.getLeafParts(parsedMessage.getMessage());
-		*/
 		int ret = 0;
 		ret++;
 

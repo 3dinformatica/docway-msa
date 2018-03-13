@@ -8,8 +8,10 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 
+import it.tredi.msa.entity.MessageContentProvider;
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.PartContentProvider;
+import it.tredi.msa.entity.StringContentProvider;
 import it.tredi.msa.entity.docway.DocwayDocument;
 import it.tredi.msa.entity.docway.DocwayFile;
 import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
@@ -22,6 +24,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	protected Date currentDate;
 	protected ParsedMessage parsedMessage;
+	
+	protected static final String TESTO_EMAIL_FILENAME = "testo email.txt";
+	protected static final String TESTO_HTML_EMAIL_FILENAME = "testo email.html";
+	protected static final String MESSAGGIO_ORIGINALE_EMAIL_FILENAME = "MessaggioOriginale.eml";
 	
 	@Override
     public boolean isMessageStorable(ParsedMessage parsedMessage) {
@@ -108,15 +114,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//note
 		if (conf.isNoteAutomatiche()) {
-			String note = "From: " + parsedMessage.getFromAddress() + "\n";
-			note += "To: " + parsedMessage.getToAddressesAsString() + "\n";
-			note += "Cc: " + parsedMessage.getCcAddressesAsString() + "\n";
-			note += "Sent: " + parsedMessage.getSentDate() + "\n";
-			note += "Subject: " + parsedMessage.getSubject() + "\n\n";
-
-//TODO - aggiungere getMailBody(TEXT)			
-			
-			doc.setNote(note);
+			doc.setNote(parsedMessage.getTextPartsWithHeaders());
 		}
 		
 		//rif interni
@@ -150,28 +148,66 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	}
 
 	private void createDocwayFiles(ParsedMessage parsedMessage, DocwayDocument doc) throws MessagingException, IOException {
-		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+
+		//email body html/text attachment
+		DocwayFile file = createDocwayFile();
+		file.setName(TESTO_HTML_EMAIL_FILENAME);
+		String text = parsedMessage.getHtmlParts().trim();
+		if (text.isEmpty()) { //no html -> switch to text version
+			file.setName(TESTO_EMAIL_FILENAME);
+			text = parsedMessage.getTextPartsWithHeaders();
+		}
+		file.setContentProvider(new StringContentProvider(text));
+		file.setConvert(true);		
+		doc.addFile(file);
 
 		//email attachments (files + immagini)
 		List<Part> attachments = parsedMessage.getAttachments();
 		for (Part attachment:attachments) {
-			DocwayFile file = new DocwayFile();
-			doc.addFile(file);
-//TODO - occorre fare la distinzione tra file e immagini			
+			file = createDocwayFile();
 			file.setContentProvider(new PartContentProvider(attachment));
 			file.setName(attachment.getFileName());
-			file.setOperatore(conf.getOperatore());
-			file.setCodOperatore("");
-			file.setData(currentDate);
-			file.setOra(currentDate);
 			file.setConvert(true);
-//TODO - CONVERT YES SOLO PER LE IMMAGINI			
+			if (isImage(file.getName()))
+					doc.addImmagine(file); //immagine
+			else
+				doc.addFile(file); //file
+			
+//TODO - CONVERT YES SOLO PER LE IMMAGINI??? BOH			
 		}
+		
+		//EML
+		file = createDocwayFile();
+		file.setContentProvider(new MessageContentProvider(parsedMessage.getMessage(), true));
+		file.setName(MESSAGGIO_ORIGINALE_EMAIL_FILENAME);
+		file.setConvert(true);
+		doc.addFile(file);		
+//TODO - gestione condizionale di EML
 
 	}
 	
 	protected abstract void saveNewDocument(DocwayDocument doc) throws Exception;
 	protected abstract RifEsterno createRifEsterno(String name, String address) throws Exception;
 	protected abstract List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception;
+	
+	protected boolean isImage(String fileName) {
+		return fileName.toLowerCase().endsWith(".jpg")
+				|| fileName.toLowerCase().endsWith(".jpeg")
+				|| fileName.toLowerCase().endsWith(".tif")
+				|| fileName.toLowerCase().endsWith(".tiff")
+				|| fileName.toLowerCase().endsWith(".bmp")
+				|| fileName.toLowerCase().endsWith(".png");
+	}	
 
+	private DocwayFile createDocwayFile() {
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		DocwayFile file = new DocwayFile();
+		file.setOperatore(conf.getOperatore());
+		file.setCodOperatore("");
+		file.setData(currentDate);
+		file.setOra(currentDate);
+		file.setConvert(true);			
+		return file;
+	}	
+	
 }
