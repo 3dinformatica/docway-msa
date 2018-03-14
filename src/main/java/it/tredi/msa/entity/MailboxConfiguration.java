@@ -14,7 +14,12 @@ public abstract class MailboxConfiguration {
 	private String address;
 	private int mailserverSocketTimeout;
 	private int mailserverConnectionTimeout;
-	private int delay = -1;
+	
+	private int delay = -1; //delay (mailbox manager polling time)
+	private StoredMessagePolicy storedMessagePolicy = StoredMessagePolicy.DELETE_FROM_FOLDER;
+	private String storedMessageFolderName;
+	
+	private final static String DEFAULT_STORED_MESSAGE_FOLDER_NAME = "MSA_STORED_MESSAGES";
 	
 	public String getName() {
 		return name;
@@ -104,12 +109,24 @@ public abstract class MailboxConfiguration {
 		this.delay = delay;
 	}
 
+	public StoredMessagePolicy getStoredMessagePolicy() {
+		return storedMessagePolicy;
+	}
+
+	public void setStoredMessagePolicy(StoredMessagePolicy storedMessagePolicy) {
+		this.storedMessagePolicy = storedMessagePolicy;
+	}
+
+	public String getStoredMessageFolderName() {
+		return (storedMessageFolderName == null || storedMessageFolderName.isEmpty())? DEFAULT_STORED_MESSAGE_FOLDER_NAME : storedMessageFolderName;
+	}
+
+	public void setStoredMessageFolderName(String storedMessageFolderName) {
+		this.storedMessageFolderName = storedMessageFolderName;
+	}
 	
 	/*
-	-removeFromServer
-	-gestire spostamento IMAP
 	notifyRemainingError
-
 	javamailDebug=false	
 	
 	*/

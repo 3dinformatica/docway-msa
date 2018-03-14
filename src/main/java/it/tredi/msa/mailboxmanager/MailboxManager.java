@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import it.tredi.mail.MailReader;
 import it.tredi.msa.entity.MailboxConfiguration;
 import it.tredi.msa.entity.ParsedMessage;
+import it.tredi.msa.entity.StoredMessagePolicy;
 
 public abstract class MailboxManager implements Runnable {
 
@@ -143,9 +144,14 @@ public abstract class MailboxManager implements Runnable {
     }
     
     public void messageStored(ParsedMessage parsedMessage) throws Exception {
-    	//TODO //gestione cancellazione / spostamento
-//TODO - COMPLETARE!!!!    	
-    	//mailReader.deleteMessage(parsedMessage.getMessage());
+    	if (configuration.getStoredMessagePolicy() == StoredMessagePolicy.DELETE_FROM_FOLDER) { //rimozione email
+    		mailReader.deleteMessage(parsedMessage.getMessage());
+    	}
+    	else if (configuration.getStoredMessagePolicy() == StoredMessagePolicy.MOVE_TO_FOLDER) { //spostamento email
+    		mailReader.createFolder(configuration.getStoredMessageFolderName()); //if folder exists this method has no effect
+    		mailReader.copyMessageToFolder(parsedMessage.getMessage(), configuration.getStoredMessageFolderName());
+    		mailReader.deleteMessage(parsedMessage.getMessage());
+    	}
     }
  
 }

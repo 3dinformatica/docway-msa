@@ -16,6 +16,7 @@ import it.tredi.extraway.ExtrawayClient;
 import it.tredi.msa.Services;
 import it.tredi.msa.configuration.MailboxConfigurationReader;
 import it.tredi.msa.entity.MailboxConfiguration;
+import it.tredi.msa.entity.StoredMessagePolicy;
 import it.tredi.msa.entity.docway.AssegnatarioMailboxConfiguration;
 import it.tredi.msa.entity.docway.Docway4MailboxConfiguration;
 
@@ -29,7 +30,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_XW_PORT_PROPERTY = "docway4mailboxmanager.xw.port";
 	public final static String DOCWAY4MAILBOXMANAGER_XW_USER_PROPERTY = "docway4mailboxmanager.xw.user";
 	public final static String DOCWAY4MAILBOXMANAGER_XW_PASSWORD_PROPERTY = "docway4mailboxmanager.xw.password";
-	public final static String DOCWAY4MAILBOXMANAGER_STORE_EML = "docway4mailboxmanager.storeEml";
+	public final static String DOCWAY4MAILBOXMANAGER_STORE_EML = "docway4mailboxmanager.store-eml.enable";
+	public final static String DOCWAY4MAILBOXMANAGER_MOVE_STORED_MESSAGES = "docway4mailboxmanager.move-stored-messages.enable";
+	public final static String DOCWAY4MAILBOXMANAGER_MOVE_STORED_MESSAGES_FOLDER = "docway4mailboxmanager.move-stored-messages.folder-name";
 	
 	private String host;
 	private int port;
@@ -227,6 +230,11 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	
     	//other docway4 global params
     	conf.setStoreEml(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_STORE_EML, false));
+    	if (propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_MOVE_STORED_MESSAGES, false)) { //move stored message policy enabled
+    		conf.setStoredMessagePolicy(StoredMessagePolicy.MOVE_TO_FOLDER);
+    		conf.setStoredMessageFolderName(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_MOVE_STORED_MESSAGES_FOLDER, ""));
+    	}
+    	
     	
 //TODO - COMPLETARE	
 		return conf;
