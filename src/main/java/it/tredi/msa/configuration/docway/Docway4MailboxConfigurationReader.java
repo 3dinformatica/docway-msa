@@ -29,6 +29,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_XW_PORT_PROPERTY = "docway4mailboxmanager.xw.port";
 	public final static String DOCWAY4MAILBOXMANAGER_XW_USER_PROPERTY = "docway4mailboxmanager.xw.user";
 	public final static String DOCWAY4MAILBOXMANAGER_XW_PASSWORD_PROPERTY = "docway4mailboxmanager.xw.password";
+	public final static String DOCWAY4MAILBOXMANAGER_STORE_EML = "docway4mailboxmanager.storeEml";
 	
 	private String host;
 	private int port;
@@ -223,7 +224,10 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setXwUser(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_USER_PROPERTY, "lettore"));
     	conf.setXwPassword(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_PASSWORD_PROPERTY, "reader"));
     	conf.setAclDb(db);
-
+    	
+    	//other docway4 global params
+    	conf.setStoreEml(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_STORE_EML, false));
+    	
 //TODO - COMPLETARE	
 		return conf;
 	}

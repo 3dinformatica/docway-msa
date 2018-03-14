@@ -8,6 +8,7 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	
 	private boolean storeEml = false;
 	
+	//email address
 	private String email;
 	
 	//xw

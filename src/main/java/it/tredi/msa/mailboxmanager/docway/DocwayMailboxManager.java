@@ -158,7 +158,6 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			text = parsedMessage.getTextPartsWithHeaders();
 		}
 		file.setContentProvider(new StringContentProvider(text));
-		file.setConvert(true);		
 		doc.addFile(file);
 
 		//email attachments (files + immagini)
@@ -167,22 +166,19 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			file = createDocwayFile();
 			file.setContentProvider(new PartContentProvider(attachment));
 			file.setName(attachment.getFileName());
-			file.setConvert(true);
-			if (isImage(file.getName()))
-					doc.addImmagine(file); //immagine
-			else
-				doc.addFile(file); //file
-			
-//TODO - CONVERT YES SOLO PER LE IMMAGINI??? BOH			
+			if (isImage(file.getName())) //immagine
+					doc.addImmagine(file);
+			else //file
+				doc.addFile(file);
 		}
 		
 		//EML
-		file = createDocwayFile();
-		file.setContentProvider(new MessageContentProvider(parsedMessage.getMessage(), true));
-		file.setName(MESSAGGIO_ORIGINALE_EMAIL_FILENAME);
-		file.setConvert(true);
-		doc.addFile(file);		
-//TODO - gestione condizionale di EML
+		if (((DocwayMailboxConfiguration)getConfiguration()).isStoreEml()) {
+			file = createDocwayFile();
+			file.setContentProvider(new MessageContentProvider(parsedMessage.getMessage(), true));
+			file.setName(MESSAGGIO_ORIGINALE_EMAIL_FILENAME);
+			doc.addFile(file);			
+		}
 
 	}
 	
@@ -206,7 +202,6 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		file.setCodOperatore("");
 		file.setData(currentDate);
 		file.setOra(currentDate);
-		file.setConvert(true);			
 		return file;
 	}	
 	

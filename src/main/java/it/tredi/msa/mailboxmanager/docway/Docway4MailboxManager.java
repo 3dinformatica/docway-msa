@@ -240,7 +240,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		if (files.size() > 0) {
 			Element filesEl = DocumentHelper.createElement("files");
 			xmlDocument.getRootElement().add(filesEl);
-			updateXmlWithDocwayFileList(filesEl, files);
+			updateXmlWithDocwayFileList(filesEl, files, true);
 		}
 		
 		//immagini
@@ -248,12 +248,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		if (immagini.size() > 0) {
 			Element immaginiEl = DocumentHelper.createElement("immagini");
 			xmlDocument.getRootElement().add(immaginiEl);
-			updateXmlWithDocwayFileList(immaginiEl, immagini);
+			updateXmlWithDocwayFileList(immaginiEl, immagini, false);
 		}		
 		
 	}
 
-	private void updateXmlWithDocwayFileList(Element filesContinerEl, List<DocwayFile> files) {
+	private void updateXmlWithDocwayFileList(Element filesContinerEl, List<DocwayFile> files, boolean convert) {
 		for (DocwayFile file:files) {
 			
 			//xw:file
@@ -261,7 +261,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			filesContinerEl.add(xwFileEl);
 			xwFileEl.addAttribute("name", file.getId());
 			xwFileEl.addAttribute("title", file.getName());
-			if (file.isConvert())
+			if (convert)
 				xwFileEl.addAttribute("convert", "yes");
 			
 			//checkin

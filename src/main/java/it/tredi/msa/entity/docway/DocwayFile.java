@@ -19,9 +19,6 @@ public class DocwayFile {
 	//content
 	private ContentProvider contentProvider;
 
-	//conversion flag
-	private boolean convert  = false;
-
 	public String getId() {
 		return id;
 	}
@@ -86,14 +83,6 @@ public class DocwayFile {
 		this.contentProvider = contentProvider;
 	}
 
-	public boolean isConvert() {
-		return convert;
-	}
-
-	public void setConvert(boolean convert) {
-		this.convert = convert;
-	}
-	
 	public byte []getContent() throws Exception {
 		return contentProvider.getContent();
 	}
