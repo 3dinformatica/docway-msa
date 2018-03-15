@@ -37,7 +37,7 @@ public class ExtrawayClient {
 		this.connId = -1;
 	}
 
-	public void connect() throws Exception  {
+	public void connect() throws SQLException  {
 		disconnect();
 		connId = broker.acquireConnection(host, port, db, user, password, -1);
         try {
@@ -49,7 +49,7 @@ public class ExtrawayClient {
         }			
 	}
 	
-	public void disconnect() throws Exception {
+	public void disconnect() throws SQLException {
 		if (connId != -1) {
 			broker.releaseConnection(connId);
 			connId = -1;			

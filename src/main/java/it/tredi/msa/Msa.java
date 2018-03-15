@@ -17,27 +17,23 @@ public class Msa {
 	
 	protected void run() throws Exception {
 		registerShutdownHook();
+
+		if (logger.isInfoEnabled())
+			logger.info("MSA Service Started!");
+
+		//load msa configuration and init all services
+		Services.init();
+
+		//start exexutor
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(Services.getConfigurationService().getMSAConfiguration().getMailboxManagersPoolsize());
+		if (logger.isInfoEnabled())
+			logger.info("Executor Service created. Pool size: " + Services.getConfigurationService().getMSAConfiguration().getMailboxManagersPoolsize());
 		
-		try {
-			if (logger.isInfoEnabled())
-				logger.info("MSA Service Started!");
+		executorServiceHandler = new ExecutorServiceHandler(executor);
+		executor.scheduleWithFixedDelay(executorServiceHandler, 0, Services.getConfigurationService().getMSAConfiguration().getMailboxManagersRefreshTime(), TimeUnit.SECONDS);
 
-			//load msa configuration and init all services
-			Services.init();
-
-			//start exexutor
-			ScheduledExecutorService executor = Executors.newScheduledThreadPool(Services.getConfigurationService().getMSAConfiguration().getMailboxManagersPoolsize());
-			executorServiceHandler = new ExecutorServiceHandler(executor);
-			executor.scheduleWithFixedDelay(executorServiceHandler, 0, Services.getConfigurationService().getMSAConfiguration().getMailboxManagersRefreshTime(), TimeUnit.SECONDS);
-
-	        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-	        executor.shutdown();
-		}	
-		catch (Exception e) {
-			logger.fatal("[FATAL ERROR] -> " + e.getMessage() + "... MSA service is down!", e);
-			throw e;
-		}
-		
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        executor.shutdown();
 	}
 	
 	protected void registerShutdownHook() {

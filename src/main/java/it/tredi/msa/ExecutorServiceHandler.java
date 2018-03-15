@@ -1,6 +1,5 @@
 package it.tredi.msa;
 
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -30,6 +29,9 @@ public class ExecutorServiceHandler implements Runnable {
     
 	@Override
     public void run() {
+		if (logger.isInfoEnabled())
+			logger.info("Refreshing mailbox managers. Loading mailbox configurations...");
+		
     	if (!shutdown) {
     		try {
     			//load mailbox configurations (via MailboxConfigurationReader(s))
@@ -44,23 +46,24 @@ public class ExecutorServiceHandler implements Runnable {
     					
     					if (mailboxManagersMap.get(mailboxConfiguration.getName()) == null) {
 
-        					logger.info("found new Mailbox Configuration: " + mailboxConfiguration.getName());
+    						if (logger.isInfoEnabled())
+    							logger.info("Found new mailbox configuration: " + mailboxConfiguration.getName());
         					
-        					MailboxManager mailboxManager = MailboxManagerFactory.createMailboxManager(mailboxConfiguration);	
+        					MailboxManager mailboxManager = MailboxManagerFactory.createMailboxManager(mailboxConfiguration);
         					mailboxManagersMap.put(mailboxConfiguration.getName(), mailboxManager);
         					
             				int delay = mailboxManager.getConfiguration().getDelay() == -1? Services.getConfigurationService().getMSAConfiguration().getMailboxManagersDelay() : mailboxManager.getConfiguration().getDelay();
             				executor.scheduleWithFixedDelay(mailboxManager, i++, delay, TimeUnit.SECONDS);
-        				}    					
+        				}
     				}
     			}
     			
     			//stop mailbox managers for deleted configurations
     			for (String confName:mailboxManagersMap.keySet()) {
-    				if (!shutdown) {
+    				if (!shutdown) {		
     					if (!freshMailboxConfigurationsSet.contains(confName)) {
-        					
-        					logger.info("found deleted Mailbox Configuration: " + confName);
+    						if (logger.isInfoEnabled())
+    							logger.info("Found missing(deleted) mailbox configuration: " + confName);
         					
         					mailboxManagersMap.get(confName).shutdown();
         					mailboxManagersMap.remove(confName);
@@ -68,9 +71,12 @@ public class ExecutorServiceHandler implements Runnable {
     				}
     			}
     			
+    			if (logger.isInfoEnabled())
+    				logger.info("Current mailbox managers: " + keySetToString(mailboxManagersMap.keySet()));
     		}
     		catch (Exception e) {
-    			logger.error("Errore imprevisto", e);    			
+    			logger.error("Unexpected error. Check mailbox configurations!", e);
+    			Services.getNotificationService().notifyError("Errore imprevisto in fase di caricamento delle configurazioni delle caselle di posta.\nConsultare il log per maggiori dettagli.\n\n" + e.getMessage());
     		}   	
     	}
     }
@@ -78,10 +84,20 @@ public class ExecutorServiceHandler implements Runnable {
     public void shutdown() {
     	shutdown = true;
     	
+		if (logger.isInfoEnabled())
+			logger.info("Shutting down mailbox managers: " + keySetToString(mailboxManagersMap.keySet()));
+    	
     	for (String confName:mailboxManagersMap.keySet())
     		mailboxManagersMap.get(confName).shutdown();
     	
 		Thread.currentThread().interrupt();
+    }
+    
+    private String keySetToString(Set<String> set) {
+    	String s = "";
+    	for (String key:set)
+    		s += ", " + key; 	
+    	return s.substring(2);
     }
  
 }
