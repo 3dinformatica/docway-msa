@@ -35,21 +35,41 @@ public abstract class MailboxManager implements Runnable {
 		
     @Override
     public void run() {
-    	if (!shutdown) {
-        	logger.info(configuration.getName() + " - run()");
+    	try {
+        	if (!shutdown) {
+        		if (logger.isInfoEnabled())
+        			logger.info(configuration.getName() + " - run()");
 
-        	//TEMPLATE STEP - processMailbox
-        	processMailbox(); //customization is achieved via template pattern
-        	
-            logger.info(configuration.getName() + " - done!");        		
+            	//TEMPLATE STEP - processMailbox
+            	processMailbox(); //customization is achieved via template pattern
+            	
+            	if (logger.isInfoEnabled())
+            		logger.info(configuration.getName() + " - done!");        		
+        	}    		
     	}
+       	catch (Throwable t) {
+    		logger.fatal(configuration.getName() + " - execution failed: " + t);
+    		shutdown();
+    	}    	
     }
     
     public void shutdown() {
-    	shutdown = true;
-    	logger.info(configuration.getName() + " - shutting down task");
-    	closeSession();
-		Thread.currentThread().interrupt();
+    	try {
+        	shutdown = true;
+        	
+        	if (logger.isInfoEnabled())
+        		logger.info(configuration.getName() + " - shutting down...");
+        	
+        	closeSession();
+    		
+        	if (logger.isInfoEnabled())
+        		logger.info(configuration.getName() + " - shutdown completed");
+    		
+    		Thread.currentThread().interrupt();
+    	}
+    	catch (Exception e) {
+    		logger.warn(configuration.getName() + " - shutdown failed: ", e);
+    	}
     }	
     
     public void processMailbox() {
@@ -100,7 +120,7 @@ public abstract class MailboxManager implements Runnable {
 		}
 		catch (Exception e) {
 			logger.warn(configuration.getName() + " - shutdown warn", e);
-		}    	
+		}
     }    
     
     public ParsedMessage parseMessage(Message message) {
@@ -127,16 +147,23 @@ public abstract class MailboxManager implements Runnable {
     		logger.warn(configuration.getName() + " - aborted during shutdown", t);
     	else
     		logger.error(configuration.getName() + " - error", t);       	
+    	
+    	//if () {
+    		// se parsedMessage == null notificare l'errore tramite mail indicando errore imprevisto nell'archiviazione della casella pippo
+    	//}
+    	
     	//TODO - log error    		
     	//TODO - notificare l'errore con il NOTIFICATION SERVICE (INSERIRE QUA LA LOGICA SE NOTIFICARE O MENO L'ERRORE UTILIZZANDO L'AUDIT (se message != null))
     }
     
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
-    	logger.info("storing message " + parsedMessage.getSubject());
+    	if (logger.isInfoEnabled())
+    		logger.info("storing message " + parsedMessage.getSubject());
     }
     
     public void skipMessage(ParsedMessage parsedMessage) throws Exception {
-    	logger.info("message skipped: " + parsedMessage.getSubject());
+    	if (logger.isInfoEnabled())
+    		logger.info("message skipped: " + parsedMessage.getSubject());
     }
     
     public boolean isMessageStorable(ParsedMessage parsedMessage) {
@@ -155,3 +182,8 @@ public abstract class MailboxManager implements Runnable {
     }
  
 }
+
+/*
+migliorare il codice in maniera da poter gestire tramite audit per esempio il fatto che un messaggio è stato archiviato ma non cancellato o spostato.
+As esempio per farlo si può creare una eccezione per il messageStored ed utilizzarla nell'handleError
+*/

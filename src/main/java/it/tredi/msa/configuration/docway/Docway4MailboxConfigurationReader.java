@@ -124,43 +124,49 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public MailboxConfiguration[] readMailboxConfigurations() throws Exception {
 		List<MailboxConfiguration> mailboxConfigurations = new ArrayList<MailboxConfiguration>();
 		
-//TODO - gestire correttamente i try catch (per eXtraWay Client)
-		
 		//connect to extraway server
-		ExtrawayClient xwClient = new ExtrawayClient(host, port, db, user, password);
-		xwClient.connect();
-		
-		//read standard mailboxes
-		int count = xwClient.search(query);
-		QueryResult qr = xwClient.getQueryResult();
-		for (int i=0; i<count; i++) { //iterate xw selection
-			xwClient.setQueryResult(qr); //fix - inner documentModel search changes current query result
-			Document xmlDocument = xwClient.loadDocByQueryResult(i);
+		ExtrawayClient xwClient = null;
+		try {
+			xwClient = new ExtrawayClient(host, port, db, user, password);
+			xwClient.connect();
 			
-			//every doc in the selection could contain more mailboxes info (see xPathInfo)
-			String []xpaths = XPathInfo.split(";");
-			for (String xpath:xpaths) { //iterate xpaths
-	            List<Element> elsL = xmlDocument.selectNodes(xpath + "[./mailbox_in/@host!='']");
-	            for (Element casellaEl:elsL) { //for each mailbox relative to the current xpath
-	            	Docway4MailboxConfiguration conf = createDocway4MailboxConfigurationByConfig(casellaEl);
-	            	mailboxConfigurations.add(conf);
-	            	
-	        		//parse documentModel
-	        		if (xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel")) > 0) {
-	        			Document dmDocument = xwClient.loadDocByQueryResult(0);
-	        			parseDocumentModel(conf, dmDocument);	
-	        		}
-//TODO - cosa fare se il documentModel non viene trovato???
-	        		
-	            }				
-			}
+			//read standard mailboxes
+			int count = xwClient.search(query);
+			QueryResult qr = xwClient.getQueryResult();
+			for (int i=0; i<count; i++) { //iterate xw selection
+				xwClient.setQueryResult(qr); //fix - inner documentModel search changes current query result
+				Document xmlDocument = xwClient.loadDocByQueryResult(i);
+				
+				//every doc in the selection could contain more mailboxes info (see xPathInfo)
+				String []xpaths = XPathInfo.split(";");
+				for (String xpath:xpaths) { //iterate xpaths
+		            List<Element> elsL = xmlDocument.selectNodes(xpath + "[./mailbox_in/@host!='']");
+		            for (Element casellaEl:elsL) { //for each mailbox relative to the current xpath
+		            	Docway4MailboxConfiguration conf = createDocway4MailboxConfigurationByConfig(casellaEl);
+		            	mailboxConfigurations.add(conf);
+		            	
+		        		//parse documentModel
+		        		if (xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel")) > 0) {
+		        			Document dmDocument = xwClient.loadDocByQueryResult(0);
+		        			parseDocumentModel(conf, dmDocument);	
+		        		}
+		        		else
+		        			throw new Exception("Document model non trovato: " + casellaEl.attributeValue("documentModel"));
+		            }				
+				}
+			}			
+	
+			//read interoperabilità mailboxes
+//TODO
 			
 		}
-		
-		xwClient.disconnect();
-		
-		//read interoperabilità mailboxes
-//TODO		
+		catch (Exception e) {
+			throw (e);
+		}
+		finally {
+			if (xwClient != null)
+			xwClient.disconnect();
+		}
 		
 		return mailboxConfigurations.toArray(new MailboxConfiguration[mailboxConfigurations.size()]);
 	}

@@ -74,9 +74,9 @@ public class ExecutorServiceHandler implements Runnable {
     			if (logger.isInfoEnabled())
     				logger.info("Current mailbox managers: " + keySetToString(mailboxManagersMap.keySet()));
     		}
-    		catch (Exception e) {
-    			logger.error("Unexpected error. Check mailbox configurations!", e);
-    			Services.getNotificationService().notifyError("Errore imprevisto in fase di caricamento delle configurazioni delle caselle di posta.\nConsultare il log per maggiori dettagli.\n\n" + e.getMessage());
+    		catch (Throwable t) {
+    			logger.error("Unexpected error. Check mailbox configurations!", t);
+    			Services.getNotificationService().notifyError("Errore imprevisto in fase di caricamento delle configurazioni delle caselle di posta.\nConsultare il log per maggiori dettagli.\n\n" + t.getMessage());
     		}   	
     	}
     }
@@ -87,8 +87,14 @@ public class ExecutorServiceHandler implements Runnable {
 		if (logger.isInfoEnabled())
 			logger.info("Shutting down mailbox managers: " + keySetToString(mailboxManagersMap.keySet()));
     	
-    	for (String confName:mailboxManagersMap.keySet())
-    		mailboxManagersMap.get(confName).shutdown();
+    	for (String confName:mailboxManagersMap.keySet()) {
+    		try {
+    			mailboxManagersMap.get(confName).shutdown();	
+    		}
+			catch (Exception e) {
+				logger.warn("Shutdown failed: " + confName, e);
+			}
+    	}
     	
 		Thread.currentThread().interrupt();
     }

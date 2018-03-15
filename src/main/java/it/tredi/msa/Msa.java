@@ -17,7 +17,7 @@ public class Msa {
 	
 	protected void run() throws Exception {
 		registerShutdownHook();
-
+	
 		if (logger.isInfoEnabled())
 			logger.info("MSA Service Started!");
 
@@ -72,11 +72,13 @@ public class Msa {
 	}		
 	
 	private void shutdown() {
-		logger.info("shutdown() called");
-		
+		if (logger.isInfoEnabled())
+			logger.info("shutdown() called");
+
 		executorServiceHandler.shutdown();
-		
-		logger.info("shutdown() successfully completed");
+
+		if (logger.isInfoEnabled())
+			logger.info("shutdown() successfully completed");
 	}
 
 }

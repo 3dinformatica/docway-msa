@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    
+    <Properties>
+    	<Property name="logdir">/Users/sstagni/Downloads/msa</Property>
+    	<Property name="filename">msa</Property>
+    </Properties>
+    
+    <Appenders>
+		<RollingFile name="ROLLFILE" fileName="${logdir}/${filename}.log" filePattern="${logdir}/${filename}-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <!--TimeBasedTriggeringPolicy interval="2" modulate="true"/-->
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${logdir}" maxDepth="1">
+                    <IfFileName glob="${filename}-*">
+                    	<IfAny>
+                    		<!--IfAccumulatedFileSize exceeds="500MB" /-->
+                    		<IfAccumulatedFileCount exceeds="5" />
+                    	</IfAny>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+    
+    <Loggers>
+		<Logger name="it.tredi.msa" level="debug" additivity="false">
+			<AppenderRef ref="ROLLFILE"/>
+		</Logger>
+		<Logger name="it.tredi.mail" level="info" additivity="false">
+			<AppenderRef ref="ROLLFILE"/>
+		</Logger>
+        <Root level="warn" additivity="false">
+            <AppenderRef ref="ROLLFILE"/>
+        </Root>
+    </Loggers>
+    
+</Configuration>
+
