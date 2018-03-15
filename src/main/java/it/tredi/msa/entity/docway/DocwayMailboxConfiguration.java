@@ -302,11 +302,6 @@ useFileNameForAttachments=true
 commandEncoding=UTF-8
 
 createOneDocByMessageId=false
-
-addOriginalMessageToDocument=true
-
-loadAndLockAttemps=10
-loadAndLockDelay=6000
 	 * 
 	 * 
 	 * 

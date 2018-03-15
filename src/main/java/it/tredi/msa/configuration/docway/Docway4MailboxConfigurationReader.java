@@ -33,7 +33,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_STORE_EML = "docway4mailboxmanager.store-eml.enable";
 	public final static String DOCWAY4MAILBOXMANAGER_MOVE_STORED_MESSAGES = "docway4mailboxmanager.move-stored-messages.enable";
 	public final static String DOCWAY4MAILBOXMANAGER_MOVE_STORED_MESSAGES_FOLDER = "docway4mailboxmanager.move-stored-messages.folder-name";
-	
+	public final static String DOCWAY4MAILBOXMANAGER_XW_LOCK_OP_ATTEMPTS = "docway4mailboxmanager.xw.lock-op.attempts";
+	public final static String DOCWAY4MAILBOXMANAGER_XW_LOCK_OP_DELAY = "docway4mailboxmanager.xw.lock-op.delay";
+
 	private String host;
 	private int port;
 	private String user;
@@ -227,6 +229,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setXwUser(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_USER_PROPERTY, "lettore"));
     	conf.setXwPassword(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_PASSWORD_PROPERTY, "reader"));
     	conf.setAclDb(db);
+    	conf.setXwLockOpAttempts(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_XW_LOCK_OP_ATTEMPTS, Docway4MailboxConfiguration.DEFAULT_XW_LOCK_OP_ATTEMPTS));
+    	conf.setXwLockOpDelay(propertiesReader.getLongProperty(DOCWAY4MAILBOXMANAGER_XW_LOCK_OP_DELAY, Docway4MailboxConfiguration.DEFAULT_XW_LOCK_OP_DELAY));
     	
     	//other docway4 global params
     	conf.setStoreEml(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_STORE_EML, false));

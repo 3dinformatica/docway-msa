@@ -11,7 +11,6 @@ import org.dom4j.Element;
 
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
-import it.tredi.mail.MessageUtils;
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.docway.AssegnatarioMailboxConfiguration;
 import it.tredi.msa.entity.docway.Docway4MailboxConfiguration;
@@ -27,9 +26,6 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	protected ExtrawayClient aclClient;
 	private int lastSavedDocumentPhysDoc;
 	private boolean extRestrictionsOnAcl;
-	
-	private final static int xwOpAttempts = 5;
-	private final static long xwOpDelay = 2000;
 	
 	@Override
     public void openSession() throws Exception {
@@ -61,24 +57,25 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	@Override
 	protected void saveNewDocument(DocwayDocument doc) throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		
 		//save new document in Extraway
 		Document xmlDocument = docwayDocumentToXml(doc);
 		lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
 		
 		//load and lock document
-		xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc);
+		xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 		
 		//upload files
 		boolean uploaded = false;
 		for (DocwayFile file:doc.getFiles()) {
-			file.setId(xwClient.addAttach(file.getName(), file.getContent(), xwOpAttempts, xwOpDelay));
+			file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
 			uploaded = true;
 		}
 
 		//upload immagini
 		for (DocwayFile file:doc.getImmagini()) {
-			file.setId(xwClient.addAttach(file.getName(), file.getContent(), xwOpAttempts, xwOpDelay));
+			file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
 			uploaded = true;
 		}		
 		

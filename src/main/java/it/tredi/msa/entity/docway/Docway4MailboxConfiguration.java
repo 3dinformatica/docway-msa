@@ -2,6 +2,9 @@ package it.tredi.msa.entity.docway;
 
 public class Docway4MailboxConfiguration extends DocwayMailboxConfiguration {
 	
+	public final static int DEFAULT_XW_LOCK_OP_ATTEMPTS = 10;
+	public final static long DEFAULT_XW_LOCK_OP_DELAY = 6000;
+	
 	//xw
 	private String xwHost;
 	private int xwPort;
@@ -9,7 +12,8 @@ public class Docway4MailboxConfiguration extends DocwayMailboxConfiguration {
 	private String xwPassword;
 	private String xwDb;
 	private String aclDb;
-	
+	private int xwLockOpAttempts;
+	private long xwLockOpDelay;
 	
 	public String getXwHost() {
 		return xwHost;
@@ -58,5 +62,21 @@ public class Docway4MailboxConfiguration extends DocwayMailboxConfiguration {
 	public void setAclDb(String aclDb) {
 		this.aclDb = aclDb;
 	}
-	
+
+	public int getXwLockOpAttempts() {
+		return xwLockOpAttempts;
+	}
+
+	public void setXwLockOpAttempts(int xwLockOpAttempts) {
+		this.xwLockOpAttempts = xwLockOpAttempts;
+	}
+
+	public long getXwLockOpDelay() {
+		return xwLockOpDelay;
+	}
+
+	public void setXwLockOpDelay(long xwLockOpDelay) {
+		this.xwLockOpDelay = xwLockOpDelay;
+	}
+
 }

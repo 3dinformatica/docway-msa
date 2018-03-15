@@ -166,8 +166,6 @@ public class ExtrawayClient {
             }
         } //end-for		
         return null;
-	}	
-	
-	
+	}
 	
 }
