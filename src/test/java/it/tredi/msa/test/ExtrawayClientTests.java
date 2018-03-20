@@ -4,7 +4,6 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import it.tredi.extraway.ExtrawayClient;
-import it.tredi.msa.Services;
 
 import java.io.IOException;
 import java.util.Properties;

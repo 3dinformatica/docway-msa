@@ -47,7 +47,7 @@ public class ExecutorServiceHandler implements Runnable {
     					if (mailboxManagersMap.get(mailboxConfiguration.getName()) == null) {
 
     						if (logger.isInfoEnabled())
-    							logger.info("Found new mailbox configuration: " + mailboxConfiguration.getName());
+    							logger.info("Found new mailbox configuration: [" + mailboxConfiguration.getName() + "]");
         					
         					MailboxManager mailboxManager = MailboxManagerFactory.createMailboxManager(mailboxConfiguration);
         					mailboxManagersMap.put(mailboxConfiguration.getName(), mailboxManager);
@@ -62,7 +62,7 @@ public class ExecutorServiceHandler implements Runnable {
     				if (!shutdown) {
     					if (!freshMailboxConfigurationsSet.contains(confName)) {
     						if (logger.isInfoEnabled())
-    							logger.info("Found missing (deleted) mailbox configuration: " + confName);
+    							logger.info("Found missing (deleted) mailbox configuration: [" + confName + "]");
         					
         					mailboxManagersMap.get(confName).shutdown();
         					mailboxManagersMap.remove(confName);
@@ -71,7 +71,7 @@ public class ExecutorServiceHandler implements Runnable {
     			}
     			
     			if (logger.isInfoEnabled()) {
-    				logger.info("Current mailbox managers: " + keySetToString(mailboxManagersMap.keySet()));
+    				logger.info("Current mailbox managers: [" + keySetToString(mailboxManagersMap.keySet()) + "]");
     				logger.info("Next refesh in (" + Services.getConfigurationService().getMSAConfiguration().getMailboxManagersRefreshTime() + ") s");
     			}
 
@@ -87,7 +87,7 @@ public class ExecutorServiceHandler implements Runnable {
     	shutdown = true;
     	
 		if (logger.isInfoEnabled())
-			logger.info("Shutting down mailbox managers: " + keySetToString(mailboxManagersMap.keySet()));
+			logger.info("Shutting down mailbox managers: [" + keySetToString(mailboxManagersMap.keySet()) + "]");
     	
     	for (String confName:mailboxManagersMap.keySet()) {
     		try {

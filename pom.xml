@@ -22,31 +22,6 @@
 		<jdk.version>1.8</jdk.version>
 	</properties>
 
-	<build>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
-		<plugins>
-		<!-- 
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<source>${jdk.version}</source>
-					<target>${jdk.version}</target>
-				</configuration>
-			</plugin>
-		 -->
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>			
-		</plugins>
-	</build>
-
 	<dependencies> 	
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -66,27 +41,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
-		</dependency>
-
-			
-<!-- 		
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-1.2-api</artifactId>
-			<version>2.6.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-web</artifactId>
-			<version>2.6.2</version>			
-		</dependency>
- -->		
+		</dependency>	
 		<dependency>
 			<groupId>it.tredi</groupId>
 			<artifactId>utils</artifactId>
@@ -108,6 +63,15 @@
     		<version>2.0.0</version>
 		</dependency>
 	</dependencies>
+	
+	<build>
+		<plugins>	
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>			
+		</plugins>	
+	</build>	
 	
 	<distributionManagement>
 		<repository>

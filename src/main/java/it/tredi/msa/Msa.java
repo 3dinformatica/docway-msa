@@ -78,12 +78,12 @@ public class Msa {
 
 		executorServiceHandler.shutdown();
 
+		if (logger.isInfoEnabled())
+			logger.info("shutdown() successfully completed");
+		
 		//call log4j2 shutdown manullay (see log4l2.xml -> shutdownHook="disable")
 		LoggerContext context = (LoggerContext)LogManager.getContext(false);
 		context.stop();
-
-		if (logger.isInfoEnabled())
-			logger.info("shutdown() successfully completed");
 	}
 
 }

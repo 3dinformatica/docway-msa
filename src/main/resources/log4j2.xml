@@ -34,11 +34,10 @@
 		</Logger>
 		<Logger name="it.tredi.mail" level="info" additivity="false">
 			<AppenderRef ref="ROLLFILE"/>
-		</Logger>
+		</Logger>	
         <Root level="warn" additivity="false">
             <AppenderRef ref="ROLLFILE"/>
         </Root>
     </Loggers>
     
 </Configuration>
-

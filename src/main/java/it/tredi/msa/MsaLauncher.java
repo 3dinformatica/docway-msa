@@ -2,19 +2,19 @@ package it.tredi.msa;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import it.tredi.utils.maven.ApplicationProperties;
+import org.springframework.core.env.Environment;
 
 @SpringBootApplication
 public class MsaLauncher implements CommandLineRunner {
 	
 	private static final Logger logger = LogManager.getLogger(MsaLauncher.class.getName());
 	
-	private static final String MSA_ARTIFACTID = "msa";
-	private static final String MSA_GROUPID = "it.tredi";	
+	@Autowired
+	private Environment env;
 	
 	public static void main(String []args) {
 		int exitCode = 0;
@@ -28,7 +28,7 @@ public class MsaLauncher implements CommandLineRunner {
 		System.exit(exitCode);		
 	}
 	
-	protected static void logSplashMessage() {
+	protected void logSplashMessage() {
 		if (logger.isInfoEnabled()) {
 			logger.info("            ..--\"\"|");
 			logger.info("            |     |");
@@ -47,7 +47,7 @@ public class MsaLauncher implements CommandLineRunner {
 			logger.info(" | |\\/| | \\___ \\    / _ \\");  
 			logger.info(" | |  | |  ___) |  / ___ \\"); 
 			logger.info(" |_|  |_| |____/  /_/   \\_\\");
-			logger.info("MSA version: " + ApplicationProperties.getInstance().getVersion(MSA_GROUPID, MSA_ARTIFACTID) + " " + ApplicationProperties.getInstance().getBuildDate(MSA_GROUPID, MSA_ARTIFACTID));
+			logger.info("MSA version: " + env.getProperty("application.version") + " " + env.getProperty("build.date"));
 		}
 	}
 
