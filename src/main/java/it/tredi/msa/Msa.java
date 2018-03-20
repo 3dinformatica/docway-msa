@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 
 public class Msa {
 	
@@ -76,6 +77,10 @@ public class Msa {
 			logger.info("shutdown() called");
 
 		executorServiceHandler.shutdown();
+
+		//call log4j2 shutdown manullay (see log4l2.xml -> shutdownHook="disable")
+		LoggerContext context = (org.apache.logging.log4j.core.LoggerContext)LogManager.getContext(false);
+		context.stop();
 
 		if (logger.isInfoEnabled())
 			logger.info("shutdown() successfully completed");

@@ -2,10 +2,14 @@ package it.tredi.msa;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import it.tredi.utils.maven.ApplicationProperties;
 
-public class MsaLauncher {
+@SpringBootApplication
+public class MsaLauncher implements CommandLineRunner {
 	
 	private static final Logger logger = LogManager.getLogger(MsaLauncher.class.getName());
 	
@@ -15,10 +19,7 @@ public class MsaLauncher {
 	public static void main(String []args) {
 		int exitCode = 0;
 		try {
-			logSplashMessage();
-			
-			Msa msa = new Msa();
-			msa.run();
+			SpringApplication.run(MsaLauncher.class, args);
 		}
 		catch (Exception e) {
 			logger.fatal(e);
@@ -48,6 +49,14 @@ public class MsaLauncher {
 			logger.info(" |_|  |_| |____/  /_/   \\_\\");
 			logger.info("MSA version: " + ApplicationProperties.getInstance().getVersion(MSA_GROUPID, MSA_ARTIFACTID) + " " + ApplicationProperties.getInstance().getBuildDate(MSA_GROUPID, MSA_ARTIFACTID));
 		}
+	}
+
+	@Override
+	public void run(String... args) throws Exception {
+		logSplashMessage();
+			
+		Msa msa = new Msa();
+		msa.run();
 	}
 	
 }
