@@ -45,7 +45,7 @@ public class Msa {
 				logger.info("MsaShutdownHook registered!");
 		} 
 		catch (AccessControlException e) {
-			logger.error("Could not register shutdown hook... " + e.getMessage(), e);
+			logger.error("Could not register shutdown hook " + e.getMessage(), e);
 		}		
 	}	
 
@@ -62,12 +62,12 @@ public class Msa {
 		@Override
 		public void run() {
 			if (logger.isInfoEnabled())
-				logger.info("MsaShutdownHook hook ACTIVATED. Shutting down...");
+				logger.info("MsaShutdownHook hook ACTIVATED. Shutting down");
 			try {
 				shutdown();
 			} 
 			catch (Exception e) {
-				logger.error("MsaShutdownHook got exception on MSA closure... " + e.getMessage(), e);
+				logger.error("MsaShutdownHook got exception on MSA closure " + e.getMessage(), e);
 			}
 		}
 	}		
@@ -79,7 +79,7 @@ public class Msa {
 		executorServiceHandler.shutdown();
 
 		//call log4j2 shutdown manullay (see log4l2.xml -> shutdownHook="disable")
-		LoggerContext context = (org.apache.logging.log4j.core.LoggerContext)LogManager.getContext(false);
+		LoggerContext context = (LoggerContext)LogManager.getContext(false);
 		context.stop();
 
 		if (logger.isInfoEnabled())

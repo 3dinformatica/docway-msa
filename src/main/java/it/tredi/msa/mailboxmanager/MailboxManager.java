@@ -33,22 +33,25 @@ public abstract class MailboxManager implements Runnable {
 		this.mailReader = mailReader;
 	}
 		
-    @Override
+	@Override
     public void run() {
     	try {
         	if (!shutdown) {
         		if (logger.isInfoEnabled())
-        			logger.info(configuration.getName() + " - run()");
+        			logger.info("[" + configuration.getName() + "] starting execution" + " [" + configuration.getUser() + "]");
 
             	//TEMPLATE STEP - processMailbox
             	processMailbox(); //customization is achieved via template pattern
             	
-            	if (logger.isInfoEnabled())
-            		logger.info(configuration.getName() + " - done!");        		
+            	if (logger.isInfoEnabled()) {
+            		logger.info("[" + configuration.getName() + "] execution completed");
+            		logger.info("[" + configuration.getName() + "] next execution in (" + configuration.getDelay() + ") s");
+            	}
+            		        		
         	}    		
     	}
        	catch (Throwable t) {
-    		logger.fatal(configuration.getName() + " - execution failed: " + t);
+    		logger.fatal("[" + configuration.getName() + "] execution failed: " + t);
     		shutdown();
     	}    	
     }
@@ -58,17 +61,17 @@ public abstract class MailboxManager implements Runnable {
         	shutdown = true;
         	
         	if (logger.isInfoEnabled())
-        		logger.info(configuration.getName() + " - shutting down...");
+        		logger.info("[" + configuration.getName() + "] shutting down");
         	
         	closeSession();
     		
         	if (logger.isInfoEnabled())
-        		logger.info(configuration.getName() + " - shutdown completed");
+        		logger.info("[" + configuration.getName() + "] shutdown completed");
     		
     		Thread.currentThread().interrupt();
     	}
     	catch (Exception e) {
-    		logger.warn(configuration.getName() + " - shutdown failed: ", e);
+    		logger.warn("[" + configuration.getName() + "] shutdown failed: ", e);
     	}
     }	
     
@@ -81,11 +84,21 @@ public abstract class MailboxManager implements Runnable {
     		if (shutdown)
     			return;
         	Message []messages = mailReader.getMessages();
-        	for (Message message:messages) {
+        	
+        	if (logger.isInfoEnabled())
+        		logger.info("[" + configuration.getName() + "] found (" + messages.length + ") messages");
+        	
+        	int i=1;
+        	for (Message message:messages) { //for each email message
         		if (shutdown)
-        			return;        		
+        			return;
+        		
         		//TEMPLATE STEP - parsedMessage
         		ParsedMessage parsedMessage = parseMessage(message);
+        		
+        		if (logger.isInfoEnabled())
+        			logger.info("[" + configuration.getName() + "] processing message (" + (i++) + "/" + messages.length + ") [Sent: " + parsedMessage.getSentDate() + "] [Subject: " + parsedMessage.getSubject() + "]");        		
+        		
         		try {
         			//TEMPLATE STEP - processMessage
         			processMessage(parsedMessage);
@@ -119,7 +132,7 @@ public abstract class MailboxManager implements Runnable {
 			}
 		}
 		catch (Exception e) {
-			logger.warn(configuration.getName() + " - shutdown warn", e);
+			logger.warn("[" + configuration.getName() + "] closeSession() warn", e);
 		}
     }    
     
@@ -144,9 +157,9 @@ public abstract class MailboxManager implements Runnable {
 
     public void handleError(Throwable t, ParsedMessage parsedMessage) {
     	if (shutdown)
-    		logger.warn(configuration.getName() + " - aborted during shutdown", t);
+    		logger.warn("[" + configuration.getName() + "] aborted during shutdown", t);
     	else
-    		logger.error(configuration.getName() + " - error", t);       	
+    		logger.error("[" + configuration.getName() + "] error", t);
     	
     	//if () {
     		// se parsedMessage == null notificare l'errore tramite mail indicando errore imprevisto nell'archiviazione della casella pippo
@@ -158,12 +171,12 @@ public abstract class MailboxManager implements Runnable {
     
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
     	if (logger.isInfoEnabled())
-    		logger.info("storing message " + parsedMessage.getSubject());
+    		logger.info("[" + configuration.getName() + "] storing message: " + parsedMessage.getMessageId());
     }
     
     public void skipMessage(ParsedMessage parsedMessage) throws Exception {
     	if (logger.isInfoEnabled())
-    		logger.info("message skipped: " + parsedMessage.getSubject());
+    		logger.info("[" + configuration.getName() + "] message skipped: " + parsedMessage.getMessageId());
     }
     
     public boolean isMessageStorable(ParsedMessage parsedMessage) {
@@ -171,10 +184,19 @@ public abstract class MailboxManager implements Runnable {
     }
     
     public void messageStored(ParsedMessage parsedMessage) throws Exception {
+    	if (logger.isInfoEnabled())
+    		logger.info("[" + configuration.getName() + "] message stored: " + parsedMessage.getMessageId());
+    	
     	if (configuration.getStoredMessagePolicy() == StoredMessagePolicy.DELETE_FROM_FOLDER) { //rimozione email
+    		if (logger.isInfoEnabled())
+    			logger.info("[" + configuration.getName() + "] deleting message: " + parsedMessage.getMessageId());
+    		
     		mailReader.deleteMessage(parsedMessage.getMessage());
     	}
     	else if (configuration.getStoredMessagePolicy() == StoredMessagePolicy.MOVE_TO_FOLDER) { //spostamento email
+    		if (logger.isInfoEnabled())
+    			logger.info("[" + configuration.getName() + "] moving message to folder(" + configuration.getStoredMessageFolderName() + "): " + parsedMessage.getMessageId());
+    		
     		mailReader.createFolder(configuration.getStoredMessageFolderName()); //if folder exists this method has no effect
     		mailReader.copyMessageToFolder(parsedMessage.getMessage(), configuration.getStoredMessageFolderName());
     		mailReader.deleteMessage(parsedMessage.getMessage());

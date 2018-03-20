@@ -30,7 +30,7 @@ public class ExecutorServiceHandler implements Runnable {
 	@Override
     public void run() {
 		if (logger.isInfoEnabled())
-			logger.info("Refreshing mailbox managers. Loading mailbox configurations...");
+			logger.info("Refreshing mailbox managers. Loading mailbox configurations");
 		
     	if (!shutdown) {
     		try {
@@ -51,19 +51,18 @@ public class ExecutorServiceHandler implements Runnable {
         					
         					MailboxManager mailboxManager = MailboxManagerFactory.createMailboxManager(mailboxConfiguration);
         					mailboxManagersMap.put(mailboxConfiguration.getName(), mailboxManager);
-        					
-            				int delay = mailboxManager.getConfiguration().getDelay() == -1? Services.getConfigurationService().getMSAConfiguration().getMailboxManagersDelay() : mailboxManager.getConfiguration().getDelay();
-            				executor.scheduleWithFixedDelay(mailboxManager, i++, delay, TimeUnit.SECONDS);
+            				mailboxManager.getConfiguration().setDelay(mailboxManager.getConfiguration().getDelay() == -1? Services.getConfigurationService().getMSAConfiguration().getMailboxManagersDelay() : mailboxManager.getConfiguration().getDelay());
+            				executor.scheduleWithFixedDelay(mailboxManager, i++, mailboxManager.getConfiguration().getDelay(), TimeUnit.SECONDS);
         				}
     				}
     			}
     			
     			//stop mailbox managers for deleted configurations
     			for (String confName:mailboxManagersMap.keySet()) {
-    				if (!shutdown) {		
+    				if (!shutdown) {
     					if (!freshMailboxConfigurationsSet.contains(confName)) {
     						if (logger.isInfoEnabled())
-    							logger.info("Found missing(deleted) mailbox configuration: " + confName);
+    							logger.info("Found missing (deleted) mailbox configuration: " + confName);
         					
         					mailboxManagersMap.get(confName).shutdown();
         					mailboxManagersMap.remove(confName);
@@ -71,8 +70,11 @@ public class ExecutorServiceHandler implements Runnable {
     				}
     			}
     			
-    			if (logger.isInfoEnabled())
+    			if (logger.isInfoEnabled()) {
     				logger.info("Current mailbox managers: " + keySetToString(mailboxManagersMap.keySet()));
+    				logger.info("Next refesh in (" + Services.getConfigurationService().getMSAConfiguration().getMailboxManagersRefreshTime() + ") s");
+    			}
+
     		}
     		catch (Throwable t) {
     			logger.error("Unexpected error. Check mailbox configurations!", t);

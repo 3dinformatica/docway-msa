@@ -37,6 +37,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	@Override
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
+		super.storeMessage(parsedMessage);
+		
 		this.currentDate = new Date();
 		this.parsedMessage = parsedMessage;
 		
