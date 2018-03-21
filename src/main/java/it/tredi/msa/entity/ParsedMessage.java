@@ -20,9 +20,9 @@ public class ParsedMessage {
 	private String textParts;
 	private String htmlParts;
 	
-	public ParsedMessage(Message message) {
+	public ParsedMessage(Message message) throws Exception {
 		this.message = message;
-		this.messageId = null;
+		getMessageId(); //force setting messageId
 	}
 
 	public Message getMessage() {

@@ -29,13 +29,13 @@
     </Appenders>
     
     <Loggers>
-		<Logger name="it.tredi.msa" level="debug" additivity="false">
+		<Logger name="it.tredi.msa" level="info" additivity="false"> <!-- MSA Logger -->
 			<AppenderRef ref="ROLLFILE"/>
 		</Logger>
-		<Logger name="it.tredi.mail" level="info" additivity="false">
+		<Logger name="it.tredi.mail" level="info" additivity="false"> <!-- MAIL API Logger -->
 			<AppenderRef ref="ROLLFILE"/>
 		</Logger>	
-        <Root level="warn" additivity="false">
+        <Root level="warn" additivity="false"> <!-- In a eXtraWay scenario don't set to [info] level if you don't want broker excessive logging -->
             <AppenderRef ref="ROLLFILE"/>
         </Root>
     </Loggers>

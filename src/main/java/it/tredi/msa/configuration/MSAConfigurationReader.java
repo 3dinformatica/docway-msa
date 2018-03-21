@@ -13,6 +13,7 @@ public class MSAConfigurationReader {
 	public final static String MAILBOXMANAGERS_DELAY_PROPERTY = "mailboxmanagers.delay";
 	public final static String MAILBOXMANAGERS_POOLSIZE_PROPERTY = "mailboxmanagers.poolsize";
 	public final static String MAILBOXMANAGERS_REFRESHTIME_PROPERTY = "mailboxmanagers.refresh.time";
+	public final static String MAILBOXMANAGERS_HOT_RELOADING_PROPERTY = "mailboxmanagers.hot-reloading";
 	public final static String MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES_PROPERTY = "mailboxmanagers.allow-email-duplicates";
 
 	public MSAConfiguration read() throws Exception {
@@ -28,6 +29,7 @@ public class MSAConfigurationReader {
 		msaConfiguration.setMailboxManagersPoolsize(propertiesReader.getIntProperty(MAILBOXMANAGERS_POOLSIZE_PROPERTY, 1));
 		msaConfiguration.setMailboxManagersRefreshTime(propertiesReader.getIntProperty(MAILBOXMANAGERS_REFRESHTIME_PROPERTY, 1));
 		msaConfiguration.setAllowEmailDuplicates(propertiesReader.getBooleanProperty(MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES_PROPERTY, false));
+		msaConfiguration.setMailboxManagersHotReloading(propertiesReader.getBooleanProperty(MAILBOXMANAGERS_HOT_RELOADING_PROPERTY, false));
 		
 		//AuditWriter configuration
 		msaConfiguration.setAuditWriterConfiguration(readConfiguration(propertiesReader, AUDIT_WRITER_PROPERTY));

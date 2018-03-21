@@ -2,6 +2,7 @@ package it.tredi.msa.mailboxmanager;
 
 import java.lang.reflect.Constructor;
 import it.tredi.mail.MailClientHelper;
+import it.tredi.msa.Services;
 import it.tredi.msa.entity.MailboxConfiguration;
 
 public class MailboxManagerFactory {
@@ -10,8 +11,7 @@ public class MailboxManagerFactory {
 		Class<?> cls = Class.forName(mailboxConfiguration.getMailboxManagerClassName());
 		Constructor<?> ct = cls.getConstructor();
 		MailboxManager mailboxManager = (MailboxManager)ct.newInstance();
-		mailboxManager.setConfiguration(mailboxConfiguration);
-		mailboxManager.setMailReader(MailClientHelper.createMailReader(mailboxConfiguration.getHost(), mailboxConfiguration.getPort(), mailboxConfiguration.getUser(), mailboxConfiguration.getPassword(), mailboxConfiguration.getProtocol()));
+		update(mailboxManager, mailboxConfiguration);
 		return (MailboxManager)mailboxManager;
 	}
 	
@@ -21,6 +21,13 @@ public class MailboxManagerFactory {
 		for (MailboxConfiguration mailboxConfiguration:mailboxConfigurations)
 			mailboxManagers[i++] = createMailboxManager(mailboxConfiguration);
 		return mailboxManagers;
+	}
+	
+	public static void update(MailboxManager mailboxManager, MailboxConfiguration mailboxConfiguration) throws Exception {
+		if (mailboxManager.getConfiguration() == null || Services.getConfigurationService().getMSAConfiguration().isMailboxManagersHotReloading()) {
+			mailboxManager.setConfiguration(mailboxConfiguration);
+			mailboxManager.setMailReader(MailClientHelper.createMailReader(mailboxConfiguration.getHost(), mailboxConfiguration.getPort(), mailboxConfiguration.getUser(), mailboxConfiguration.getPassword(), mailboxConfiguration.getProtocol()));
+		}
 	}
 
 }

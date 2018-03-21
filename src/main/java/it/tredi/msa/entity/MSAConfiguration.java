@@ -10,6 +10,7 @@ public class MSAConfiguration {
 	private int mailboxManagersDelay;
 	private int mailboxManagersPoolsize;
 	private int mailboxManagersRefreshTime;
+	private boolean mailboxManagersHotReloading = false;
 	private boolean allowEmailDuplicates;
 	Object rawData;
 	
@@ -61,6 +62,14 @@ public class MSAConfiguration {
 
 	public void setMailboxManagersRefreshTime(int mailboxManagersPoolsize) {
 		this.mailboxManagersRefreshTime = mailboxManagersPoolsize;
+	}
+
+	public boolean isMailboxManagersHotReloading() {
+		return mailboxManagersHotReloading;
+	}
+
+	public void setMailboxManagersHotReloading(boolean mailboxManagersHotReloading) {
+		this.mailboxManagersHotReloading = mailboxManagersHotReloading;
 	}
 
 	public boolean isAllowEmailDuplicates() {

@@ -11,7 +11,6 @@ public abstract class MailboxConfiguration {
 	private String protocol;
 	private String user;
 	private String password;
-	private String address;
 	private int mailserverSocketTimeout;
 	private int mailserverConnectionTimeout;
 	
@@ -77,14 +76,6 @@ public abstract class MailboxConfiguration {
 		this.password = password;
 	}
 	
-	public String getAddress() {
-		return address;
-	}
-	
-	public void setAddress(String address) {
-		this.address = address;
-	}
-	
 	public int getMailserverSocketTimeout() {
 		return mailserverSocketTimeout;
 	}
@@ -124,11 +115,5 @@ public abstract class MailboxConfiguration {
 	public void setStoredMessageFolderName(String storedMessageFolderName) {
 		this.storedMessageFolderName = storedMessageFolderName;
 	}
-	
-	/*
-	notifyRemainingError
-	javamailDebug=false	
-	
-	*/
 	
 }

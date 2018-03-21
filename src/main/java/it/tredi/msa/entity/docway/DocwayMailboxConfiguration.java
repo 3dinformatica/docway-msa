@@ -11,14 +11,6 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	//email address
 	private String email;
 	
-	//xw
-	private String xwHost;
-	private int xwPort;
-	private String xwUser;
-	private String xwPassword;
-	private String xwDb;
-	private String aclDb;
-	
 	private String tipoDoc; //arrivo, partenza, interno, varie
 	private boolean bozza;
 	private String codAmmAoo;
@@ -62,54 +54,6 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setEmail(String email) {
 		this.email = email;
-	}
-
-	public String getXwHost() {
-		return xwHost;
-	}
-	
-	public void setXwHost(String xwHost) {
-		this.xwHost = xwHost;
-	}
-	
-	public int getXwPort() {
-		return xwPort;
-	}
-	
-	public void setXwPort(int xwPort) {
-		this.xwPort = xwPort;
-	}
-	
-	public String getXwUser() {
-		return xwUser;
-	}
-
-	public void setXwUser(String xwUser) {
-		this.xwUser = xwUser;
-	}
-
-	public String getXwPassword() {
-		return xwPassword;
-	}
-
-	public void setXwPassword(String xwPassword) {
-		this.xwPassword = xwPassword;
-	}
-
-	public String getXwDb() {
-		return xwDb;
-	}
-
-	public void setXwDb(String xwDb) {
-		this.xwDb = xwDb;
-	}
-	
-	public String getAclDb() {
-		return aclDb;
-	}
-
-	public void setAclDb(String aclDb) {
-		this.aclDb = aclDb;
 	}
 
 	public String getTipoDoc() {

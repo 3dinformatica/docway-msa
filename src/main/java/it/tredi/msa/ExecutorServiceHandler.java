@@ -20,6 +20,8 @@ public class ExecutorServiceHandler implements Runnable {
 	private static final Logger logger = LogManager.getLogger(ExecutorServiceHandler.class.getName());
 	private ScheduledExecutorService executor;
 	
+	private final static String LOADING_CONFIGURATION_ERROR_MESSAGE = "Errore imprevisto in fase di caricamento delle configurazioni delle caselle di posta.\nConsultare il log per maggiori dettagli.\n\n$s";
+	
 	private Map<String, MailboxManager> mailboxManagersMap;
 	
     public ExecutorServiceHandler(ScheduledExecutorService executor) {
@@ -38,22 +40,29 @@ public class ExecutorServiceHandler implements Runnable {
     			Set<String>	freshMailboxConfigurationsSet = new HashSet<String>();
     			MailboxConfiguration []freshMailboxConfigurations = Services.getConfigurationService().readMailboxConfigurations();
     			
-    			//create and start mailbox managers for new configurations
+    			//add new configurations and refresh existing ones
     			int i = 0;
     			for (MailboxConfiguration mailboxConfiguration:freshMailboxConfigurations) {
     				if (!shutdown) {
     					freshMailboxConfigurationsSet.add(mailboxConfiguration.getName());
     					
-    					if (mailboxManagersMap.get(mailboxConfiguration.getName()) == null) {
+    					if (mailboxManagersMap.get(mailboxConfiguration.getName()) == null) { //create and start mailbox managers for new configurations
 
-    						if (logger.isInfoEnabled())
-    							logger.info("Found new mailbox configuration: [" + mailboxConfiguration.getName() + "]");
+    						if (logger.isDebugEnabled())
+    							logger.debug("Found new mailbox configuration: [" + mailboxConfiguration.getName() + "]");
         					
         					MailboxManager mailboxManager = MailboxManagerFactory.createMailboxManager(mailboxConfiguration);
         					mailboxManagersMap.put(mailboxConfiguration.getName(), mailboxManager);
             				mailboxManager.getConfiguration().setDelay(mailboxManager.getConfiguration().getDelay() == -1? Services.getConfigurationService().getMSAConfiguration().getMailboxManagersDelay() : mailboxManager.getConfiguration().getDelay());
             				executor.scheduleWithFixedDelay(mailboxManager, i++, mailboxManager.getConfiguration().getDelay(), TimeUnit.SECONDS);
         				}
+    					else { //update existing configuration
+    						if (logger.isDebugEnabled())
+    							logger.debug("Updating mailbox configuration: [" + mailboxConfiguration.getName() + "]");
+    						
+    						MailboxManagerFactory.update(mailboxManagersMap.get(mailboxConfiguration.getName()), mailboxConfiguration);
+    					}
+    					
     				}
     			}
     			
@@ -61,8 +70,8 @@ public class ExecutorServiceHandler implements Runnable {
     			for (String confName:mailboxManagersMap.keySet()) {
     				if (!shutdown) {
     					if (!freshMailboxConfigurationsSet.contains(confName)) {
-    						if (logger.isInfoEnabled())
-    							logger.info("Found missing (deleted) mailbox configuration: [" + confName + "]");
+    						if (logger.isDebugEnabled())
+    							logger.debug("Found missing (deleted) mailbox configuration: [" + confName + "]");
         					
         					mailboxManagersMap.get(confName).shutdown();
         					mailboxManagersMap.remove(confName);
@@ -78,7 +87,7 @@ public class ExecutorServiceHandler implements Runnable {
     		}
     		catch (Throwable t) {
     			logger.error("Unexpected error. Check mailbox configurations!", t);
-    			Services.getNotificationService().notifyError("Errore imprevisto in fase di caricamento delle configurazioni delle caselle di posta.\nConsultare il log per maggiori dettagli.\n\n" + t.getMessage());
+    			Services.getNotificationService().notifyError(String.format(LOADING_CONFIGURATION_ERROR_MESSAGE, t.getMessage()));
     		}   	
     	}
     }
