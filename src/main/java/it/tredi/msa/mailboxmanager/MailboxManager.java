@@ -1,5 +1,9 @@
 package it.tredi.msa.mailboxmanager;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Date;
+
 import javax.mail.Message;
 
 import org.apache.logging.log4j.LogManager;
@@ -7,18 +11,23 @@ import org.apache.logging.log4j.Logger;
 
 import it.tredi.mail.MailReader;
 import it.tredi.msa.Services;
+import it.tredi.msa.audit.AuditMailboxRun;
+import it.tredi.msa.audit.AuditMailboxRunStatus;
 import it.tredi.msa.entity.MailboxConfiguration;
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.StoredMessagePolicy;
 
 public abstract class MailboxManager implements Runnable {
-
+	
 	private MailboxConfiguration configuration;
 	private MailReader mailReader;
 	private boolean shutdown = false;
 	private static final Logger logger = LogManager.getLogger(MailboxManager.class.getName());
+	private AuditMailboxRun auditMailboxRun;
 	
 	private final static String PROCESS_MAILBOX_ERROR_MESSAGE = "Errore imprevisto durante le gestione della casella di posta [%s].\nControllare la configurazione [%s://%s:%s][User:%s]\nConsultare il log per maggiori dettagli.\n\n%s";
+	private final static String STORE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante l'archiviazione del messaggio di posta [%s].\nMessage Id:%s\nSent Date: %s\nSubject: %s\nConsultare il log per maggiori dettagli.\n\n%s";
+	private final static String HANDLE_ERROR_ERROR_MESSAGE = "Errore imprevisto durante la gestione di un errore in fase di archiviazione di un messaggio di posta\nConsultare il log per maggiori dettagli.\n\n%s";
 	
 	public MailboxConfiguration getConfiguration() {
 		return configuration;
@@ -93,6 +102,7 @@ public abstract class MailboxManager implements Runnable {
         	
         	if (logger.isInfoEnabled())
         		logger.info("[" + configuration.getName() + "] found (" + messages.length + ") messages");
+        	auditMailboxRun.setMessageCount(messages.length);
         	
         	int i=1;
         	for (Message message:messages) { //for each email message
@@ -107,8 +117,15 @@ public abstract class MailboxManager implements Runnable {
             		if (logger.isInfoEnabled())
             			logger.info("[" + configuration.getName() + "] message (" + (i++) + "/" + messages.length + ") [" + parsedMessage.getMessageId() + "]");
             		
-        			//TEMPLATE STEP - processMessage
-        			processMessage(parsedMessage);
+            		if (Services.getAuditService().auditMessageInErrorFound(configuration, parsedMessage)) { //message found in error in audit
+            			auditMailboxRun.incrementErrorCount();
+            			logger.info("[" + configuration.getName() + "] message skipped [" + parsedMessage.getMessageId() + "]. Message already found in audit in [ERROR] state");
+            			continue; //skip to next message
+            		}
+            		
+            		//TEMPLATE STEP - processMessage
+        			processMessage(parsedMessage);            			
+
         		}
         		catch (Exception e) {
         			//TEMPLATE STEP - handleError
@@ -121,6 +138,7 @@ public abstract class MailboxManager implements Runnable {
     		handleError(t, null);
     	}
     	finally {
+    		
 			//TEMPLATE STEP - closeMessage
 			closeSession();	
 			
@@ -133,6 +151,13 @@ public abstract class MailboxManager implements Runnable {
     	if (logger.isDebugEnabled())
     		logger.debug("[" + configuration.getName() + "] opening mailReader connection");
     	
+    	//auditi - init mailbox run obj
+    	auditMailboxRun = new AuditMailboxRun();
+    	auditMailboxRun.setMailboxName(configuration.getName());
+    	auditMailboxRun.setMailboxAddress(configuration.getUser());
+    	auditMailboxRun.setStartDate(new Date());
+    	auditMailboxRun.setStatus(AuditMailboxRunStatus.SUCCESS);
+    	
 		mailReader.connect();
 		mailReader.openInboxFolder();
 		
@@ -141,6 +166,13 @@ public abstract class MailboxManager implements Runnable {
     }
 
     public void closeSession() {
+    	//audit - mailbox run
+    	if (auditMailboxRun != null) { //call it just one time
+        	auditMailboxRun.setEndDate(new Date());
+    		Services.getAuditService().writeAuditMailboxRun(auditMailboxRun);
+    		auditMailboxRun = null;    		
+    	}
+    	
 		try {
 			if (mailReader != null) {
 	        	if (logger.isDebugEnabled())
@@ -151,7 +183,7 @@ public abstract class MailboxManager implements Runnable {
 				
 	        	if (logger.isDebugEnabled())
 	        		logger.debug("[" + configuration.getName() + "] mailReader connection closed");
-			}
+			}			
 		}
 		catch (Exception e) {
 			logger.warn("[" + configuration.getName() + "] failed to close mailReader session", e);
@@ -191,23 +223,48 @@ public abstract class MailboxManager implements Runnable {
     		logger.warn("[" + configuration.getName() + "] exception during shutdown... ignoring error", t);
     	else {
     		if (obj != null)  { //message exception [parseMessage(), storeMessage]
-//TODO - gestione errore
+
+    			auditMailboxRun.incrementErrorCount();
+    			auditMailboxRun.incrementNewErrorCount();
+    			
+    			try {
+            		if (obj instanceof ParsedMessage) { //message exception - processMessage
+            			ParsedMessage parsedMessage = (ParsedMessage)obj;
+            			
+        				//audit - error
+        				Services.getAuditService().writeErrorAuditMessage(configuration, parsedMessage, (Exception)t);
+            			
+            			logger.error("[" + configuration.getName() + "] unexpected error processing message [" + parsedMessage.getMessageId() + "]", t);
+            			Services.getNotificationService().notifyError(String.format(STORE_MESSAGE_ERROR_MESSAGE, configuration.getName(), parsedMessage.getMessageId(), parsedMessage.getSentDate(), parsedMessage.getSubject(), t.getMessage()));
+            		}
+            		else if (obj instanceof Message) { //message exception - parseMessage
+            			Message message = (Message)obj;
+            			logger.error("[" + configuration.getName() + "] unexpected error parsing message [Sent: " + message.getSentDate() + "] [Subject: " + message.getSentDate() + "]");
+            			Services.getNotificationService().notifyError(String.format(STORE_MESSAGE_ERROR_MESSAGE, configuration.getName(), "", message.getSentDate(), message.getSubject(), t.getMessage()));
+            		}        				
+    			}
+    			catch (Exception e) {
+    				logger.error("[" + configuration.getName() + "] unexpected error handling message error", e);
+    				Services.getNotificationService().notifyError(String.format(HANDLE_ERROR_ERROR_MESSAGE, e.getMessage()));
+    			}
+    			
     		}
     		else { //error [processMailbox()]
     			logger.error("[" + configuration.getName() + "] [" + configuration.getProtocol() + "://" + configuration.getHost() + ":" + configuration.getPort()  + "][User:" + configuration.getUser()  + "]");
     			logger.error("[" + configuration.getName() + "] unexpected error processing mailbox. Check configuration!", t);
     			Services.getNotificationService().notifyError(String.format(PROCESS_MAILBOX_ERROR_MESSAGE, configuration.getName(), configuration.getProtocol(), configuration.getHost(), configuration.getPort(), configuration.getUser(), t.getMessage()));
+
+    			//stack trace to string
+    			StringWriter sw = new StringWriter();
+    			PrintWriter pw = new PrintWriter(sw);
+    			t.printStackTrace(pw);
+    			String sStackTrace = sw.toString();
+    			
+    			auditMailboxRun.setErrorStackTrace(sStackTrace);
+    			auditMailboxRun.setStatus(AuditMailboxRunStatus.ERROR);
+    			auditMailboxRun.setErrorMessge(t.getMessage());
     		}
-    		
-    		//se obj == null -> errore non di messaggio -> notificare l'errore tramite mail indicando errore imprevisto nell'archiviazione della casella (indicare il nome)
-    		//se obj instance of Message -> errore di parsing (indicare dati minimali) -> indicare errore solo una volta
-    		//se obj instance of ParsedMessage -> errore di gestione/archiviazione messaggio -> indicare errore solo una volta
-    	
-    		//utilizzare l'AUDIT (impostando l'errore)...oppure l'audit va gestito comunque e fare report
     	}
-    	
-    	//TODO - log error    		
-    	//TODO - notificare l'errore con il NOTIFICATION SERVICE (INSERIRE QUA LA LOGICA SE NOTIFICARE O MENO L'ERRORE UTILIZZANDO L'AUDIT (se message != null))
     }
     
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
@@ -231,7 +288,7 @@ public abstract class MailboxManager implements Runnable {
     	if (configuration.getStoredMessagePolicy() == StoredMessagePolicy.DELETE_FROM_FOLDER) { //rimozione email
     		if (logger.isInfoEnabled())
     			logger.info("[" + configuration.getName() + "] deleting message [" + parsedMessage.getMessageId() + "]");
-    		
+
     		mailReader.deleteMessage(parsedMessage.getMessage());
     	}
     	else if (configuration.getStoredMessagePolicy() == StoredMessagePolicy.MOVE_TO_FOLDER) { //spostamento email
@@ -242,11 +299,10 @@ public abstract class MailboxManager implements Runnable {
     		mailReader.copyMessageToFolder(parsedMessage.getMessage(), configuration.getStoredMessageFolderName());
     		mailReader.deleteMessage(parsedMessage.getMessage());
     	}
+    	
+    	//audit - success
+    	Services.getAuditService().writeSuccessAuditMessage(configuration, parsedMessage);
+    	auditMailboxRun.incrementStoredCount();
     }
  
 }
-
-/*
-migliorare il codice in maniera da poter gestire tramite audit per esempio il fatto che un messaggio è stato archiviato ma non cancellato o spostato.
-As esempio per farlo si può creare una eccezione per il messageStored ed utilizzarla nell'handleError
-*/

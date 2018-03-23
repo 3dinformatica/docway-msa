@@ -5,14 +5,14 @@ import it.tredi.msa.configuration.ConfigurationService;
 import it.tredi.msa.notification.NotificationService;
 
 public class Services {
-	
+		
 	public static ConfigurationService getConfigurationService() {
 		return ConfigurationService.getInstance();
 	}
 
 	public static AuditService getAuditService() {
 		return AuditService.getInstance();
-	}	
+	}
 	
 	public static NotificationService getNotificationService() {
 		return NotificationService.getInstance();

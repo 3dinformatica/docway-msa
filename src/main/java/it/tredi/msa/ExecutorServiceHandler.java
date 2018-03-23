@@ -20,7 +20,7 @@ public class ExecutorServiceHandler implements Runnable {
 	private static final Logger logger = LogManager.getLogger(ExecutorServiceHandler.class.getName());
 	private ScheduledExecutorService executor;
 	
-	private final static String LOADING_CONFIGURATION_ERROR_MESSAGE = "Errore imprevisto in fase di caricamento delle configurazioni delle caselle di posta.\nConsultare il log per maggiori dettagli.\n\n$s";
+	private final static String LOADING_CONFIGURATION_ERROR_MESSAGE = "Errore imprevisto in fase di caricamento delle configurazioni delle caselle di posta.\nConsultare il log per maggiori dettagli.\n\n%s";
 	
 	private Map<String, MailboxManager> mailboxManagersMap;
 	
@@ -79,16 +79,23 @@ public class ExecutorServiceHandler implements Runnable {
     				}
     			}
     			
-    			if (logger.isInfoEnabled()) {
-    				logger.info("Current mailbox managers: [" + keySetToString(mailboxManagersMap.keySet()) + "]");
-    				logger.info("Next refesh in (" + Services.getConfigurationService().getMSAConfiguration().getMailboxManagersRefreshTime() + ") s");
-    			}
 
     		}
     		catch (Throwable t) {
     			logger.error("Unexpected error. Check mailbox configurations!", t);
     			Services.getNotificationService().notifyError(String.format(LOADING_CONFIGURATION_ERROR_MESSAGE, t.getMessage()));
-    		}   	
+    		}   
+    		finally {
+    			if (logger.isInfoEnabled()) {
+    				logger.info("Current mailbox managers: [" + keySetToString(mailboxManagersMap.keySet()) + "]");
+    				try {
+    					logger.info("Next refesh in (" + Services.getConfigurationService().getMSAConfiguration().getMailboxManagersRefreshTime() + ") s");	
+    				}
+    				catch (Exception logE) {
+    					; //ignore it
+    				}
+    			}    			
+    		}
     	}
     }
 	
