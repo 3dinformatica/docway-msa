@@ -1,22 +1,33 @@
 package it.tredi.msa.audit;
 
+import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
 
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.gridfs.GridFsOperations;
+
+import com.mongodb.gridfs.GridFSFile;
+
 import it.tredi.msa.ContextProvider;
 import it.tredi.msa.entity.MailboxConfiguration;
+import it.tredi.msa.entity.MessageContentProvider;
 import it.tredi.msa.entity.ParsedMessage;
 
 public class MongodbAuditWriter extends AuditWriter {
 	
 	private AuditMessageRepository auditMessageRepository;
 	private AuditMailboxRunRepository auditMailboxRunRepository;
+	private GridFsOperations gridFsOperations;
 	
 	public MongodbAuditWriter() {
 		super();
 		auditMessageRepository = ContextProvider.getBean(AuditMessageRepository.class);
 		auditMailboxRunRepository = ContextProvider.getBean(AuditMailboxRunRepository.class);
+		gridFsOperations = ContextProvider.getBean(GridFsOperations.class);
 	}	
 
 	@Override
@@ -26,6 +37,9 @@ public class MongodbAuditWriter extends AuditWriter {
 		if (isFull()) { //full audit -> update or create new audit message collection in mongoDb
 			auditMessage = (auditMessage == null)? new AuditMessage() : auditMessage;
 			auditMessage.setDate(new Date());
+			if (auditMessage.getEmlId() != null) { //delete previos EML (if found)
+				gridFsOperations.delete(new Query(Criteria.where("_id").is(new ObjectId(auditMessage.getEmlId()))));
+			}			
 			auditMessage.setEmlId(null);
 			auditMessage.setErrorMessge(null);
 			auditMessage.setErrorStackTrace(null);
@@ -37,12 +51,15 @@ public class MongodbAuditWriter extends AuditWriter {
 			auditMessage.setSubject(parsedMessage.getSubject());
 			auditMessageRepository.save(auditMessage);
 		}	
-		else { //base audit -> (if found) remove audit message collection from mongoDb
-			if (auditMessage != null)
+		else { //base audit -> (if found) remove audit message from mongoDb collection
+			if (auditMessage != null) {
+				if (auditMessage.getEmlId() != null) { //delete previos EML (if found)
+					gridFsOperations.delete(new Query(Criteria.where("_id").is(new ObjectId(auditMessage.getEmlId()))));
+				}				
 				auditMessageRepository.delete(auditMessage);
+			}
 		}
 		
-//TODO - MANCA gestione EML
 	}
 
 	@Override
@@ -50,7 +67,14 @@ public class MongodbAuditWriter extends AuditWriter {
 		AuditMessage auditMessage = auditMessageRepository.findByMessageIdAndMailboxName(parsedMessage.getMessageId(), mailboxConfiguration.getName());
 		auditMessage = (auditMessage == null)? new AuditMessage() : auditMessage;
 		auditMessage.setDate(new Date());
-		auditMessage.setEmlId(null);
+		
+		//store EML
+		byte []b = (new MessageContentProvider(parsedMessage.getMessage(), false)).getContent();			
+		ObjectId objId = gridFsOperations.store(new ByteArrayInputStream(b), "Message.eml");
+		if (auditMessage.getEmlId() != null) { //delete previos EML (if found)
+			gridFsOperations.delete(new Query(Criteria.where("_id").is(new ObjectId(auditMessage.getEmlId()))));
+		}
+		auditMessage.setEmlId(objId.toHexString());
 		auditMessage.setErrorMessge(exception.getMessage());
 		
 		//stack trace to string
@@ -67,8 +91,6 @@ public class MongodbAuditWriter extends AuditWriter {
 		auditMessage.setStatus(AuditMessageStatus.ERROR);
 		auditMessage.setSubject(parsedMessage.getSubject());
 		auditMessageRepository.save(auditMessage);
-		
-//TODO - manca gestione EML
 	}
 
 	@Override
