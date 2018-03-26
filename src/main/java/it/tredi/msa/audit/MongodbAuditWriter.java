@@ -23,6 +23,8 @@ public class MongodbAuditWriter extends AuditWriter {
 	private AuditMailboxRunRepository auditMailboxRunRepository;
 	private GridFsOperations gridFsOperations;
 	
+	private static final String MESSAGGIO_EMAIL_FILENAME = "Messaggio.eml";
+	
 	public MongodbAuditWriter() {
 		super();
 		auditMessageRepository = ContextProvider.getBean(AuditMessageRepository.class);
@@ -70,7 +72,7 @@ public class MongodbAuditWriter extends AuditWriter {
 		
 		//store EML
 		byte []b = (new MessageContentProvider(parsedMessage.getMessage(), false)).getContent();			
-		ObjectId objId = gridFsOperations.store(new ByteArrayInputStream(b), "Message.eml");
+		ObjectId objId = gridFsOperations.store(new ByteArrayInputStream(b), MESSAGGIO_EMAIL_FILENAME);
 		if (auditMessage.getEmlId() != null) { //delete previos EML (if found)
 			gridFsOperations.delete(new Query(Criteria.where("_id").is(new ObjectId(auditMessage.getEmlId()))));
 		}
