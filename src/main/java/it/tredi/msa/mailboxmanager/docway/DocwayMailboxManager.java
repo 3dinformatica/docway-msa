@@ -5,9 +5,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.Part;
+import javax.mail.Message.RecipientType;
+import javax.mail.internet.InternetAddress;
 
+import it.tredi.mail.MessageUtils;
 import it.tredi.msa.entity.MessageContentProvider;
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.PartContentProvider;
@@ -30,11 +34,6 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected static final String MESSAGGIO_ORIGINALE_EMAIL_FILENAME = "MessaggioOriginale.eml";
 	protected static final String DEFAULT_ALLEGATO = "0 - nessun allegato";
 	
-	@Override
-    public boolean isMessageStorable(ParsedMessage parsedMessage) {
-    	return true;
-//TODO - per ora true    	
-    }
 	
 	@Override
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
@@ -107,9 +106,14 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//rif esterni
 		if (doc.getTipo().toUpperCase().equals("ARRIVO"))
 			doc.addRifEsterno(createRifEsterno(parsedMessage.getFromPersonal(), parsedMessage.getFromAddress()));
-		else if (doc.getTipo().toUpperCase().equals("PARTENZA"))
-			;
-//TODO - gestire rif_esterni per i doc in partenza
+		else if (doc.getTipo().toUpperCase().equals("PARTENZA")) {
+			Address []recipients = parsedMessage.getMessage().getRecipients(RecipientType.TO);
+			for (Address recipient:recipients) {
+				String personal = ((InternetAddress)recipient).getPersonal();
+				String address = ((InternetAddress)recipient).getAddress();
+				doc.addRifEsterno(createRifEsterno((personal==null || personal.isEmpty())? "" : personal, (address==null || address.isEmpty())? "" : address));
+			}
+		}
 		
 		//voce di indice
 		doc.setVoceIndice(conf.getVoceIndice());
