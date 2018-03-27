@@ -28,6 +28,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected static final String TESTO_EMAIL_FILENAME = "testo email.txt";
 	protected static final String TESTO_HTML_EMAIL_FILENAME = "testo email.html";
 	protected static final String MESSAGGIO_ORIGINALE_EMAIL_FILENAME = "MessaggioOriginale.eml";
+	protected static final String DEFAULT_ALLEGATO = "0 - nessun allegato";
 	
 	@Override
     public boolean isMessageStorable(ParsedMessage parsedMessage) {
@@ -44,12 +45,19 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 //TODO - realizzare lo store del messaggio
 //inserire tutta la logica di archiviazione
+//occorre ricercare il documento per messageId (in AND con cod_amm_aoo) (in AND con indirizzo_email_casella se property attivata)
+//si ricade in 3 differenti casistiche
+		//1. salvataggio nuovo doc (nuovo messageId)
+		//2. aggiornamento x upload file a doc (salvataggio flaggato come parziale) (stesso messageId, stessa casella, ma stato parziale di salvataggio) (se stesso messageId, stessa casella ma stato completato non occorre fare nulla...evidentemnete non era riuscita la cancellazione del documento...loggare la situazione)
+		//3. aggiornamento destinatari doc x stessa email su 2 caselle di posta (stesso mesasgeId, diversa casella, indipendentemente dallo stato completato)
 		
 		//build new Docway document
 		DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
 
 		//save new document
 		saveNewDocument(doc);
+		
+//TODO - effettuare la gestione delle email di notifica
 	}	
 	
 	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {
@@ -141,10 +149,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			doc.addStoriaItem(storiaItem);
 		}
 		
-		//files + immagini
+		//files + immagini + allegato
 		createDocwayFiles(parsedMessage, doc);
-		
-//TODO - effettuare la gestione delle email di notifica
 		
 		return doc;
 	}
@@ -172,7 +178,14 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 					doc.addImmagine(file);
 			else //file
 				doc.addFile(file);
+			
+			//allegato
+			doc.addAllegato(file.getName());
 		}
+
+		//allegato - default
+		if (doc.getAllegato().isEmpty())
+			doc.addAllegato(DEFAULT_ALLEGATO);
 		
 		//EML
 		if (((DocwayMailboxConfiguration)getConfiguration()).isStoreEml()) {

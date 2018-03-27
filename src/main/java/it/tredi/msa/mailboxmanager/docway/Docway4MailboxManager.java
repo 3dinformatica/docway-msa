@@ -77,7 +77,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		for (DocwayFile file:doc.getImmagini()) {
 			file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
 			uploaded = true;
-		}		
+		}
 		
 		//update document with uploaded xw:file(s)
 		if (uploaded) {
@@ -87,9 +87,6 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		else { //no filed uploaded -> unlock document
 			xwClient.unlockDocument(lastSavedDocumentPhysDoc);
 		}
-
-		int ret = 0;
-		ret++;
 
 	}
 	
@@ -194,8 +191,11 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}		
 		
 		//allegato
+		for(String allegato:doc.getAllegato())
+			docEl.add(allegatoToXml(allegato));
 		
 		//fascicolo
+//TODO		
 
 		//note
 		if (doc.getNote() != null && !doc.getNote().isEmpty()) {
@@ -218,8 +218,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}
 
 		//scarto
+//TODO		
 		
 		//postit
+//TODO		
 		
 		//storia
 		Element storiaEl = DocumentHelper.createElement("storia");
@@ -570,6 +572,13 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		if (rifInterno.getCodFasc() != null && !rifInterno.getCodFasc().isEmpty())
 			rifEl.addAttribute("cod_fasc", rifInterno.getCodFasc());
 		return rifEl;
+	}
+	
+	private Element allegatoToXml(String descrizione_allegato) {
+		Element allegatoEl = DocumentHelper.createElement("allegato");
+		allegatoEl.setText(descrizione_allegato);
+		allegatoEl.addAttribute("xml:space", "preserve");
+		return allegatoEl;
 	}
 	
 	private List<RifInterno> createRifInterniByPersintQuery(String query) throws Exception {

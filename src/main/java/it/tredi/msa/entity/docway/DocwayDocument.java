@@ -29,6 +29,7 @@ public class DocwayDocument {
 	private List<RifInterno> rifInterni;
 	private List<DocwayFile> files;
 	private List<DocwayFile> immagini;
+	private List<String> allegato;
 	
 	public DocwayDocument() {
 		this.storia = new ArrayList<StoriaItem>();
@@ -36,6 +37,7 @@ public class DocwayDocument {
 		this.rifInterni = new ArrayList<RifInterno>();
 		this.files = new ArrayList<DocwayFile>();
 		this.immagini = new ArrayList<DocwayFile>();
+		this.allegato = new ArrayList<String>();
 	}
 
 	public String getTipo() {
@@ -265,6 +267,18 @@ public class DocwayDocument {
 
 	public void addImmagine(DocwayFile file) {
 		immagini.add(file);
+	}
+
+	public List<String> getAllegato() {
+		return allegato;
+	}
+
+	public void setAllegato(List<String> allegato) {
+		this.allegato = allegato;
+	}
+	
+	public void addAllegato(String descrizione_allegato) {
+		allegato.add(descrizione_allegato);
 	}
 	
 }
