@@ -35,6 +35,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_MOVE_STORED_MESSAGES_FOLDER = "docway4mailboxmanager.move-stored-messages.folder-name";
 	public final static String DOCWAY4MAILBOXMANAGER_XW_LOCK_OP_ATTEMPTS = "docway4mailboxmanager.xw.lock-op.attempts";
 	public final static String DOCWAY4MAILBOXMANAGER_XW_LOCK_OP_DELAY = "docway4mailboxmanager.xw.lock-op.delay";
+	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_SOCKET_TIMEOUT = "docway4mailboxmanager.mail-reader.socket-timeout";
+	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_TIMEOUT = "docway4mailboxmanager.mail-reader.connection-timeout";
 
 	private String host;
 	private int port;
@@ -159,6 +161,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 			//read interoperabilità mailboxes
 //TODO
 			
+//TODO - gestire mailbox_out (serve per il rifiuto allegati)			
+			
 		}
 		catch (Exception e) {
 			throw (e);
@@ -244,6 +248,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     		conf.setStoredMessagePolicy(StoredMessagePolicy.MOVE_TO_FOLDER);
     		conf.setStoredMessageFolderName(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_MOVE_STORED_MESSAGES_FOLDER, ""));
     	}
+    	conf.setMailserverSocketTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_SOCKET_TIMEOUT, -1));
+    	conf.setMailserverConnectionTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_TIMEOUT, -1));
     	
     	
 //TODO - COMPLETARE	

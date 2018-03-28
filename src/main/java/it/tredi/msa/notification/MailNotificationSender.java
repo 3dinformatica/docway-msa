@@ -19,8 +19,8 @@ public class MailNotificationSender extends NotificationSender {
 	private String senderAdress;
 	private String senderPersonal;
 	private String []admEmailAddresses;
-	private int socketTimeout;
-	private int connectionTimeout;
+	private int socketTimeout = -1;
+	private int connectionTimeout = -1;
 	
 	public String getHost() {
 		return host;
@@ -131,6 +131,10 @@ public class MailNotificationSender extends NotificationSender {
 	public boolean notifiyError(String message) throws Exception {
 		boolean done = false;
 		MailSender mailSender = MailClientHelper.createMailSender(host, port, user, password, protocol);
+		if (connectionTimeout != -1)
+			mailSender.setConnectionTimeout(connectionTimeout);
+		if (socketTimeout != -1)
+			mailSender.setSocketTimeout(socketTimeout);
 		mailSender.connect();
 		for (String toAddress: admEmailAddresses) {
 			try {

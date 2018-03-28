@@ -11,8 +11,8 @@ public abstract class MailboxConfiguration {
 	private String protocol;
 	private String user;
 	private String password;
-	private int mailserverSocketTimeout;
-	private int mailserverConnectionTimeout;
+	private int mailserverSocketTimeout = -1;
+	private int mailserverConnectionTimeout = -1;
 	
 	private int delay = -1; //delay (mailbox manager polling time)
 	private StoredMessagePolicy storedMessagePolicy = StoredMessagePolicy.DELETE_FROM_FOLDER;
