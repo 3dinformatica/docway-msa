@@ -16,8 +16,8 @@ public class AuditService {
 	
 	public final static String WRITE_AUDIT_MESSAGE_LOG_ERROR_MESSAGE = "Error writing audit message [%s] [%s]";
 	public final static String WRITE_AUDIT_MESSAGE_MAIL_ERROR_MESSAGE = "Errore imprevisto in fase di registrazione dell'audit per un messaggio di posta [%s]\nConsultare il log per maggiori dettagli.\n\n%s";
-	public final static String WRITE_AUDIT_MESSAGE_LOG_MESSAGE = "[%s] audit message [%s] [%s]. Audit level [%s]";
-	public final static String WRITE_AUDIT_MAILBOX_RUN_LOG_MESSAGE = "[%s] audit mailbox run [%s]";
+	public final static String WRITE_AUDIT_MESSAGE_LOG_MESSAGE = "[%s] writing audit [message] [%s] [%s]. Audit level [%s]";
+	public final static String WRITE_AUDIT_MAILBOX_RUN_LOG_MESSAGE = "[%s] writing audit [mailbox run] [%s]";
 	public final static String WRITE_AUDIT_MAILBOX_RUN_LOG_ERROR_MESSAGE = "Error writing audit mailbox run [%s]";
 	public final static String WRITE_AUDIT_MAILBOX_RUN_MAIL_ERROR_MESSAGE = "Errore imprevisto in fase di registrazione dell'audit per una esecuzione di una casella di posta [%s]\nConsultare il log per maggiori dettagli.\n\n%s";
 	
