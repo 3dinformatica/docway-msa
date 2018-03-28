@@ -130,11 +130,7 @@ public class MailNotificationSender extends NotificationSender {
 	@Override
 	public boolean notifiyError(String message) throws Exception {
 		boolean done = false;
-		MailSender mailSender = MailClientHelper.createMailSender(host, port, user, password, protocol);
-		if (connectionTimeout != -1)
-			mailSender.setConnectionTimeout(connectionTimeout);
-		if (socketTimeout != -1)
-			mailSender.setSocketTimeout(socketTimeout);
+		MailSender mailSender = createMailSender();
 		mailSender.connect();
 		for (String toAddress: admEmailAddresses) {
 			try {
@@ -147,6 +143,15 @@ public class MailNotificationSender extends NotificationSender {
 		}
 		mailSender.disconnect();
 		return done;
+	}
+	
+	public MailSender createMailSender() {
+		MailSender mailSender = MailClientHelper.createMailSender(host, port, user, password, protocol);
+		if (connectionTimeout != -1)
+			mailSender.setConnectionTimeout(connectionTimeout);
+		if (socketTimeout != -1)
+			mailSender.setSocketTimeout(socketTimeout);
+		return mailSender;
 	}
 
 }

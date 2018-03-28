@@ -10,6 +10,7 @@ public class RifInterno {
 	private String codFasc;
 	private boolean intervento;
 	private boolean ruolo = false;
+	private boolean notify = false;
 	
 	public String getNomePersona() {
 		return nomePersona;
@@ -81,6 +82,14 @@ public class RifInterno {
 		this.codPersona = "tutti_" + codRuolo;
 		this.nomeUff = nomeRuolo;
 		this.codUff = codRuolo;
+	}
+
+	public boolean isNotify() {
+		return notify;
+	}
+
+	public void setNotify(boolean notify) {
+		this.notify = notify;
 	}
 	
 }

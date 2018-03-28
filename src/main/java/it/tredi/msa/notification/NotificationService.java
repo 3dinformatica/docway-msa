@@ -40,6 +40,10 @@ public class NotificationService {
 		}
 	}
 
+	public NotificationSender getNotificationSender() {
+		return notificationSender;
+	}
+
 }
 
 
