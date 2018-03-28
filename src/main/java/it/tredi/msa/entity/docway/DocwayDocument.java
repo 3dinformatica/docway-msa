@@ -227,8 +227,10 @@ public class DocwayDocument {
 	public void addRifInterno(RifInterno rifInterno) {
 		//check duplicati
 		RifInterno rif = getRifInterno(rifInterno);
-		if (rif == null)
+		if (rif == null) {
+			rifInterno.setNotify(true); //send notify email only for new rifs (avoid duplicates)
 			rifInterni.add(rifInterno);
+		}
 		else
 			updateRifInterno(rif, rifInterno);
 	}

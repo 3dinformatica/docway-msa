@@ -40,6 +40,12 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private List<AssegnatarioMailboxConfiguration> assegnatariCC;
 	private boolean daCopiaConoscenza;
 	
+	//email di notifica
+	private boolean notifyRPA;
+	private boolean notifyCC;
+	private String notificationAppUri;
+	private String notificationAppHost;
+	
 	public boolean isStoreEml() {
 		return storeEml;
 	}
@@ -219,6 +225,39 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public String getOperatore() {
 		return oper + "(" + uffOper + ")";
 	}
+
+	public boolean isNotifyRPA() {
+		return notifyRPA;
+	}
+
+	public void setNotifyRPA(boolean notifyRPA) {
+		this.notifyRPA = notifyRPA;
+	}
+
+	public boolean isNotifyCC() {
+		return notifyCC;
+	}
+
+	public void setNotifyCC(boolean notifyCC) {
+		this.notifyCC = notifyCC;
+	}
+
+	public String getNotificationAppUri() {
+		return notificationAppUri;
+	}
+
+	public void setNotificationAppUri(String notificationAppUri) {
+		this.notificationAppUri = notificationAppUri;
+	}
+
+	public String getNotificationAppHost() {
+		return notificationAppHost;
+	}
+
+	public void setNotificationAppHost(String notificationAppHost) {
+		this.notificationAppHost = notificationAppHost;
+	}
+	
 	
 	/**
 	 * 

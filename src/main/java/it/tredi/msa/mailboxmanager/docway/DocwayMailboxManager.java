@@ -2,6 +2,7 @@ package it.tredi.msa.mailboxmanager.docway;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -11,7 +12,11 @@ import javax.mail.Part;
 import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import it.tredi.mail.MessageUtils;
+import it.tredi.msa.Services;
 import it.tredi.msa.entity.MessageContentProvider;
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.PartContentProvider;
@@ -23,6 +28,7 @@ import it.tredi.msa.entity.docway.RifEsterno;
 import it.tredi.msa.entity.docway.RifInterno;
 import it.tredi.msa.entity.docway.StoriaItem;
 import it.tredi.msa.mailboxmanager.MailboxManager;
+import it.tredi.msa.notification.MailNotificationSender;
 
 public abstract class DocwayMailboxManager extends MailboxManager {
 	
@@ -34,6 +40,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected static final String MESSAGGIO_ORIGINALE_EMAIL_FILENAME = "MessaggioOriginale.eml";
 	protected static final String DEFAULT_ALLEGATO = "0 - nessun allegato";
 	
+	private static final Logger logger = LogManager.getLogger(DocwayMailboxManager.class.getName());
 	
 	@Override
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
@@ -54,10 +61,12 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
 
 		//save new document
-		saveNewDocument(doc);
+		Object retObj = saveNewDocument(doc);
 		
-//TODO - effettuare la gestione delle email di notifica
-	}	
+		//notify mails
+		logger.info("[" + super.getConfiguration().getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
+		sendNotificationMails(doc, retObj);
+	}
 	
 	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
@@ -201,9 +210,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 
 	}
 	
-	protected abstract void saveNewDocument(DocwayDocument doc) throws Exception;
+	protected abstract Object saveNewDocument(DocwayDocument doc) throws Exception;
 	protected abstract RifEsterno createRifEsterno(String name, String address) throws Exception;
 	protected abstract List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception;
+	protected abstract void sendNotificationMails(DocwayDocument doc, Object saveDocRetObj);
 	
 	protected boolean isImage(String fileName) {
 		return fileName.toLowerCase().endsWith(".jpg")
