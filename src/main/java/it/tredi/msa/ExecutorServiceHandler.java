@@ -78,7 +78,6 @@ public class ExecutorServiceHandler implements Runnable {
         				}
     				}
     			}
-    			
 
     		}
     		catch (Throwable t) {
