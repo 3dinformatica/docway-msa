@@ -320,6 +320,19 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 			conf.setRepertorio(repertorio);
 		}		
 		
+		//mail di notifica
+		Element notifyEl = dmDocument.getRootElement().element("notify");
+		if (notifyEl != null) {
+			conf.setNotifyRPA(Boolean.parseBoolean(notifyEl.attributeValue("rpa", "false")));
+			conf.setNotifyCC(Boolean.parseBoolean(notifyEl.attributeValue("cc", "false")));
+			conf.setNotificationAppHost(notifyEl.attributeValue("httpHost", ""));
+			conf.setNotificationAppUri(notifyEl.attributeValue("uri", ""));
+		}
+		else {
+			conf.setNotifyRPA(false);
+			conf.setNotifyCC(false);			
+		}
+		
 //TODO - continuare ad analizzare il documentModel
 	}
 	
