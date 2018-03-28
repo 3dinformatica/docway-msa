@@ -4,6 +4,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.mail.MessagingException;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -11,6 +15,8 @@ import org.dom4j.Element;
 
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
+import it.tredi.mail.MailSender;
+import it.tredi.msa.Services;
 import it.tredi.msa.entity.ParsedMessage;
 import it.tredi.msa.entity.docway.AssegnatarioMailboxConfiguration;
 import it.tredi.msa.entity.docway.Docway4MailboxConfiguration;
@@ -19,6 +25,7 @@ import it.tredi.msa.entity.docway.DocwayFile;
 import it.tredi.msa.entity.docway.RifEsterno;
 import it.tredi.msa.entity.docway.RifInterno;
 import it.tredi.msa.entity.docway.StoriaItem;
+import it.tredi.msa.notification.MailNotificationSender;
 
 public class Docway4MailboxManager extends DocwayMailboxManager {
 
@@ -26,6 +33,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	protected ExtrawayClient aclClient;
 	private int lastSavedDocumentPhysDoc;
 	private boolean extRestrictionsOnAcl;
+	
+	private static final Logger logger = LogManager.getLogger(Docway4MailboxManager.class.getName());
 	
 	@Override
     public void openSession() throws Exception {
@@ -56,7 +65,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	}  	
 	
 	@Override
-	protected void saveNewDocument(DocwayDocument doc) throws Exception {
+	protected Object saveNewDocument(DocwayDocument doc) throws Exception {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		
 		//save new document in Extraway
@@ -88,6 +97,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			xwClient.unlockDocument(lastSavedDocumentPhysDoc);
 		}
 
+		return xmlDocument;
 	}
 	
 	private Document docwayDocumentToXml(DocwayDocument doc) {
@@ -677,41 +687,35 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		return rifInterni;
 	}
 
-    
-	/**
-	 * 
-<doc    tipo="arrivo" bozza="si" cod_amm_aoo="3DINBOL" nrecord="00117865" anno="" data_prot="20180213" num_prot="" annullato="no" messageId="B0DA6608-4932-4178-962C-F146C2084FF5@3di.it">
-  <oggetto xml:space="preserve">aaa</oggetto>
-  <postit cod_operatore="TEST" data="20180213" operatore="TEST TSET">aaa</postit>
-  <tipologia cod="E-mail"/>
-  <rif_esterni>
-    <rif>
-      <nome xml:space="preserve">Simone Stagni</nome>
-      <indirizzo email="sstagni@3di.it" xml:space="preserve"/>
-    </rif>
-  </rif_esterni>
-  <allegato xml:space="preserve">0 - nessun allegato</allegato>
-  <storia>
-    <creazione oper="Archiviatore Email" uff_oper="Protocollo" data="20180213" ora="08:46:46"/>
-    <responsabilita nome_persona="Candelora Nicola" cod_persona="PI000056" data="20180213" ora="08:46:46" cod_operatore="" operatore="Archiviatore Email(Protocollo)" nome_uff="Servizio archivistico" cod_uff="SI000010"/>
-  </storia>
-  <rif_interni>
-    <rif diritto="RPA" nome_persona="Candelora Nicola" cod_persona="PI000056" nome_uff="Servizio archivistico" cod_uff="SI000010"/>
-  </rif_interni>
-  <note xml:space="preserve">From: Simone Stagni
-To: test-archiviatore-xw@libero.it
-Cc: 
-Sent: Tue, 13 Feb 2018 08:46:38 +0100
-Subject: aaa
+	@Override
+	protected void sendNotificationMails(DocwayDocument doc, Object saveDocRetObj) {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		
+		if (conf.isNotifyRPA() || conf.isNotifyCC()) { //if notification is activated
+			Document document = (Document)saveDocRetObj;
+			MailSender mailSender = ((MailNotificationSender)Services.getNotificationService().getNotificationSender()).createMailSender();
+logger.info(document.getRootElement().attributeValue("nrecord"));
+			
+			for (RifInterno rifInterno:doc.getRifInterni()) {
+				if (rifInterno.isNotify()) { //if rif interno has to be notified
+					
+					
+					
+logger.info("NOTIFICA " + rifInterno.getDiritto() + " - " + rifInterno.getCodPersona());
+					
+					//TODO - realizzare qua tutto il codice per l'invio di email di notifica
+					
+				}
+			}				
 
-aaaa
-</note>  <archiviatore recipientEmail="test-archiviatore-xw@libero.it"/>  <files>    <xw:file name="48582.txt" title="testo email" size="136" impronta="2omIAODJriZH0XRbYa98d26qNlSalLuGSAwA7AMLNZc=" tipoImpronta="SHA256" index="yes" agent.meta="ignore">    
-  <chkin operatore="Archiviatore Email(Protocollo)" cod_operatore="" data="20180213" ora="08:46:46"/>    </xw:file>  
-    <xw:file name="48583.eml" title="MessaggioOriginale.eml" readonly="si" size="3973" impronta="TPTshu0cSaM66SyPPzPXPfCRfrgzyctpJoBv80zEVPQ=" tipoImpronta="SHA256" der_to="48584.txt" agent.meta="ignore">     
-     <chkin operatore="Archiviatore Email(Protocollo)" cod_operatore="" data="20180213" ora="08:46:46"/>    </xw:file>    <xw:file name="48584.txt" title="MessaggioOriginale.txt" der_from="48583.eml" index="yes" size="8">    
-       <chkin operatore="convertitore" cod_operatore="convertitore" data="20180213" ora="08:46:59"/>    </xw:file>  </files>
-       </doc>
-	 * 
-	 */    
+			try {
+				mailSender.disconnect();
+			} 
+			catch (MessagingException e) {
+//TODO - log warn
+			}
+		}
+	}
+
 	
 }
