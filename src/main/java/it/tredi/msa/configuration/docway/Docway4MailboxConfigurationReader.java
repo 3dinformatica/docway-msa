@@ -37,6 +37,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_XW_LOCK_OP_DELAY = "docway4mailboxmanager.xw.lock-op.delay";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_SOCKET_TIMEOUT = "docway4mailboxmanager.mail-reader.socket-timeout";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_TIMEOUT = "docway4mailboxmanager.mail-reader.connection-timeout";
+	public final static String DOCWAY4MAILBOXMANAGER_NOTIFICATION_EMAILS = "docway4mailboxmanager.notification-emails.enable";
 
 	private String host;
 	private int port;
@@ -224,7 +225,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	
     	//assegnatari cc
     	List<AssegnatarioMailboxConfiguration> ccS = new ArrayList<AssegnatarioMailboxConfiguration>();
-    	List<Element> ccElsL = casellaEl.element("assegnazione_cc").elements("assegnatario");
+    	@SuppressWarnings("unchecked")
+		List<Element> ccElsL = casellaEl.element("assegnazione_cc").elements("assegnatario");
     	for (Element ccEl:ccElsL) {
     		AssegnatarioMailboxConfiguration cc = createAssegnatarioByConfig("CC", ccEl);
     		if (!cc.getCodPersona().isEmpty() || !cc.getCodUff().isEmpty() || !cc.getCodRuolo().isEmpty()) //purtroppo nell'xml se non ci sono CC compare un assegnatario vuoto
@@ -250,7 +252,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	}
     	conf.setMailserverSocketTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_SOCKET_TIMEOUT, -1));
     	conf.setMailserverConnectionTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_TIMEOUT, -1));
-    	
+    	conf.setNotificationEnabled(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_NOTIFICATION_EMAILS, false));    	
     	
 //TODO - COMPLETARE	
 		return conf;
@@ -326,7 +328,11 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 			conf.setNotifyRPA(Boolean.parseBoolean(notifyEl.attributeValue("rpa", "false")));
 			conf.setNotifyCC(Boolean.parseBoolean(notifyEl.attributeValue("cc", "false")));
 			conf.setNotificationAppHost(notifyEl.attributeValue("httpHost", ""));
-			conf.setNotificationAppUri(notifyEl.attributeValue("uri", ""));
+			conf.setNotificationAppHost1(notifyEl.attributeValue("httpHost1", ""));
+			String uri = notifyEl.attributeValue("uri", "");
+			if (!uri.isEmpty())
+				uri = "// " + uri;
+			conf.setNotificationAppUri(uri);
 		}
 		else {
 			conf.setNotifyRPA(false);
