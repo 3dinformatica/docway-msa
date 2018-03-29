@@ -2,9 +2,9 @@ package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-
-import javax.mail.MessagingException;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,6 +36,14 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	private static final Logger logger = LogManager.getLogger(Docway4MailboxManager.class.getName());
 	
+	//for notification emails
+    private static final String _DB_ ="%DB%";
+    private static final String _ALIAS_ ="%ALIAS%";
+    private static final String _NRECORD_ ="%NRECORD%";
+    private static final int MITT_DEST_LENGTH = 25;
+    private static final int OGGETTO_LENGTH = 25;    
+    public final static String TUTTI_COD = "tutti";
+	
 	@Override
     public void openSession() throws Exception {
 		super.openSession();
@@ -49,18 +57,19 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	@Override
     public void closeSession() {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
     	super.closeSession();
 		try {
 			xwClient.disconnect();
 		}
 		catch (Exception e) {
-//TODO - log warning			
+			logger.warn("[" + conf.getName() + "] failed to close eXtraWay session [" + conf.getXwDb() + "]", e);			
 		}
 		try {
 			aclClient.disconnect();
 		}
 		catch (Exception e) {
-//TODO - log warning			
+			logger.warn("[" + conf.getName() + "] failed to close eXtraWay session [" + conf.getAclDb() + "]", e);
 		}
 	}  	
 	
@@ -690,32 +699,239 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	@Override
 	protected void sendNotificationMails(DocwayDocument doc, Object saveDocRetObj) {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
-		
-		if (conf.isNotifyRPA() || conf.isNotifyCC()) { //if notification is activated
-			Document document = (Document)saveDocRetObj;
-			MailSender mailSender = ((MailNotificationSender)Services.getNotificationService().getNotificationSender()).createMailSender();
-logger.info(document.getRootElement().attributeValue("nrecord"));
+		MailNotificationSender notificationSender = (MailNotificationSender)Services.getNotificationService().getNotificationSender();
+		MailSender mailSender = notificationSender.createMailSender();
+		try {
+			mailSender.connect();
+			String body = getBodyForEmail(conf.getNotificationAppHost(), conf.getNotificationAppHost1(), conf.getNotificationAppUri(), conf.getXwDb(), (Document)saveDocRetObj);
 			
+			Set<String>	notifiedAddresses = new HashSet<String>();
 			for (RifInterno rifInterno:doc.getRifInterni()) {
 				if (rifInterno.isNotify()) { //if rif interno has to be notified
-					
-					
-					
-logger.info("NOTIFICA " + rifInterno.getDiritto() + " - " + rifInterno.getCodPersona());
-					
-					//TODO - realizzare qua tutto il codice per l'invio di email di notifica
-					
+					if ((rifInterno.getDiritto().equals("RPA") && conf.isNotifyRPA()) || (!rifInterno.getDiritto().equals("RPA") && conf.isNotifyCC()))
+						sendNotificationMail(mailSender, notificationSender.getSenderAdress(), notificationSender.getSenderPersonal(), rifInterno.getCodPersona(), rifInterno.getDiritto().equals("RPA"), doc, (Document)saveDocRetObj, body, conf.getCodAmmAoo(), notifiedAddresses);
 				}
 			}				
-
+		} 
+		catch (Exception e) {
+			logger.error("[" + conf.getName() + "] unexpected error sending notification emails", e);
+		}
+		finally {
 			try {
 				mailSender.disconnect();
 			} 
-			catch (MessagingException e) {
-//TODO - log warn
-			}
+			catch (Exception e) {
+				logger.warn("[" + conf.getName() + "] failed to close mailSender session", e);
+			}				
 		}
 	}
 
+	private void sendNotificationMail(MailSender mailSender, String senderAddress, String senderPersonal, String matricola, boolean isRPA, DocwayDocument doc, Document savedDocument, String body, String codAmmAooDestinatario, Set<String> notifiedAddresses) {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		try {
+			String subject = getSubjectForEmail(isRPA?"RPA":"CC", savedDocument);
+			String destEmail = getEmailWithMatricola(matricola, codAmmAooDestinatario);
+			String []destinatari = destEmail.split(",");
+			for (String dest:destinatari) {
+				if (!dest.isEmpty() && !notifiedAddresses.contains(dest)) {
+					try {
+						if (logger.isInfoEnabled())
+							logger.warn("[" + conf.getName() + "] sending notification email [" + dest + "]");
+						notifiedAddresses.add(dest);
+						mailSender.sendMail(senderAddress, senderPersonal, dest, subject, body);	
+					}
+					catch (Exception e) {
+						logger.error("[" + conf.getName() + "] unexpected error sending notification email [" + dest + "]", e);
+					}
+				}
+			}
+			
+		} 
+		catch (Exception e) {
+			logger.error("[" + conf.getName() + "] unexpected error extracting email address for matricola [" + matricola + "]", e);
+		}
+	}
 	
+    public String getBodyForEmail(String httpHost, String httpHost1, String theURL, String db, Document document) throws java.net.MalformedURLException {
+        String nrecord = document.getRootElement().attributeValue("nrecord");
+        String tipo_doc = document.getRootElement().attributeValue("tipo");
+        String data_prot = document.getRootElement().attributeValue("data_prot");
+
+        String num_prot = document.getRootElement().attributeValue("num_prot");
+        if (num_prot != null && num_prot.length() > 0) {
+            if (num_prot.length() >= 13)
+                num_prot = "N. " + deleteZeros(num_prot.substring(13)) + " del " + data_prot + " (" + num_prot + ")";
+            else {
+                String d = document.selectSingleNode("/doc/storia/creazione/@data").getText();
+                num_prot = "Bozza del " + dateFormat(d);
+            }
+        }
+        // Federico 19/12/05: aggiunto test su 'data_prot' in quanto può essere assente [RW 0032968]
+        else if (data_prot != null && data_prot.length() > 0) {
+                 num_prot = "Documento non protocollato del " + dateFormat(data_prot);
+             }
+             else {
+                 num_prot = "Documento non protocollato";
+             }
+
+        String mittOrDest = "";
+        if (tipo_doc == null)
+            num_prot = tipo_doc = "";
+        if (tipo_doc.equals("arrivo"))
+            mittOrDest = "\nMittente: ";
+        else if (tipo_doc.equals("partenza"))
+            mittOrDest = "\nDestinatario: ";
+        if (mittOrDest.length() > 0) {
+            @SuppressWarnings("unchecked")
+			List<Element> l = (List<Element>)document.selectNodes("/doc/rif_esterni/rif/nome");
+            if (l.size() > 0)
+                mittOrDest += ((Element) l.get(0)).getText();
+        }
+
+        String oggetto = "\nOggetto: " + document.getRootElement().elementText("oggetto");
+        String tmpURL = getNotifyURL(theURL, httpHost, httpHost1, db, "docnrecord", nrecord);
+        String ret = num_prot + mittOrDest + oggetto + "\n\nPer visualizzare:\n " + tmpURL;
+
+        return ret;
+    }
+    
+    private String deleteZeros(String s) {
+        while (s.charAt(0) == '0')
+            s = s.substring(1);
+        return s;
+    }    
+    
+    public String dateFormat(String s) {
+        if (s.length() == 8)
+            return s.substring(6, 8) + "/" + s.substring(4, 6) + "/" + s.substring(0, 4);
+        else
+            return s;
+    }   
+    
+    public String getNotifyURL(String theURL, String httpHost, String httpHost1, String db, String alias, String nrecord) throws java.net.MalformedURLException {
+    	String newURL = theURL;
+    	String newURL1 = theURL;
+    	boolean completeUrl = false;
+    	boolean completeUrl1 = false;
+
+    	// sstagni - 15 Nov 2006 - se url contiene hcadm.dll viene modificata in hcprot.dll
+    	// FindBug: Dead store to theURL in it.highwaytech.apps.generic.Protocollo.getNotifyURL()
+    	//if (theURL.indexOf("hcadm.dll") != -1)
+    	//    theURL = theURL.replaceAll("hcadm.dll", "hcprot.dll");
+
+    	if (httpHost.length() > 0) {
+    		// si verifica se la property è già  esaustiva...
+    		if ( (httpHost.indexOf(_DB_) > -1)    ||
+    				(httpHost.indexOf(_ALIAS_) > -1) ||
+    				(httpHost.indexOf(_NRECORD_) > -1) ) {
+    			completeUrl = true;
+    			newURL = ((httpHost.replaceAll(_DB_, db)).replaceAll(_ALIAS_, alias)).replaceAll(_NRECORD_, nrecord);
+    		}
+    		else if (newURL.indexOf("//") == -1) newURL = httpHost + newURL;
+    		else {
+    			int index = newURL.indexOf("//");
+    			index = newURL.indexOf("/", index + 2);
+    			newURL = httpHost + newURL.substring(index);
+    		}
+    	}
+    	if (httpHost1.length() > 0) {
+    		// si verifica se la property è già  esaustiva...
+    		if ( (httpHost1.indexOf(_DB_) > -1)    ||
+    				(httpHost1.indexOf(_ALIAS_) > -1) ||
+    				(httpHost1.indexOf(_NRECORD_) > -1) ) {
+    			completeUrl1 = true;
+    			newURL1 = ((httpHost1.replaceAll(_DB_, db)).replaceAll(_ALIAS_, alias)).replaceAll(_NRECORD_, nrecord);
+    		}
+    		else if (newURL1.indexOf("//") == -1) newURL1 = httpHost1 + newURL1;
+    		else {
+    			int index = newURL1.indexOf("//");
+    			index = newURL1.indexOf("/", index + 2);
+    			newURL1 = httpHost1 + newURL1.substring(index);
+    		}
+    	}
+    	else newURL1 = "";
+
+    	String  tmpURL = "";
+    	String tmpURL1 = "";
+    	if ( !completeUrl )   tmpURL = "?db=" + db + "&verbo=queryplain&query=%5B" + alias + "%5D%3D" + nrecord;
+    	if ( !completeUrl1 ) tmpURL1 = "?db=" + db + "&verbo=queryplain&query=%5B" + alias + "%5D%3D" + nrecord;
+
+    	String defURL = newURL + tmpURL;
+    	java.net.URL url = new java.net.URL(defURL);
+    	defURL = url.toExternalForm();
+
+    	String defURL1 = "";
+    	if (newURL1.length() > 0) {
+    		defURL1 = newURL1 + tmpURL1;
+    		java.net.URL url1 = new java.net.URL(defURL1);
+    		defURL1 = url1.toExternalForm();
+    	}
+
+    	String ret = defURL;
+    	if (defURL1.length() > 0)
+    		ret += "\n\n" + defURL1;
+    	return ret;
+    }    
+    
+    public String getSubjectForEmail(String type, Document document) throws java.net.MalformedURLException {
+        String tipo_doc = document.getRootElement().attributeValue("tipo");
+
+        String mittOrDest = "";
+        if (tipo_doc.equals("arrivo") || tipo_doc.equals("partenza")) {
+            @SuppressWarnings("unchecked")
+			List<Element> l = (List<Element>)document.selectNodes("/doc/rif_esterni/rif/nome");            
+            if (l.size() > 0)
+                mittOrDest += ((Element) l.get(0)).getText();
+        }
+        String oggetto = document.getRootElement().elementText("oggetto");
+        String ret = "[" + type + "]" + getMittDestSubjectFor(mittOrDest) + ":" + getOggettoSubjectFor(oggetto);
+        return ret;
+    }   
+    
+    private String getMittDestSubjectFor(String mittOrDest) {
+        mittOrDest = mittOrDest.replaceAll("\n", " ");
+
+        if (mittOrDest.length() > MITT_DEST_LENGTH)
+            return mittOrDest.substring(0, MITT_DEST_LENGTH) + "...";
+        else
+            return mittOrDest;
+    }
+
+    private String getOggettoSubjectFor(String oggetto) {
+        oggetto = oggetto.replaceAll("\n", " ");
+        if (oggetto.length() > OGGETTO_LENGTH)
+            return oggetto.substring(0, OGGETTO_LENGTH) + "...";
+        else
+            return oggetto;
+    }    
+    
+	public String getEmailWithMatricola(String matricola, String codAmmAoo) throws Exception {
+		String res = "";
+
+		String query = "";
+		if (matricola.startsWith(TUTTI_COD + "_")) {
+			String codUff = matricola.substring(matricola.indexOf("_") + 1);
+			query = "([persint_coduff]=" + codUff + " OR [persint_gruppoappartenenzacod]=" + codUff + " OR [persint_mansionecod]=" + codUff + ") AND [/persona_interna/#cod_ammaoo/]=" + codAmmAoo;
+		}
+		else {
+			query = "[persint_matricola]=" + matricola + " AND [/persona_interna/#cod_ammaoo/]=" + codAmmAoo;
+		}
+
+		int count = aclClient.search(query);
+		for (int i=0; i<count; i++) {
+			Document document = aclClient.loadDocByQueryResult(i);
+			Attribute indirizzoEl = (Attribute)document.selectSingleNode("/persona_interna/recapito/email/@addr");
+			if (indirizzoEl != null) {
+				String indirizzo = indirizzoEl.getText().trim();
+				if (!indirizzo.isEmpty())
+					res += "," + indirizzo;
+			}
+		}
+
+		if (!res.isEmpty())
+			res = res.substring(1);
+		
+		return res;
+	}    
+    
 }

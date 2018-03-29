@@ -44,6 +44,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	@Override
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		super.storeMessage(parsedMessage);
 		
 		this.currentDate = new Date();
@@ -64,8 +65,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		Object retObj = saveNewDocument(doc);
 		
 		//notify mails
-		logger.info("[" + super.getConfiguration().getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
-		sendNotificationMails(doc, retObj);
+		if (conf.isNotificationEnabled() && (conf.isNotifyRPA() || conf.isNotifyCC())) { //if notification is activated
+			logger.info("[" + conf.getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
+			sendNotificationMails(doc, retObj);
+		}
 	}
 	
 	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {

@@ -45,6 +45,8 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private boolean notifyCC;
 	private String notificationAppUri;
 	private String notificationAppHost;
+	private String notificationAppHost1;
+	private boolean notificationEnabled;
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -257,7 +259,23 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public void setNotificationAppHost(String notificationAppHost) {
 		this.notificationAppHost = notificationAppHost;
 	}
-	
+
+	public String getNotificationAppHost1() {
+		return notificationAppHost1;
+	}
+
+	public void setNotificationAppHost1(String notificationAppHost1) {
+		this.notificationAppHost1 = notificationAppHost1;
+	}
+
+	public boolean isNotificationEnabled() {
+		return notificationEnabled;
+	}
+
+	public void setNotificationEnabled(boolean notificationEnabled) {
+		this.notificationEnabled = notificationEnabled;
+	}
+
 	
 	/**
 	 * 
