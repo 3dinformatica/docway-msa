@@ -2,7 +2,6 @@ package it.tredi.msa.mailboxmanager.docway;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -15,15 +14,12 @@ import javax.mail.internet.InternetAddress;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import it.tredi.mail.MessageUtils;
-import it.tredi.msa.Services;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.MailboxManager;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
 import it.tredi.msa.mailboxmanager.StringContentProvider;
-import it.tredi.msa.notification.MailNotificationSender;
 
 public abstract class DocwayMailboxManager extends MailboxManager {
 	
@@ -62,7 +58,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//notify mails
 		if (conf.isNotificationEnabled() && (conf.isNotifyRPA() || conf.isNotifyCC())) { //if notification is activated
 			logger.info("[" + conf.getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
-			sendNotificationMails(doc, retObj);
+			sendNotificationEmails(doc, retObj);
 		}
 	}
 	
@@ -211,7 +207,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract Object saveNewDocument(DocwayDocument doc) throws Exception;
 	protected abstract RifEsterno createRifEsterno(String name, String address) throws Exception;
 	protected abstract List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception;
-	protected abstract void sendNotificationMails(DocwayDocument doc, Object saveDocRetObj);
+	protected abstract void sendNotificationEmails(DocwayDocument doc, Object saveDocRetObj);
 	
 	protected boolean isImage(String fileName) {
 		return fileName.toLowerCase().endsWith(".jpg")
