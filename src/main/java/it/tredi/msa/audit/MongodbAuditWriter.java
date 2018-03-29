@@ -9,9 +9,6 @@ import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
-
-import com.mongodb.gridfs.GridFSFile;
-
 import it.tredi.msa.ContextProvider;
 import it.tredi.msa.entity.MailboxConfiguration;
 import it.tredi.msa.entity.MessageContentProvider;
