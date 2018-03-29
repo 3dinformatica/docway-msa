@@ -10,9 +10,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import it.tredi.msa.ContextProvider;
-import it.tredi.msa.entity.MailboxConfiguration;
-import it.tredi.msa.entity.MessageContentProvider;
-import it.tredi.msa.entity.ParsedMessage;
+import it.tredi.msa.configuration.MailboxConfiguration;
+import it.tredi.msa.mailboxmanager.MessageContentProvider;
+import it.tredi.msa.mailboxmanager.ParsedMessage;
 
 public class MongodbAuditWriter extends AuditWriter {
 	

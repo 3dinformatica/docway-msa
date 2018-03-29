@@ -1,4 +1,4 @@
-package it.tredi.msa.entity.docway;
+package it.tredi.msa.mailboxmanager.docway;
 
 public class RifEsterno {
 	

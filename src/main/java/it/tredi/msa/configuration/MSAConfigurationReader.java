@@ -1,7 +1,6 @@
 package it.tredi.msa.configuration;
 
 import it.tredi.msa.ObjectFactoryConfiguration;
-import it.tredi.msa.entity.MSAConfiguration;
 import it.tredi.utils.properties.PropertiesReader;
 
 public class MSAConfigurationReader {

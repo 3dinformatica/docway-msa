@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import it.tredi.msa.entity.MailboxConfiguration;
+import it.tredi.msa.configuration.MailboxConfiguration;
 import it.tredi.msa.mailboxmanager.MailboxManager;
 import it.tredi.msa.mailboxmanager.MailboxManagerFactory;
 

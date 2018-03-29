@@ -13,9 +13,7 @@ import it.tredi.mail.MailReader;
 import it.tredi.msa.Services;
 import it.tredi.msa.audit.AuditMailboxRun;
 import it.tredi.msa.audit.AuditMailboxRunStatus;
-import it.tredi.msa.entity.MailboxConfiguration;
-import it.tredi.msa.entity.ParsedMessage;
-import it.tredi.msa.entity.StoredMessagePolicy;
+import it.tredi.msa.configuration.MailboxConfiguration;
 
 public abstract class MailboxManager implements Runnable {
 	

@@ -17,17 +17,12 @@ import org.apache.logging.log4j.Logger;
 
 import it.tredi.mail.MessageUtils;
 import it.tredi.msa.Services;
-import it.tredi.msa.entity.MessageContentProvider;
-import it.tredi.msa.entity.ParsedMessage;
-import it.tredi.msa.entity.PartContentProvider;
-import it.tredi.msa.entity.StringContentProvider;
-import it.tredi.msa.entity.docway.DocwayDocument;
-import it.tredi.msa.entity.docway.DocwayFile;
-import it.tredi.msa.entity.docway.DocwayMailboxConfiguration;
-import it.tredi.msa.entity.docway.RifEsterno;
-import it.tredi.msa.entity.docway.RifInterno;
-import it.tredi.msa.entity.docway.StoriaItem;
+import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.MailboxManager;
+import it.tredi.msa.mailboxmanager.MessageContentProvider;
+import it.tredi.msa.mailboxmanager.ParsedMessage;
+import it.tredi.msa.mailboxmanager.PartContentProvider;
+import it.tredi.msa.mailboxmanager.StringContentProvider;
 import it.tredi.msa.notification.MailNotificationSender;
 
 public abstract class DocwayMailboxManager extends MailboxManager {

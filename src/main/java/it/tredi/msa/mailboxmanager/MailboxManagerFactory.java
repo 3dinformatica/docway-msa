@@ -4,7 +4,7 @@ import java.lang.reflect.Constructor;
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailReader;
 import it.tredi.msa.Services;
-import it.tredi.msa.entity.MailboxConfiguration;
+import it.tredi.msa.configuration.MailboxConfiguration;
 
 public class MailboxManagerFactory {
 	

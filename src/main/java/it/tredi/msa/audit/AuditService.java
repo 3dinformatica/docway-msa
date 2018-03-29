@@ -5,8 +5,8 @@ import org.apache.logging.log4j.Logger;
 
 import it.tredi.msa.ObjectFactory;
 import it.tredi.msa.Services;
-import it.tredi.msa.entity.MailboxConfiguration;
-import it.tredi.msa.entity.ParsedMessage;
+import it.tredi.msa.configuration.MailboxConfiguration;
+import it.tredi.msa.mailboxmanager.ParsedMessage;
 
 public class AuditService {
 	

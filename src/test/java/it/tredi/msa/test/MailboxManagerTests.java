@@ -3,7 +3,7 @@ package it.tredi.msa.test;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import it.tredi.msa.Services;
-import it.tredi.msa.entity.MailboxConfiguration;
+import it.tredi.msa.configuration.MailboxConfiguration;
 import it.tredi.msa.mailboxmanager.MailboxManager;
 import it.tredi.msa.mailboxmanager.MailboxManagerFactory;
 

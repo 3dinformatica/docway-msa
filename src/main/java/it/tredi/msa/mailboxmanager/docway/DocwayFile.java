@@ -1,9 +1,9 @@
-package it.tredi.msa.entity.docway;
+package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import it.tredi.msa.entity.ContentProvider;
+import it.tredi.msa.mailboxmanager.ContentProvider;
 
 public class DocwayFile {
 	

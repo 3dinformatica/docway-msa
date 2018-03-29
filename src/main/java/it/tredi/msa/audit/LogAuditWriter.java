@@ -1,7 +1,7 @@
 package it.tredi.msa.audit;
 
-import it.tredi.msa.entity.MailboxConfiguration;
-import it.tredi.msa.entity.ParsedMessage;
+import it.tredi.msa.configuration.MailboxConfiguration;
+import it.tredi.msa.mailboxmanager.ParsedMessage;
 
 public class LogAuditWriter extends AuditWriter {
 

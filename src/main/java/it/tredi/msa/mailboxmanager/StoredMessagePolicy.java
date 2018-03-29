@@ -1,4 +1,4 @@
-package it.tredi.msa.entity;
+package it.tredi.msa.mailboxmanager;
 
 public enum StoredMessagePolicy {
 	DELETE_FROM_FOLDER,

@@ -17,14 +17,9 @@ import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
 import it.tredi.mail.MailSender;
 import it.tredi.msa.Services;
-import it.tredi.msa.entity.ParsedMessage;
-import it.tredi.msa.entity.docway.AssegnatarioMailboxConfiguration;
-import it.tredi.msa.entity.docway.Docway4MailboxConfiguration;
-import it.tredi.msa.entity.docway.DocwayDocument;
-import it.tredi.msa.entity.docway.DocwayFile;
-import it.tredi.msa.entity.docway.RifEsterno;
-import it.tredi.msa.entity.docway.RifInterno;
-import it.tredi.msa.entity.docway.StoriaItem;
+import it.tredi.msa.configuration.docway.AssegnatarioMailboxConfiguration;
+import it.tredi.msa.configuration.docway.Docway4MailboxConfiguration;
+import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.notification.MailNotificationSender;
 
 public class Docway4MailboxManager extends DocwayMailboxManager {

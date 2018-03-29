@@ -14,12 +14,9 @@ import org.dom4j.Element;
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
 import it.tredi.msa.Services;
+import it.tredi.msa.configuration.MailboxConfiguration;
 import it.tredi.msa.configuration.MailboxConfigurationReader;
-import it.tredi.msa.entity.MailboxConfiguration;
-import it.tredi.msa.entity.StoredMessagePolicy;
-import it.tredi.msa.entity.docway.AssegnatarioMailboxConfiguration;
-import it.tredi.msa.entity.docway.Docway4MailboxConfiguration;
-
+import it.tredi.msa.mailboxmanager.StoredMessagePolicy;
 import it.tredi.utils.properties.PropertiesReader;
 
 public class Docway4MailboxConfigurationReader extends MailboxConfigurationReader {
