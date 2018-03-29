@@ -2,8 +2,6 @@ package it.tredi.msa.notification;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import it.tredi.msa.MsaLauncher;
 import it.tredi.msa.ObjectFactory;
 import it.tredi.msa.Services;
 
