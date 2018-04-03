@@ -99,32 +99,42 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		//load and lock document
 		xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 		
-		//upload files
-		boolean uploaded = false;
-		for (DocwayFile file:doc.getFiles()) {
-			file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
-			uploaded = true;
-		}
+		try {
+			//upload files
+			boolean uploaded = false;
+			for (DocwayFile file:doc.getFiles()) {
+				file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
+				uploaded = true;
+			}
 
-		//upload immagini
-		for (DocwayFile file:doc.getImmagini()) {
-			file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
-			uploaded = true;
+			//upload immagini
+			for (DocwayFile file:doc.getImmagini()) {
+				file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
+				uploaded = true;
+			}
+			
+			//update document with uploaded xw:file(s)
+			if (uploaded) {
+				updateXmlWithDocwayFiles(xmlDocument, doc);
+				setCompletedInDoc(xmlDocument, doc.getRecipientEmail());
+				xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
+			}
+			else { //no filed uploaded -> unlock document
+				xwClient.unlockDocument(lastSavedDocumentPhysDoc);
+			}			
 		}
-		
-		//update document with uploaded xw:file(s)
-		if (uploaded) {
-			updateXmlWithDocwayFiles(xmlDocument, doc);
-			setCompletedInDoc(xmlDocument, doc.getRecipientEmail());
-			xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
-		}
-		else { //no filed uploaded -> unlock document
-			xwClient.unlockDocument(lastSavedDocumentPhysDoc);
+		catch (Exception e) {
+			try {
+				xwClient.unlockDocument(lastSavedDocumentPhysDoc);
+			}
+			catch (Exception unlockE) {
+				; //do nothing
+			}
+			throw e;
 		}
 
 		return xmlDocument;
 	}
-	
 	
 	private void updateXmlWithDocwayFiles(Document xmlDocument, DocwayDocument doc) {
 		
@@ -549,34 +559,45 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		//load and lock existing document
 		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocToUpdate, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 		
-		//upload files
-		boolean uploaded = false;
-		for (DocwayFile file:doc.getFiles()) {
-			if (isFileNew(file.getName(), xmlDocument, "files")) {
-				file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
-				uploaded = true;				
+		try {
+			//upload files
+			boolean uploaded = false;
+			for (DocwayFile file:doc.getFiles()) {
+				if (isFileNew(file.getName(), xmlDocument, "files")) {
+					file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
+					uploaded = true;				
+				}
+				else
+					file.setId(null);
 			}
-			else
-				file.setId(null);
-		}
 
-		//upload immagini
-		for (DocwayFile file:doc.getImmagini()) {
-			if (isFileNew(file.getName(), xmlDocument, "immagini")) {
-				file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
-				uploaded = true;
+			//upload immagini
+			for (DocwayFile file:doc.getImmagini()) {
+				if (isFileNew(file.getName(), xmlDocument, "immagini")) {
+					file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
+					uploaded = true;
+				}
+				else
+					file.setId(null);			
 			}
-			else
-				file.setId(null);			
+			//update document with uploaded xw:file(s)
+			if (uploaded) {
+				updateXmlWithDocwayFiles(xmlDocument, doc);
+				setCompletedInDoc(xmlDocument, doc.getRecipientEmail());
+				xwClient.saveDocument(xmlDocument, this.physDocToUpdate);
+			}
+			else { //no filed uploaded -> unlock document
+				xwClient.unlockDocument(this.physDocToUpdate);
+			}			
 		}
-		//update document with uploaded xw:file(s)
-		if (uploaded) {
-			updateXmlWithDocwayFiles(xmlDocument, doc);
-			setCompletedInDoc(xmlDocument, doc.getRecipientEmail());
-			xwClient.saveDocument(xmlDocument, this.physDocToUpdate);
-		}
-		else { //no filed uploaded -> unlock document
-			xwClient.unlockDocument(this.physDocToUpdate);
+		catch (Exception e) {
+			try {
+				xwClient.unlockDocument(this.physDocToUpdate);
+			}
+			catch (Exception unlockE) {
+				; //do nothing
+			}
+			throw e;
 		}
 
 		return xmlDocument;
@@ -591,5 +612,53 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}
 		return true;
 	}
+
+	@Override
+	protected Object updateDocumentWithRecipient(DocwayDocument doc) throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		
+		//load and lock existing document
+		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocToUpdate, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		
+		try {
+			Element docEl = xmlDocument.getRootElement();
+			Element rifIntEl = docEl.element("rif_interni");
+			
+			//update document with new mailbox and CCs
+			Element archiviatoreEl = DocumentHelper.createElement("archiviatore");
+			docEl.add(archiviatoreEl);
+			archiviatoreEl.addAttribute("recipientEmail", doc.getRecipientEmail());
+			for (RifInterno rifInterno:doc.getRifInterni()) {
+				if (isNewRifInterno(rifInterno, rifIntEl)) {
+					rifIntEl.add(Docway4EntityToXmlUtils.rifInternoToXml(rifInterno));
+				}
+				else 
+					rifInterno.setNotify(false);
+			}
+			
+			updateXmlWithDocwayFiles(xmlDocument, doc);
+			xwClient.saveDocument(xmlDocument, this.physDocToUpdate);
+		}
+		catch (Exception e) {
+			try {
+				xwClient.unlockDocument(this.physDocToUpdate);
+			}
+			catch (Exception unlockE) {
+				; //do nothing
+			}
+			throw e;
+		}		
+		
+		return xmlDocument;
+	}
     
+	@SuppressWarnings("unchecked")
+	private boolean isNewRifInterno(RifInterno rifInterno, Element rifIntEl) {
+		for (Element rifEl: (List<Element>)rifIntEl.elements()) {
+			if (rifEl.attributeValue("diritto").equals(rifInterno.getDiritto()) && rifEl.attributeValue("cod_persona").equals(rifInterno.getCodPersona()) && rifEl.attributeValue("cod_uff").equals(rifInterno.getCodUff()))
+				return false;
+		}
+		return true;
+	}
+	
 }

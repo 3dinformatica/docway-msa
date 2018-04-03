@@ -52,7 +52,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		if (logger.isInfoEnabled())
 			logger.info("[" + conf.getName() + "] message [" + parsedMessage.getMessageId() + "] store type [" + storeType + "]");
 		
-		if (storeType == StoreType.SAVE_NEW_DOCUMENT || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT) { //save new document or update existing one
+		if (storeType == StoreType.SAVE_NEW_DOCUMENT || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT || storeType == StoreType.UPDATE_NEW_RECIPIENT) { //save new document or update existing one
 			//build new Docway document
 			DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
 
@@ -62,16 +62,15 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 				retObj = saveNewDocument(doc); 
 			else if (storeType == StoreType.UPDATE_PARTIAL_DOCUMENT) //2. doc found by messageId flagged as partial (attachments upload not completed) -> update document adding missing attachments
 				retObj = updatePartialDocument(doc);			
-
+			else if (storeType == StoreType.UPDATE_NEW_RECIPIENT) //3. doc found with different recipient email (same email sent to different mailboxes) -> update document adding new CCs
+				retObj = updateDocumentWithRecipient(doc);			
+			
 			//notify emails
 			if (conf.isNotificationEnabled() && (conf.isNotifyRPA() || conf.isNotifyCC())) { //if notification is activated
 				if (logger.isInfoEnabled())
 					logger.info("[" + conf.getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
 				sendNotificationEmails(doc, retObj);
 			}							
-		}
-		else if (storeType == StoreType.UPDATE_NEW_RECIPIENT ) { //3. doc found with different recipient email (same email sent to different mailboxes) -> update document adding new CCs
-//TODO			
 		}
 		else if (storeType == StoreType.SKIP_DOCUMENT) //4. there's nothing to do (maybe message deletion/move failed)
 			; 
@@ -222,6 +221,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	protected abstract Object saveNewDocument(DocwayDocument doc) throws Exception;
 	protected abstract Object updatePartialDocument(DocwayDocument doc) throws Exception;
+	protected abstract Object updateDocumentWithRecipient(DocwayDocument doc) throws Exception;
 	protected abstract RifEsterno createRifEsterno(String name, String address) throws Exception;
 	protected abstract List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception;
 	protected abstract void sendNotificationEmails(DocwayDocument doc, Object saveDocRetObj);
