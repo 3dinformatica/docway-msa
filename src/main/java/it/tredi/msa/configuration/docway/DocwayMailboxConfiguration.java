@@ -48,6 +48,9 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String notificationAppHost1;
 	private boolean notificationEnabled;
 	
+	//creazione di un singolo documento per messageId
+	private boolean createSingleDocByMessageId;
+	
 	public boolean isStoreEml() {
 		return storeEml;
 	}
@@ -276,6 +279,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 		this.notificationEnabled = notificationEnabled;
 	}
 
+	public boolean isCreateSingleDocByMessageId() {
+		return createSingleDocByMessageId;
+	}
+
+	public void setCreateSingleDocByMessageId(boolean createSingleDocByMessageId) {
+		this.createSingleDocByMessageId = createSingleDocByMessageId;
+	}
+	
 	
 	/**
 	 * 

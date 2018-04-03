@@ -25,8 +25,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 
 	protected ExtrawayClient xwClient;
 	protected ExtrawayClient aclClient;
-	private int lastSavedDocumentPhysDoc;
 	private boolean extRestrictionsOnAcl;
+	private int physDocToUpdate;
 	
 	private static final Logger logger = LogManager.getLogger(Docway4MailboxManager.class.getName());
 	
@@ -60,12 +60,41 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	}  	
 	
 	@Override
+	protected StoreType decodeStoreType(ParsedMessage parsedMessage) throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		
+		String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
+		if (!conf.isCreateSingleDocByMessageId())
+			query += " AND [/doc/archiviatore/@recipientEmail]=\"" + conf.getEmail() + "\"";
+		
+		int count = xwClient.search(query);
+		if (count > 0) { //messageId found
+			Document xmlDocument = xwClient.loadDocByQueryResult(0);
+			Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
+			if (archiviatoreEl != null) { //same mailbox
+				if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
+					this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+					return StoreType.UPDATE_PARTIAL_DOCUMENT;
+				}
+				else
+					return StoreType.SKIP_DOCUMENT;
+			}
+			else { //different mailbox
+				this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+				return StoreType.UPDATE_NEW_RECIPIENT;
+			}
+		}
+		else //messageId not found
+			return StoreType.SAVE_NEW_DOCUMENT;
+	}  	
+	
+	@Override
 	protected Object saveNewDocument(DocwayDocument doc) throws Exception {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		
 		//save new document in Extraway
 		Document xmlDocument = Docway4EntityToXmlUtils.docwayDocumentToXml(doc, super.currentDate);
-		lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
+		int lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
 		
 		//load and lock document
 		xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
@@ -86,6 +115,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		//update document with uploaded xw:file(s)
 		if (uploaded) {
 			updateXmlWithDocwayFiles(xmlDocument, doc);
+			setCompletedInDoc(xmlDocument, doc.getRecipientEmail());
 			xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
 		}
 		else { //no filed uploaded -> unlock document
@@ -101,16 +131,22 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		//files
 		List<DocwayFile> files = doc.getFiles();
 		if (files.size() > 0) {
-			Element filesEl = DocumentHelper.createElement("files");
-			xmlDocument.getRootElement().add(filesEl);
+			Element filesEl = (Element)xmlDocument.selectSingleNode("/doc/files");
+			if (filesEl == null) {
+				filesEl = DocumentHelper.createElement("files");
+				xmlDocument.getRootElement().add(filesEl);				
+			}
 			updateXmlWithDocwayFileList(filesEl, files, true);
 		}
 		
 		//immagini
 		List<DocwayFile> immagini = doc.getImmagini();
 		if (immagini.size() > 0) {
-			Element immaginiEl = DocumentHelper.createElement("immagini");
-			xmlDocument.getRootElement().add(immaginiEl);
+			Element immaginiEl = (Element)xmlDocument.selectSingleNode("/doc/immagini");
+			if (immaginiEl == null) {
+				immaginiEl = DocumentHelper.createElement("immagini");
+				xmlDocument.getRootElement().add(immaginiEl);				
+			}
 			updateXmlWithDocwayFileList(immaginiEl, immagini, false);
 		}		
 		
@@ -118,24 +154,31 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 
 	private void updateXmlWithDocwayFileList(Element filesContinerEl, List<DocwayFile> files, boolean convert) {
 		for (DocwayFile file:files) {
-			
-			//xw:file
-			Element xwFileEl = DocumentHelper.createElement("xw:file");
-			filesContinerEl.add(xwFileEl);
-			xwFileEl.addAttribute("name", file.getId());
-			xwFileEl.addAttribute("title", file.getName());
-			if (convert)
-				xwFileEl.addAttribute("convert", "yes");
-			
-			//checkin
-			Element chkinEl = DocumentHelper.createElement("chkin");
-			xwFileEl.add(chkinEl);
-			chkinEl.addAttribute("operatore", file.getOperatore());
-			chkinEl.addAttribute("cod_operatore", file.getCodOperatore());
-			chkinEl.addAttribute("data", file.getData());
-			chkinEl.addAttribute("ora", file.getOra());
+			if (file.getId() != null) {
+				//xw:file
+				Element xwFileEl = DocumentHelper.createElement("xw:file");
+				filesContinerEl.add(xwFileEl);
+				xwFileEl.addAttribute("name", file.getId());
+				xwFileEl.addAttribute("title", file.getName());
+				if (convert)
+					xwFileEl.addAttribute("convert", "yes");
+				
+				//checkin
+				Element chkinEl = DocumentHelper.createElement("chkin");
+				xwFileEl.add(chkinEl);
+				chkinEl.addAttribute("operatore", file.getOperatore());
+				chkinEl.addAttribute("cod_operatore", file.getCodOperatore());
+				chkinEl.addAttribute("data", file.getData());
+				chkinEl.addAttribute("ora", file.getOra());				
+			}
 		}
 	}	
+	
+	private void setCompletedInDoc(Document xmlDocument, String recipientEmail) {
+		Attribute completedAtt = (Attribute)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + recipientEmail + "']/@completed");
+		if (completedAtt != null)
+			completedAtt.detach();
+	}
 	
 	private boolean checkExtRestrictionsOnAcl() {
 		boolean restrictions = false;
@@ -497,6 +540,56 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			res = res.substring(1);
 		
 		return res;
-	}    
+	}
+
+	@Override
+	protected Object updatePartialDocument(DocwayDocument doc) throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		
+		//load and lock existing document
+		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocToUpdate, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		
+		//upload files
+		boolean uploaded = false;
+		for (DocwayFile file:doc.getFiles()) {
+			if (isFileNew(file.getName(), xmlDocument, "files")) {
+				file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
+				uploaded = true;				
+			}
+			else
+				file.setId(null);
+		}
+
+		//upload immagini
+		for (DocwayFile file:doc.getImmagini()) {
+			if (isFileNew(file.getName(), xmlDocument, "immagini")) {
+				file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
+				uploaded = true;
+			}
+			else
+				file.setId(null);			
+		}
+		//update document with uploaded xw:file(s)
+		if (uploaded) {
+			updateXmlWithDocwayFiles(xmlDocument, doc);
+			setCompletedInDoc(xmlDocument, doc.getRecipientEmail());
+			xwClient.saveDocument(xmlDocument, this.physDocToUpdate);
+		}
+		else { //no filed uploaded -> unlock document
+			xwClient.unlockDocument(this.physDocToUpdate);
+		}
+
+		return xmlDocument;
+	}
+
+	private boolean isFileNew(String fileName, Document xmlDocument, String fileContainerElName) {
+		@SuppressWarnings("unchecked")
+		List<Element> xwFilesL = xmlDocument.selectNodes("/doc/" + fileContainerElName + "/*[name()='xw:file'][count(.//*[name()='xw:file'])=0][count(@der_from)=0]");
+		for (Element fileEl:xwFilesL) {
+			if (fileEl.attributeValue("title").equals(fileName))
+				return false;
+		}
+		return true;
+	}
     
 }

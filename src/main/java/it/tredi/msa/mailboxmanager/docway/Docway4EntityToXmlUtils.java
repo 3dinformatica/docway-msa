@@ -42,10 +42,11 @@ public class Docway4EntityToXmlUtils {
 		//messageId
 		docEl.addAttribute("messageId", doc.getMessageId());
 		
-		//recipientEmail
+		//archiviatore (recipientEmail + completed)
 		Element archiviatoreEl = DocumentHelper.createElement("archiviatore");
 		docEl.add(archiviatoreEl);
 		archiviatoreEl.addAttribute("recipientEmail", doc.getRecipientEmail());
+		archiviatoreEl.addAttribute("completed", "no"); //set partial status (not completes)
 		
 		//autore
 		if (doc.getAutore() != null && !doc.getAutore().isEmpty()) {

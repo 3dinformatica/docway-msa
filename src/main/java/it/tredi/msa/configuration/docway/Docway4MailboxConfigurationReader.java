@@ -35,6 +35,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_SOCKET_TIMEOUT = "docway4mailboxmanager.mail-reader.socket-timeout";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_TIMEOUT = "docway4mailboxmanager.mail-reader.connection-timeout";
 	public final static String DOCWAY4MAILBOXMANAGER_NOTIFICATION_EMAILS = "docway4mailboxmanager.notification-emails.enable";
+	public final static String DOCWAY4MAILBOXMANAGER_CREATE_SINGLE_DOC_BY_MESSAGE_ID = "docway4mailboxmanager.create-single-doc-by-message-id";
 
 	private String host;
 	private int port;
@@ -249,7 +250,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	}
     	conf.setMailserverSocketTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_SOCKET_TIMEOUT, -1));
     	conf.setMailserverConnectionTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_TIMEOUT, -1));
-    	conf.setNotificationEnabled(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_NOTIFICATION_EMAILS, false));    	
+    	conf.setNotificationEnabled(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_NOTIFICATION_EMAILS, false));
+    	conf.setCreateSingleDocByMessageId(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_CREATE_SINGLE_DOC_BY_MESSAGE_ID, false));
     	
 //TODO - COMPLETARE	
 		return conf;

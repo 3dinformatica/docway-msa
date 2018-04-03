@@ -33,6 +33,13 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	private static final Logger logger = LogManager.getLogger(DocwayMailboxManager.class.getName());
 	
+	public enum StoreType {
+	    SAVE_NEW_DOCUMENT,
+	    UPDATE_PARTIAL_DOCUMENT,
+	    UPDATE_NEW_RECIPIENT,
+	    SKIP_DOCUMENT
+	}
+	
 	@Override
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
@@ -41,25 +48,34 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		this.currentDate = new Date();
 		this.parsedMessage = parsedMessage;
 		
-//TODO - realizzare lo store del messaggio
-//inserire tutta la logica di archiviazione
-//occorre ricercare il documento per messageId (in AND con cod_amm_aoo) (in AND con indirizzo_email_casella se property attivata)
-//si ricade in 3 differenti casistiche
-		//1. salvataggio nuovo doc (nuovo messageId)
-		//2. aggiornamento x upload file a doc (salvataggio flaggato come parziale) (stesso messageId, stessa casella, ma stato parziale di salvataggio) (se stesso messageId, stessa casella ma stato completato non occorre fare nulla...evidentemnete non era riuscita la cancellazione del documento...loggare la situazione)
-		//3. aggiornamento destinatari doc x stessa email su 2 caselle di posta (stesso mesasgeId, diversa casella, indipendentemente dallo stato completato)
+		StoreType storeType = decodeStoreType(parsedMessage);
+		if (logger.isInfoEnabled())
+			logger.info("[" + conf.getName() + "] message [" + parsedMessage.getMessageId() + "] store type [" + storeType + "]");
 		
-		//build new Docway document
-		DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
+		if (storeType == StoreType.SAVE_NEW_DOCUMENT || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT) { //save new document or update existing one
+			//build new Docway document
+			DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
 
-		//save new document
-		Object retObj = saveNewDocument(doc);
-		
-		//notify mails
-		if (conf.isNotificationEnabled() && (conf.isNotifyRPA() || conf.isNotifyCC())) { //if notification is activated
-			logger.info("[" + conf.getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
-			sendNotificationEmails(doc, retObj);
+			//save new document
+			Object retObj = null;
+			if (storeType == StoreType.SAVE_NEW_DOCUMENT) //1. doc not found by messageId -> save new document
+				retObj = saveNewDocument(doc); 
+			else if (storeType == StoreType.UPDATE_PARTIAL_DOCUMENT) //2. doc found by messageId flagged as partial (attachments upload not completed) -> update document adding missing attachments
+				retObj = updatePartialDocument(doc);			
+
+			//notify emails
+			if (conf.isNotificationEnabled() && (conf.isNotifyRPA() || conf.isNotifyCC())) { //if notification is activated
+				if (logger.isInfoEnabled())
+					logger.info("[" + conf.getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
+				sendNotificationEmails(doc, retObj);
+			}							
 		}
+		else if (storeType == StoreType.UPDATE_NEW_RECIPIENT ) { //3. doc found with different recipient email (same email sent to different mailboxes) -> update document adding new CCs
+//TODO			
+		}
+		else if (storeType == StoreType.SKIP_DOCUMENT) //4. there's nothing to do (maybe message deletion/move failed)
+			; 
+
 	}
 	
 	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {
@@ -205,9 +221,11 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	}
 	
 	protected abstract Object saveNewDocument(DocwayDocument doc) throws Exception;
+	protected abstract Object updatePartialDocument(DocwayDocument doc) throws Exception;
 	protected abstract RifEsterno createRifEsterno(String name, String address) throws Exception;
 	protected abstract List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception;
 	protected abstract void sendNotificationEmails(DocwayDocument doc, Object saveDocRetObj);
+	protected abstract StoreType decodeStoreType(ParsedMessage parsedMessage) throws Exception;
 	
 	protected boolean isImage(String fileName) {
 		return fileName.toLowerCase().endsWith(".jpg")
