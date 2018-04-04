@@ -110,7 +110,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//autore
 		if (doc.getTipo().toUpperCase().equals("VARIE"))
-			doc.setAutore(parsedMessage.getFromPersonal().isEmpty()? parsedMessage.getFromAddress() : parsedMessage.getFromPersonal());
+			doc.setAutore((parsedMessage.getFromPersonal() == null || parsedMessage.getFromPersonal().isEmpty())? parsedMessage.getFromAddress() : parsedMessage.getFromPersonal());
 
 		//oggetto
 		doc.setOggetto(parsedMessage.getSubject());
@@ -123,13 +123,13 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//rif esterni
 		if (doc.getTipo().toUpperCase().equals("ARRIVO"))
-			doc.addRifEsterno(createRifEsterno(parsedMessage.getFromPersonal(), parsedMessage.getFromAddress()));
+			doc.addRifEsterno(createRifEsterno((parsedMessage.getFromPersonal() == null || parsedMessage.getFromPersonal().isEmpty())? parsedMessage.getFromAddress() : parsedMessage.getFromPersonal(), parsedMessage.getFromAddress()));
 		else if (doc.getTipo().toUpperCase().equals("PARTENZA")) {
 			Address []recipients = parsedMessage.getMessage().getRecipients(RecipientType.TO);
 			for (Address recipient:recipients) {
 				String personal = ((InternetAddress)recipient).getPersonal();
 				String address = ((InternetAddress)recipient).getAddress();
-				doc.addRifEsterno(createRifEsterno((personal==null || personal.isEmpty())? "" : personal, (address==null || address.isEmpty())? "" : address));
+				doc.addRifEsterno(createRifEsterno((personal==null || personal.isEmpty())? address : personal, address));
 			}
 		}
 		

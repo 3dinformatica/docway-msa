@@ -24,7 +24,7 @@ public abstract class MailboxManager implements Runnable {
 	private AuditMailboxRun auditMailboxRun;
 	
 	private final static String PROCESS_MAILBOX_ERROR_MESSAGE = "Errore imprevisto durante le gestione della casella di posta [%s].\nControllare la configurazione [%s://%s:%s][User:%s]\nConsultare il log per maggiori dettagli.\n\n%s";
-	private final static String STORE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante l'archiviazione del messaggio di posta [%s].\nMessage Id:%s\nSent Date: %s\nSubject: %s\nConsultare il log per maggiori dettagli.\n\n%s";
+	private final static String STORE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante l'archiviazione del messaggio di posta [%s].\nMessage Id: %s\nSent Date: %s\nSubject: %s\nConsultare il log per maggiori dettagli.\n\n%s";
 	private final static String HANDLE_ERROR_ERROR_MESSAGE = "Errore imprevisto durante la gestione di un errore in fase di archiviazione di un messaggio di posta\nConsultare il log per maggiori dettagli.\n\n%s";
 	
 	public MailboxConfiguration getConfiguration() {
@@ -158,6 +158,9 @@ public abstract class MailboxManager implements Runnable {
     	
 		mailReader.connect();
 		mailReader.openInboxFolder();
+		
+		if (configuration.getStoredMessagePolicy() == StoredMessagePolicy.MOVE_TO_FOLDER)
+    		mailReader.createFolder(configuration.getStoredMessageFolderName()); //if folder exists this method has no effect
 		
     	if (logger.isDebugEnabled())
     		logger.debug("[" + configuration.getName() + "] mailReader connection opened");		
@@ -293,7 +296,6 @@ public abstract class MailboxManager implements Runnable {
     		if (logger.isInfoEnabled())
     			logger.info("[" + configuration.getName() + "] moving message to folder(" + configuration.getStoredMessageFolderName() + ") [" + parsedMessage.getMessageId() + "]");
     		
-    		mailReader.createFolder(configuration.getStoredMessageFolderName()); //if folder exists this method has no effect
     		mailReader.copyMessageToFolder(parsedMessage.getMessage(), configuration.getStoredMessageFolderName());
     		mailReader.deleteMessage(parsedMessage.getMessage());
     	}

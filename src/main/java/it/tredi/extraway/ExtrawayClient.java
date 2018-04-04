@@ -25,6 +25,7 @@ public class ExtrawayClient {
 	private int connId;
 	private QueryResult queryResult;
 	private final String ENCODING = "UTF-8";
+	private static final String XW_NAMESPACE = "http://www.3di.it/ns/xw-200303121136";
 	private String theLock;
 	
 	public ExtrawayClient(String host, int port, String db, String user, String password) {
@@ -101,6 +102,9 @@ public class ExtrawayClient {
 	
 	public int saveDocument(Document xmlDocument, int docNum) throws Exception {
 		Element rootEl = xmlDocument.getRootElement();
+		if (rootEl.getNamespaceForPrefix("xw") == null) //add xmlns:xw to root element
+			rootEl.addNamespace("xw", XW_NAMESPACE);
+		
 		StringWriter sw = new StringWriter();
 		OutputFormat outformat = new OutputFormat("  ", true, ENCODING);
 		outformat.setEncoding(ENCODING);
@@ -126,6 +130,7 @@ public class ExtrawayClient {
 	
 	public Document loadAndLockDocument(int physdoc, int attempts, long delay) throws Exception {
         XMLCommand theCommand = new XMLCommand(it.highwaytech.broker.XMLCommand.LoadDocument, XMLCommand.LoadDocument_Lock, physdoc);
+        theCommand.encoding = ENCODING;
         String xresponse = null;
         for (int i = 0; (i < attempts); i++) {
             try {
