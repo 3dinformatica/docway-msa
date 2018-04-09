@@ -122,7 +122,7 @@ public abstract class MailboxManager implements Runnable {
             		}
             		
             		//TEMPLATE STEP - processMessage
-        			processMessage(parsedMessage);            			
+        			processMessage(parsedMessage);
 
         		}
         		catch (Exception e) {

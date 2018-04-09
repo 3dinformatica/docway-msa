@@ -43,7 +43,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	private String password;
 	private String db;
 	private String query;
-	private String queryInterop;
+	private String queryPEC;
 	private String XPathInfo;
 	
 	public String getHost() {
@@ -98,14 +98,14 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		this.query = query;
 	}
 	
-	public String getQueryInterop() {
-		return queryInterop;
+	public String getQueryPEC() {
+		return queryPEC;
 	}
-	
-	public void setQueryInterop(String queryInterop) {
-		this.queryInterop = queryInterop;
+
+	public void setQueryPEC(String queryPEC) {
+		this.queryPEC = queryPEC;
 	}
-	
+
 	public String getXPathInfo() {
 		return XPathInfo;
 	}
@@ -120,7 +120,6 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public MailboxConfiguration[] readMailboxConfigurations() throws Exception {
 		List<MailboxConfiguration> mailboxConfigurations = new ArrayList<MailboxConfiguration>();
@@ -132,35 +131,10 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 			xwClient.connect();
 			
 			//read standard mailboxes
-			int count = xwClient.search(query);
-			QueryResult qr = xwClient.getQueryResult();
-			for (int i=0; i<count; i++) { //iterate xw selection
-				xwClient.setQueryResult(qr); //fix - inner documentModel search changes current query result
-				Document xmlDocument = xwClient.loadDocByQueryResult(i);
-				
-				//every doc in the selection could contain more mailboxes info (see xPathInfo)
-				String []xpaths = XPathInfo.split(";");
-				for (String xpath:xpaths) { //iterate xpaths
-		            List<Element> elsL = xmlDocument.selectNodes(xpath + "[./mailbox_in/@host!='']");
-		            for (Element casellaEl:elsL) { //for each mailbox relative to the current xpath
-		            	Docway4MailboxConfiguration conf = createDocway4MailboxConfigurationByConfig(casellaEl);
-		            	mailboxConfigurations.add(conf);
-		            	
-		        		//parse documentModel
-		        		if (xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel")) > 0) {
-		        			Document dmDocument = xwClient.loadDocByQueryResult(0);
-		        			parseDocumentModel(conf, dmDocument);	
-		        		}
-		        		else
-		        			throw new Exception("Document model non trovato: " + casellaEl.attributeValue("documentModel"));
-		            }				
-				}
-			}			
+			mailboxConfigurations.addAll(readMailboxConfigurations(false, query, xwClient));
 	
-			//read interoperabilità mailboxes
-//TODO
-			
-//TODO - gestire mailbox_out (serve per il rifiuto allegati)			
+			//read PEC mailboxes
+			mailboxConfigurations.addAll(readMailboxConfigurations(true, queryPEC, xwClient));
 			
 		}
 		catch (Exception e) {
@@ -168,10 +142,42 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		}
 		finally {
 			if (xwClient != null)
-			xwClient.disconnect();
+				xwClient.disconnect();
 		}
 		
 		return mailboxConfigurations.toArray(new MailboxConfiguration[mailboxConfigurations.size()]);
+	}
+	
+	private List<MailboxConfiguration> readMailboxConfigurations(boolean isPEC, String query, ExtrawayClient xwClient) throws Exception {
+		List<MailboxConfiguration> mailboxConfigurations = new ArrayList<MailboxConfiguration>();
+		int count = xwClient.search(query);
+		QueryResult qr = xwClient.getQueryResult();
+		for (int i=0; i<count; i++) { //iterate xw selection
+			xwClient.setQueryResult(qr); //fix - inner documentModel search changes current query result
+			Document xmlDocument = xwClient.loadDocByQueryResult(i);
+			
+			//every doc in the selection could contain more mailboxes info (see xPathInfo)
+			String []xpaths = XPathInfo.split(";");
+			for (String xpath:xpaths) { //iterate xpaths
+	            @SuppressWarnings("unchecked")
+				List<Element> elsL = xmlDocument.selectNodes(xpath + "[./mailbox_in/@host!='']");
+	            for (Element casellaEl:elsL) { //for each mailbox relative to the current xpath
+	            	Docway4MailboxConfiguration conf = createDocway4MailboxConfigurationByConfig(casellaEl);
+	            	mailboxConfigurations.add(conf);
+	            	conf.setPEC(isPEC);
+	            	
+	        		//parse documentModel
+	        		if (xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel")) > 0) {
+	        			Document dmDocument = xwClient.loadDocByQueryResult(0);
+	        			parseDocumentModel(conf, dmDocument);
+	        		}
+	        		else
+	        			throw new Exception("Document model non trovato: " + casellaEl.attributeValue("documentModel"));
+	        		
+	            }				
+			}
+		}	
+		return mailboxConfigurations;
 	}
 	
 	private Docway4MailboxConfiguration createDocway4MailboxConfigurationByConfig(Element casellaEl) throws Exception {
@@ -186,8 +192,10 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	//delay
     	conf.setDelay(Services.getConfigurationService().getMSAConfiguration().getMailboxManagersDelay());
     	
-    	//host
+    	/* *************************** mailbox-in ****************************************** */
     	Element mailboxInEl = casellaEl.element("mailbox_in");
+    	
+    	//host
     	conf.setHost(mailboxInEl.attributeValue("host"));
     	
     	//port
@@ -204,10 +212,56 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	
     	//email
     	conf.setEmail(mailboxInEl.attributeValue("email"));
+    	/* ********************************************************************************* */
+    	
+    	/* *************************** mailbox-out ***************************************** */
+    	Element mailboxOutEl = casellaEl.element("mailbox_out");
+    	if (mailboxOutEl != null) {
+        	//host
+        	conf.setHost(mailboxOutEl.attributeValue("host"));
+        	
+        	//port
+        	conf.setPort(Integer.parseInt(mailboxOutEl.attributeValue("port", "-1")));
+        	
+        	//user
+        	conf.setUser(mailboxOutEl.attributeValue("login"));
+        	
+        	//password
+        	conf.setPassword(decryptPassword(mailboxOutEl.attributeValue("password")));
+        	
+        	//protocol
+        	conf.setProtocol(mailboxOutEl.attributeValue("protocol"));
+        	
+        	//email
+        	conf.setEmail(mailboxOutEl.attributeValue("email"));    		
+    	}
+		/* ******************************************************************************** */
     	
     	//cod_amm_aoo
-    	conf.setCodAmmAoo(casellaEl.attributeValue("cod_amm") + casellaEl.attributeValue("cod_aoo"));
+    	conf.setCodAmm(casellaEl.attributeValue("cod_amm"));
+    	conf.setCodAoo(casellaEl.attributeValue("cod_aoo"));
+    	conf.setCodAmmAoo(conf.getCodAmm() + conf.getCodAoo());
     	
+    	//xwDb
+		conf.setXwDb(casellaEl.attributeValue("db"));
+    	
+		//mail di notifica
+		Element notifyEl = casellaEl.element("notify");
+		if (notifyEl != null) {
+			conf.setNotifyRPA(Boolean.parseBoolean(notifyEl.attributeValue("rpa", "false")));
+			conf.setNotifyCC(Boolean.parseBoolean(notifyEl.attributeValue("cc", "false")));
+			conf.setNotificationAppHost(notifyEl.attributeValue("httpHost", ""));
+			conf.setNotificationAppHost1(notifyEl.attributeValue("httpHost1", ""));
+			String uri = notifyEl.attributeValue("uri", "");
+			if (!uri.isEmpty())
+				uri = "// " + uri;
+			conf.setNotificationAppUri(uri);
+		}
+		else {
+			conf.setNotifyRPA(false);
+			conf.setNotifyCC(false);			
+		}		
+		
     	//oper, uff_oper
     	conf.setOper(casellaEl.attributeValue("oper"));
     	conf.setUffOper(casellaEl.attributeValue("uff_oper"));
@@ -253,7 +307,6 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setNotificationEnabled(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_NOTIFICATION_EMAILS, false));
     	conf.setCreateSingleDocByMessageId(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_CREATE_SINGLE_DOC_BY_MESSAGE_ID, false));
     	
-//TODO - COMPLETARE	
 		return conf;
 	}
 	
@@ -268,7 +321,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public void parseDocumentModel(Docway4MailboxConfiguration conf, Document dmDocument) {
 		
     	//xwDb
-    	conf.setXwDb(dmDocument.getRootElement().attributeValue("db"));
+		if (conf.getXwDb() == null || conf.getXwDb().isEmpty()) //ha la precedenza la configurazione sulla casella di posta a quella del document model
+			conf.setXwDb(dmDocument.getRootElement().attributeValue("db"));
     	
 		//tipo doc
 		String tipoDoc = ((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@tipo']")).attributeValue("value");
@@ -322,20 +376,22 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		}		
 		
 		//mail di notifica
-		Element notifyEl = dmDocument.getRootElement().element("notify");
-		if (notifyEl != null) {
-			conf.setNotifyRPA(Boolean.parseBoolean(notifyEl.attributeValue("rpa", "false")));
-			conf.setNotifyCC(Boolean.parseBoolean(notifyEl.attributeValue("cc", "false")));
-			conf.setNotificationAppHost(notifyEl.attributeValue("httpHost", ""));
-			conf.setNotificationAppHost1(notifyEl.attributeValue("httpHost1", ""));
-			String uri = notifyEl.attributeValue("uri", "");
-			if (!uri.isEmpty())
-				uri = "// " + uri;
-			conf.setNotificationAppUri(uri);
-		}
-		else {
-			conf.setNotifyRPA(false);
-			conf.setNotifyCC(false);			
+		if (conf.getNotificationAppHost() == null || conf.getNotificationAppHost().isEmpty()) { //ha la precedenza la configurazione sulla casella di posta a quella del document model
+			Element notifyEl = dmDocument.getRootElement().element("notify");
+			if (notifyEl != null) {
+				conf.setNotifyRPA(Boolean.parseBoolean(notifyEl.attributeValue("rpa", "false")));
+				conf.setNotifyCC(Boolean.parseBoolean(notifyEl.attributeValue("cc", "false")));
+				conf.setNotificationAppHost(notifyEl.attributeValue("httpHost", ""));
+				conf.setNotificationAppHost1(notifyEl.attributeValue("httpHost1", ""));
+				String uri = notifyEl.attributeValue("uri", "");
+				if (!uri.isEmpty())
+					uri = "// " + uri;
+				conf.setNotificationAppUri(uri);
+			}
+			else {
+				conf.setNotifyRPA(false);
+				conf.setNotifyCC(false);			
+			}			
 		}
 		
 //TODO - continuare ad analizzare il documentModel

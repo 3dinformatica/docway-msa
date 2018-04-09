@@ -18,6 +18,8 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String mezzoTrasmissione;
 	private boolean currentYear;
 	private boolean currentDate;
+	private String codAmm;
+	private String codAoo;
 	
 	//classificazione
 	private String classif;
@@ -50,6 +52,17 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	
 	//creazione di un singolo documento per messageId
 	private boolean createSingleDocByMessageId;
+	
+	//per PEC
+	boolean isPEC;
+	
+	//smtp parameters
+	private String smtpEmail;
+	private String smtpHost;
+	private int smtpPort;
+	private String smtpProtocol;
+	private String smtpUser;
+	private String smtpPassword;	
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -121,6 +134,22 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setCurrentDate(boolean currentDate) {
 		this.currentDate = currentDate;
+	}
+	
+	public String getCodAmm() {
+		return codAmm;
+	}
+
+	public void setCodAmm(String codAmm) {
+		this.codAmm = codAmm;
+	}
+
+	public String getCodAoo() {
+		return codAoo;
+	}
+
+	public void setCodAoo(String codAoo) {
+		this.codAoo = codAoo;
 	}
 
 	public String getClassif() {
@@ -286,7 +315,62 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public void setCreateSingleDocByMessageId(boolean createSingleDocByMessageId) {
 		this.createSingleDocByMessageId = createSingleDocByMessageId;
 	}
-	
+
+	public boolean isPEC() {
+		return isPEC;
+	}
+
+	public void setPEC(boolean isPEC) {
+		this.isPEC = isPEC;
+	}
+
+	public String getSmtpEmail() {
+		return smtpEmail;
+	}
+
+	public void setSmtpEmail(String smtpEmail) {
+		this.smtpEmail = smtpEmail;
+	}
+
+	public String getSmtpHost() {
+		return smtpHost;
+	}
+
+	public void setSmtpHost(String smtpHost) {
+		this.smtpHost = smtpHost;
+	}
+
+	public int getSmtpPort() {
+		return smtpPort;
+	}
+
+	public void setSmtpPort(int smtpPort) {
+		this.smtpPort = smtpPort;
+	}
+
+	public String getSmtpProtocol() {
+		return smtpProtocol;
+	}
+
+	public void setSmtpProtocol(String smtpProtocol) {
+		this.smtpProtocol = smtpProtocol;
+	}
+
+	public String getSmtpUser() {
+		return smtpUser;
+	}
+
+	public void setSmtpUser(String smtpUser) {
+		this.smtpUser = smtpUser;
+	}
+
+	public String getSmtpPassword() {
+		return smtpPassword;
+	}
+
+	public void setSmtpPassword(String smtpPassword) {
+		this.smtpPassword = smtpPassword;
+	}
 	
 	/**
 	 * 
