@@ -218,22 +218,22 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	Element mailboxOutEl = casellaEl.element("mailbox_out");
     	if (mailboxOutEl != null) {
         	//host
-        	conf.setHost(mailboxOutEl.attributeValue("host"));
+        	conf.setSmtpHost(mailboxOutEl.attributeValue("host"));
         	
         	//port
-        	conf.setPort(Integer.parseInt(mailboxOutEl.attributeValue("port", "-1")));
+        	conf.setSmtpPort(Integer.parseInt(mailboxOutEl.attributeValue("port", "-1")));
         	
         	//user
-        	conf.setUser(mailboxOutEl.attributeValue("login"));
+        	conf.setSmtpUser(mailboxOutEl.attributeValue("login"));
         	
         	//password
-        	conf.setPassword(decryptPassword(mailboxOutEl.attributeValue("password")));
+        	conf.setSmtpPassword(decryptPassword(mailboxOutEl.attributeValue("password")));
         	
         	//protocol
-        	conf.setProtocol(mailboxOutEl.attributeValue("protocol"));
+        	conf.setSmtpProtocol(mailboxOutEl.attributeValue("protocol"));
         	
         	//email
-        	conf.setEmail(mailboxOutEl.attributeValue("email"));    		
+        	conf.setSmtpEmail(mailboxOutEl.attributeValue("email"));
     	}
 		/* ******************************************************************************** */
     	
