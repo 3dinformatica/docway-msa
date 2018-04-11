@@ -16,6 +16,8 @@ public abstract class MailboxConfiguration {
 	private int mailserverSocketTimeout = -1;
 	private int mailserverConnectionTimeout = -1;
 	
+	boolean isPec;
+	
 	private int delay = -1; //delay (mailbox manager polling time)
 	private StoredMessagePolicy storedMessagePolicy = StoredMessagePolicy.DELETE_FROM_FOLDER;
 	private String storedMessageFolderName;
@@ -116,6 +118,14 @@ public abstract class MailboxConfiguration {
 
 	public void setStoredMessageFolderName(String storedMessageFolderName) {
 		this.storedMessageFolderName = storedMessageFolderName;
+	}
+
+	public boolean isPec() {
+		return isPec;
+	}
+
+	public void setPec(boolean isPec) {
+		this.isPec = isPec;
 	}
 	
 }

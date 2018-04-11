@@ -53,9 +53,6 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	//creazione di un singolo documento per messageId
 	private boolean createSingleDocByMessageId;
 	
-	//per PEC
-	boolean isPEC;
-	
 	//smtp parameters
 	private String smtpEmail;
 	private String smtpHost;
@@ -314,14 +311,6 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setCreateSingleDocByMessageId(boolean createSingleDocByMessageId) {
 		this.createSingleDocByMessageId = createSingleDocByMessageId;
-	}
-
-	public boolean isPEC() {
-		return isPEC;
-	}
-
-	public void setPEC(boolean isPEC) {
-		this.isPEC = isPEC;
 	}
 
 	public String getSmtpEmail() {

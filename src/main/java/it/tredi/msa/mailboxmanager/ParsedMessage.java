@@ -9,16 +9,29 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+
 import it.tredi.mail.MessageUtils;
 
 public class ParsedMessage {
 	
-	private Message message;
+	protected Message message;
 	private String messageId;
 	private List<Part> leafPartsL;
 	private List<Part> attachmentsL;
 	private String textParts;
 	private String htmlParts;
+	
+	private boolean pecMessage = false;
+	private boolean isPecMessageInCache = false;
+	
+	private boolean pecNotification = false;
+	private boolean isPecNotificationInCache = false;
+	
+	private Document datiCertDocument;
+	private boolean datiCertDocumentInCache = false;
 	
 	public ParsedMessage(Message message) throws Exception {
 		this.message = message;
@@ -52,11 +65,15 @@ public class ParsedMessage {
 		return message.getSentDate();
 	}
 	
+	private String cleanMessageId(String messageId) {
+		messageId = messageId.replaceAll("<", "");
+		messageId = messageId.replaceAll(">", "");
+		return messageId;
+	}
+	
 	public String getMessageId() throws Exception {
 		if (messageId == null) {
-			messageId = MessageUtils.getMessageId(message);
-    		messageId = messageId.replaceAll("<", "");
-    		messageId = messageId.replaceAll(">", "");
+			messageId = cleanMessageId(MessageUtils.getMessageId(message));
 		}
 		return messageId;
 	}
@@ -110,7 +127,7 @@ public class ParsedMessage {
 		if (htmlParts == null) {
 			htmlParts = "";
 			for (Part part:getLeafPartsL()) 
-				if (MessageUtils.isHtmlPart(part))			
+				if (MessageUtils.isHtmlPart(part))
 					htmlParts += part.getContent();
 			htmlParts = htmlParts.trim();
 		}
@@ -126,6 +143,50 @@ public class ParsedMessage {
 		headers += "Sent: " + getSentDate() + "\n";
 		headers += "Subject: " + getSubject() + "\n\n";
 		return headers + getTextParts();
+	}
+
+	public boolean isPecMessage() {
+		if (!isPecMessageInCache) {
+			pecMessage = MessageUtils.isPecMessage(message);
+			isPecMessageInCache = true;
+		}
+		return pecMessage;
+	}	
+	
+	public boolean isPecReceipt() {
+		if (!isPecNotificationInCache) {
+			pecNotification = MessageUtils.isPecReceipt(message);
+			isPecNotificationInCache = true;
+		}
+		return pecNotification;
+	}
+	
+	private Document getDatiCertDocument() throws Exception {
+		if (!datiCertDocumentInCache) {
+			Part part = MessageUtils.extractDatiCertXmlFromPec(message);
+			byte []b = (new PartContentProvider(part)).getContent();
+			datiCertDocument = DocumentHelper.parseText(new String(b, "UTF-8"));			
+		}
+		return datiCertDocument;
+	}	
+	
+	public String getMessageIdFromDatiCertPec() throws Exception {
+		return cleanMessageId(getDatiCertDocument().selectSingleNode("/postacert/dati/msgid").getText());
+	}
+
+	public String getSubjectFromDatiCertPec() throws Exception {
+		return getDatiCertDocument().selectSingleNode("/postacert/intestazione/oggetto").getText();
+	}	
+	
+	@SuppressWarnings("unchecked")
+	public String getRealToAddressFromDatiCertPec() throws Exception {
+		List<Element> l = (List<Element>)getDatiCertDocument().selectNodes("/postacert/intestazione/destinatari");
+		if (l.size() == 1)
+			return l.get(0).getText();
+		Element el = (Element)getDatiCertDocument().selectSingleNode("/postacert/dati/consegna");
+		if (el != null)
+			return el.getText();
+		return null;
 	}
 	
 }

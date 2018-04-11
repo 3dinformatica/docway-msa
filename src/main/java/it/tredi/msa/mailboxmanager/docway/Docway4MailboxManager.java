@@ -1,5 +1,6 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import it.tredi.mail.MailSender;
 import it.tredi.msa.Services;
 import it.tredi.msa.configuration.docway.AssegnatarioMailboxConfiguration;
 import it.tredi.msa.configuration.docway.Docway4MailboxConfiguration;
+import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.notification.MailNotificationSender;
 
@@ -27,6 +29,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	protected ExtrawayClient aclClient;
 	private boolean extRestrictionsOnAcl;
 	private int physDocToUpdate;
+	private int physDocForAttachingPecReceipt;
 	
 	private static final Logger logger = LogManager.getLogger(Docway4MailboxManager.class.getName());
 	
@@ -62,30 +65,51 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	@Override
 	protected StoreType decodeStoreType(ParsedMessage parsedMessage) throws Exception {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		
-		String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
-		if (!conf.isCreateSingleDocByMessageId())
-			query += " AND [/doc/archiviatore/@recipientEmail]=\"" + conf.getEmail() + "\"";
-		
-		int count = xwClient.search(query);
-		if (count > 0) { //messageId found
-			Document xmlDocument = xwClient.loadDocByQueryResult(0);
-			Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
-			if (archiviatoreEl != null) { //same mailbox
-				if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
-					this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
-					return StoreType.UPDATE_PARTIAL_DOCUMENT;
+		if (conf.isPec() && parsedMessage.isPecReceipt()) { //casella PEC e messaggio è una ricevuta PEC
+			String query = "";
+			if (dcwParsedMessage.isPecReceiptForInteropPAbySubject()) //ricevuta PEC di messaggio di interoperabilità (identificato dal subject tramite euristica)
+				query = "[/doc/@num_prot]=\"" + dcwParsedMessage.extractNumProtFromOriginalSubject() + "\"";
+			else if (dcwParsedMessage.isPecReceiptForFatturaPAbySubject()) //ricevuta PEC di messaggio per la fattura PA
+				query = "";
+//TODO - realizzare
+			if (query.length() > 0) { //trovato doc a cui allegare ricevuta PEC
+				int count = xwClient.search(query);
+				if (count > 0) {
+					this.physDocForAttachingPecReceipt = xwClient.getPhysdocByQueryResult(0);
+					return StoreType.ATTACH_PEC_RECEIPT;
 				}
-				else
-					return StoreType.SKIP_DOCUMENT;
 			}
-			else { //different mailbox
-				this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
-				return StoreType.UPDATE_NEW_RECIPIENT;
-			}
-		}
-		else //messageId not found
 			return StoreType.SAVE_NEW_DOCUMENT;
+		}
+//TODO - inserire altre casistiche	(segnatura, notifiche interoperabilità, fattura pa, notifiche fattura PA)
+		else { //casella ordinaria oppure casella PEC ma messaggio ordinario (oppure ricevuta che non si riesce ad allegare ad alcun documento)
+			String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
+			if (!conf.isCreateSingleDocByMessageId())
+				query += " AND [/doc/archiviatore/@recipientEmail]=\"" + conf.getEmail() + "\"";
+			
+			int count = xwClient.search(query);
+			if (count > 0) { //messageId found
+				Document xmlDocument = xwClient.loadDocByQueryResult(0);
+				Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
+				if (archiviatoreEl != null) { //same mailbox
+					if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
+						this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+						return StoreType.UPDATE_PARTIAL_DOCUMENT;
+					}
+					else
+						return StoreType.SKIP_DOCUMENT;
+				}
+				else { //different mailbox
+					this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+					return StoreType.UPDATE_NEW_RECIPIENT;
+				}
+			}
+			else //messageId not found
+				return StoreType.SAVE_NEW_DOCUMENT;
+		}
+		
 	}  	
 	
 	@Override
@@ -659,6 +683,70 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				return false;
 		}
 		return true;
+	}
+
+	@Override
+	protected void attachPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		
+		//load and lock existing document
+		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocForAttachingPecReceipt, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		
+		try {
+			//upload file
+			String receiptTypeBySubject = parsedMessage.getSubject().substring(0, parsedMessage.getSubject().indexOf(":"));
+			String fileName =  receiptTypeBySubject + ".eml";
+			byte []fileContent = (new MessageContentProvider(parsedMessage.getMessage(), false)).getContent();
+			String fileId = xwClient.addAttach(fileName, fileContent, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+			
+			//build interoperabilita element
+            Element interopEl = DocumentHelper.createElement("interoperabilita");
+            interopEl.addAttribute("name", fileId);
+            interopEl.addAttribute("title", fileName);
+            interopEl.addAttribute("data", (new SimpleDateFormat("yyyyMMdd")).format(currentDate));
+            interopEl.addAttribute("ora", (new SimpleDateFormat("HH:mm:ss")).format(currentDate));
+            interopEl.addAttribute("info", receiptTypeBySubject);
+            interopEl.addAttribute("messageId", parsedMessage.getMessageId());			
+			
+			//try to attach interopEl to rif esterno (by email)
+            Element rifEsterniEl = (Element)xmlDocument.selectSingleNode("/doc/rif_esterni");
+            @SuppressWarnings("unchecked")
+			List<Element> rifsL = rifEsterniEl.elements("rif");
+            Element rifEl = null;
+            String realToAddress = parsedMessage.getRealToAddressFromDatiCertPec();
+            if (realToAddress != null && !realToAddress.isEmpty()) {
+                for (Element el:rifsL) {
+                	Element emailCertificataEl = el.element("email_certificata");
+                	if (emailCertificataEl != null && emailCertificataEl.attributeValue("addr", "").equals(realToAddress)) {
+                		rifEl = el;
+                		break;            		
+                	}
+                }            	
+            }
+
+            if (rifEl != null) {
+            	rifEl.add(interopEl);
+            }
+            else { 	//default -> attach interopEl to interoperabilita_multipla
+    			Element interoperabilitaMultiplaEl = rifEsterniEl.element("interoperabilita_multipla");
+    			if (interoperabilitaMultiplaEl == null) {
+    				interoperabilitaMultiplaEl = DocumentHelper.createElement("interoperabilita_multipla");
+    				rifEsterniEl.add(interoperabilitaMultiplaEl);
+    			}
+    			interoperabilitaMultiplaEl.add(interopEl);            	
+            }
+            
+			xwClient.saveDocument(xmlDocument, this.physDocForAttachingPecReceipt);
+		}
+		catch (Exception e) {
+			try {
+				xwClient.unlockDocument(this.physDocForAttachingPecReceipt);
+			}
+			catch (Exception unlockE) {
+				; //do nothing
+			}
+			throw e;
+		}
 	}
 	
 }

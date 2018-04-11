@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.mail.Address;
+import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.Message.RecipientType;
@@ -37,8 +38,14 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	    SAVE_NEW_DOCUMENT,
 	    UPDATE_PARTIAL_DOCUMENT,
 	    UPDATE_NEW_RECIPIENT,
-	    SKIP_DOCUMENT
+	    SKIP_DOCUMENT,
+	    ATTACH_PEC_RECEIPT
 	}
+	
+	@Override
+    public ParsedMessage parseMessage(Message message) throws Exception {
+    	return new DocwayParsedMessage(message);
+    }	
 	
 	@Override
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
@@ -72,6 +79,12 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 				sendNotificationEmails(doc, retObj);
 			}							
 		}
+		else if (storeType == StoreType.ATTACH_PEC_RECEIPT) {
+			attachPecReceiptToDocument(parsedMessage);
+		}
+		
+		
+//TODO - gestire altre casistiche
 		else if (storeType == StoreType.SKIP_DOCUMENT) //4. there's nothing to do (maybe message deletion/move failed)
 			; 
 
@@ -226,6 +239,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception;
 	protected abstract void sendNotificationEmails(DocwayDocument doc, Object saveDocRetObj);
 	protected abstract StoreType decodeStoreType(ParsedMessage parsedMessage) throws Exception;
+	protected abstract void attachPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception;
 	
 	protected boolean isImage(String fileName) {
 		return fileName.toLowerCase().endsWith(".jpg")

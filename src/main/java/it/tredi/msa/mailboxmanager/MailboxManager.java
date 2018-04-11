@@ -47,8 +47,10 @@ public abstract class MailboxManager implements Runnable {
     public void run() {
     	try {
         	if (!shutdown) {
-        		if (logger.isInfoEnabled())
-        			logger.info("[" + configuration.getName() + "] starting execution" + " [" + configuration.getUser() + "]");
+        		if (logger.isInfoEnabled()) {
+        			String pecLog = configuration.isPec()? " [PEC]" : "";
+        			logger.info("[" + configuration.getName() + "] starting execution" + " [" + configuration.getUser() + "]" + pecLog);
+        		}
 
             	//TEMPLATE STEP - processMailbox
             	processMailbox(); //customization is achieved via template pattern
@@ -199,8 +201,12 @@ public abstract class MailboxManager implements Runnable {
     	if (logger.isDebugEnabled())
     		logger.debug("[" + configuration.getName() + "] processMessage() called");
     	
-		if (logger.isInfoEnabled())
-			logger.info("[" + configuration.getName() + "] processing message [" + parsedMessage.getMessageId() + "] [Sent: " + parsedMessage.getSentDate() + "] [Subject: " + parsedMessage.getSubject() + "]");
+		if (logger.isInfoEnabled()) {
+			String pecLog = "";
+			if (configuration.isPec())
+				pecLog = parsedMessage.isPecMessage()? " [PEC Message]" : parsedMessage.isPecReceipt()? " [PEC Receipt]" : "";
+			logger.info("[" + configuration.getName() + "] processing message [" + parsedMessage.getMessageId() + "] [Sent: " + parsedMessage.getSentDate() + "] [Subject: " + parsedMessage.getSubject() + "]" + pecLog);
+		}
     	
     	//TEMPLATE STEP - isMessageStorable
     	if (isMessageStorable(parsedMessage)) {

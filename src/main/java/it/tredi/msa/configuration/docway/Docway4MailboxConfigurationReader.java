@@ -43,7 +43,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	private String password;
 	private String db;
 	private String query;
-	private String queryPEC;
+	private String queryPec;
 	private String XPathInfo;
 	
 	public String getHost() {
@@ -97,13 +97,13 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public void setQuery(String query) {
 		this.query = query;
 	}
-	
-	public String getQueryPEC() {
-		return queryPEC;
+
+	public String getQueryPec() {
+		return queryPec;
 	}
 
-	public void setQueryPEC(String queryPEC) {
-		this.queryPEC = queryPEC;
+	public void setQueryPec(String queryPec) {
+		this.queryPec = queryPec;
 	}
 
 	public String getXPathInfo() {
@@ -133,8 +133,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 			//read standard mailboxes
 			mailboxConfigurations.addAll(readMailboxConfigurations(false, query, xwClient));
 	
-			//read PEC mailboxes
-			mailboxConfigurations.addAll(readMailboxConfigurations(true, queryPEC, xwClient));
+			//read Pec mailboxes
+			mailboxConfigurations.addAll(readMailboxConfigurations(true, queryPec, xwClient));
 			
 		}
 		catch (Exception e) {
@@ -148,7 +148,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		return mailboxConfigurations.toArray(new MailboxConfiguration[mailboxConfigurations.size()]);
 	}
 	
-	private List<MailboxConfiguration> readMailboxConfigurations(boolean isPEC, String query, ExtrawayClient xwClient) throws Exception {
+	private List<MailboxConfiguration> readMailboxConfigurations(boolean isPec, String query, ExtrawayClient xwClient) throws Exception {
 		List<MailboxConfiguration> mailboxConfigurations = new ArrayList<MailboxConfiguration>();
 		int count = xwClient.search(query);
 		QueryResult qr = xwClient.getQueryResult();
@@ -164,7 +164,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	            for (Element casellaEl:elsL) { //for each mailbox relative to the current xpath
 	            	Docway4MailboxConfiguration conf = createDocway4MailboxConfigurationByConfig(casellaEl);
 	            	mailboxConfigurations.add(conf);
-	            	conf.setPEC(isPEC);
+	            	conf.setPec(isPec);
 	            	
 	        		//parse documentModel
 	        		if (xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel")) > 0) {
