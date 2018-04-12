@@ -162,9 +162,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	            @SuppressWarnings("unchecked")
 				List<Element> elsL = xmlDocument.selectNodes(xpath + "[./mailbox_in/@host!='']");
 	            for (Element casellaEl:elsL) { //for each mailbox relative to the current xpath
-	            	Docway4MailboxConfiguration conf = createDocway4MailboxConfigurationByConfig(casellaEl);
+	            	Docway4MailboxConfiguration conf = createDocway4MailboxConfigurationByConfig(casellaEl, isPec);
 	            	mailboxConfigurations.add(conf);
-	            	conf.setPec(isPec);
 	            	
 	        		//parse documentModel
 	        		if (xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel")) > 0) {
@@ -180,8 +179,11 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		return mailboxConfigurations;
 	}
 	
-	private Docway4MailboxConfiguration createDocway4MailboxConfigurationByConfig(Element casellaEl) throws Exception {
+	private Docway4MailboxConfiguration createDocway4MailboxConfigurationByConfig(Element casellaEl, boolean isPec) throws Exception {
     	Docway4MailboxConfiguration conf = new Docway4MailboxConfiguration();
+    	
+    	//isPec
+    	conf.setPec(isPec);
     	
     	//className
     	conf.setMailboxManagerClassName("it.tredi.msa.mailboxmanager.docway.Docway4MailboxManager");
@@ -241,6 +243,10 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setCodAmm(casellaEl.attributeValue("cod_amm"));
     	conf.setCodAoo(casellaEl.attributeValue("cod_aoo"));
     	conf.setCodAmmAoo(conf.getCodAmm() + conf.getCodAoo());
+    	
+    	//cod_amm_aoo segnatura
+    	conf.setCodAmmInteropPA(casellaEl.attributeValue("cod_amm_segnatura", conf.getCodAmm()));
+    	conf.setCodAooInteropPA(casellaEl.attributeValue("cod_aoo_segnatura", conf.getCodAoo()));
     	
     	//xwDb
 		conf.setXwDb(casellaEl.attributeValue("db"));

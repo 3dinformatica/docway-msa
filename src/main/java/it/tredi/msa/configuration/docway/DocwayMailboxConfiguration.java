@@ -61,6 +61,10 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String smtpUser;
 	private String smtpPassword;	
 	
+	//per interoperabilità PA
+	private String codAmmInteropPA;
+	private String codAooInteropPA;
+	
 	public boolean isStoreEml() {
 		return storeEml;
 	}
@@ -359,6 +363,22 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setSmtpPassword(String smtpPassword) {
 		this.smtpPassword = smtpPassword;
+	}
+
+	public String getCodAmmInteropPA() {
+		return codAmmInteropPA;
+	}
+
+	public void setCodAmmInteropPA(String codAmmInteropPA) {
+		this.codAmmInteropPA = codAmmInteropPA;
+	}
+
+	public String getCodAooInteropPA() {
+		return codAooInteropPA;
+	}
+
+	public void setCodAooInteropPA(String codAooInteropPA) {
+		this.codAooInteropPA = codAooInteropPA;
 	}
 	
 	/**

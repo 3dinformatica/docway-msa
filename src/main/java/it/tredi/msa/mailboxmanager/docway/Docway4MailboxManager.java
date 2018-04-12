@@ -68,12 +68,19 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		
 		if (conf.isPec() && parsedMessage.isPecReceipt()) { //casella PEC e messaggio è una ricevuta PEC
-			String query = "";
-			if (dcwParsedMessage.isPecReceiptForInteropPAbySubject()) //ricevuta PEC di messaggio di interoperabilità (identificato dal subject tramite euristica)
-				query = "[/doc/@num_prot]=\"" + dcwParsedMessage.extractNumProtFromOriginalSubject() + "\"";
+			String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/@messageId]=\"" + parsedMessage.getMessageId() + "\")"
+					+ " AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
+			if (xwClient.search(query) > 0)
+				return StoreType.SKIP_DOCUMENT;
+				
+			query = "";
+			if (dcwParsedMessage.isPecReceiptForInteropPA(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) //1st try: individuazione ricevuta PEC di messaggio di interoperabilità (tramite identificazione degli allegati del messaggio originale)
+				query = "[/doc/@num_prot]=\"" + dcwParsedMessage.extractNumProtFromInteropPAMessage(conf.getCodAmm(), conf.getCodAoo(), conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()) + "\"";
+			else if (dcwParsedMessage.isPecReceiptForInteropPAbySubject()) //2nd try: non sempre nelle ricevute è presente il messaggi originale -> si cerca il numero di protocollo nel subject
+				query = "[/doc/@num_prot]=\"" + dcwParsedMessage.extractNumProtFromOriginalSubject() + "\"";			
 			else if (dcwParsedMessage.isPecReceiptForFatturaPAbySubject()) //ricevuta PEC di messaggio per la fattura PA
 				query = "";
-//TODO - realizzare
+//TODO - realizzare parte delle fatture
 			if (query.length() > 0) { //trovato doc a cui allegare ricevuta PEC
 				int count = xwClient.search(query);
 				if (count > 0) {
@@ -81,34 +88,33 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					return StoreType.ATTACH_PEC_RECEIPT;
 				}
 			}
-			return StoreType.SAVE_NEW_DOCUMENT;
 		}
+		
 //TODO - inserire altre casistiche	(segnatura, notifiche interoperabilità, fattura pa, notifiche fattura PA)
-		else { //casella ordinaria oppure casella PEC ma messaggio ordinario (oppure ricevuta che non si riesce ad allegare ad alcun documento)
-			String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
-			if (!conf.isCreateSingleDocByMessageId())
-				query += " AND [/doc/archiviatore/@recipientEmail]=\"" + conf.getEmail() + "\"";
-			
-			int count = xwClient.search(query);
-			if (count > 0) { //messageId found
-				Document xmlDocument = xwClient.loadDocByQueryResult(0);
-				Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
-				if (archiviatoreEl != null) { //same mailbox
-					if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
-						this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
-						return StoreType.UPDATE_PARTIAL_DOCUMENT;
-					}
-					else
-						return StoreType.SKIP_DOCUMENT;
-				}
-				else { //different mailbox
+		//casella ordinaria oppure casella PEC ma messaggio ordinario (oppure ricevuta che non si riesce ad allegare ad alcun documento)
+		String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
+		if (!conf.isCreateSingleDocByMessageId())
+			query += " AND [/doc/archiviatore/@recipientEmail]=\"" + conf.getEmail() + "\"";
+		
+		int count = xwClient.search(query);
+		if (count > 0) { //messageId found
+			Document xmlDocument = xwClient.loadDocByQueryResult(0);
+			Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
+			if (archiviatoreEl != null) { //same mailbox
+				if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
 					this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
-					return StoreType.UPDATE_NEW_RECIPIENT;
+					return StoreType.UPDATE_PARTIAL_DOCUMENT;
 				}
+				else
+					return StoreType.SKIP_DOCUMENT;
 			}
-			else //messageId not found
-				return StoreType.SAVE_NEW_DOCUMENT;
+			else { //different mailbox
+				this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+				return StoreType.UPDATE_NEW_RECIPIENT;
+			}
 		}
+		else //messageId not found
+			return StoreType.SAVE_NEW_DOCUMENT;
 		
 	}  	
 	
@@ -719,7 +725,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                 	Element emailCertificataEl = el.element("email_certificata");
                 	if (emailCertificataEl != null && emailCertificataEl.attributeValue("addr", "").equals(realToAddress)) {
                 		rifEl = el;
-                		break;            		
+                		break;
                 	}
                 }            	
             }
