@@ -20,6 +20,7 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private boolean currentDate;
 	private String codAmm;
 	private String codAoo;
+	private String numProt;
 	
 	//classificazione
 	private String classif;
@@ -151,6 +152,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setCodAoo(String codAoo) {
 		this.codAoo = codAoo;
+	}
+
+	public String getNumProt() {
+		return numProt;
+	}
+
+	public void setNumProt(String numProt) {
+		this.numProt = numProt;
 	}
 
 	public String getClassif() {

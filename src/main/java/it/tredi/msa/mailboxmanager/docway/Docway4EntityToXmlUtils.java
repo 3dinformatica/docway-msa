@@ -2,6 +2,7 @@ package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -82,8 +83,10 @@ public class Docway4EntityToXmlUtils {
 		Element oggettoEl = DocumentHelper.createElement("oggetto");
 		docEl.add(oggettoEl);
 		oggettoEl.addAttribute("xml:space", "preserve");
-//TODO - effettuare la pulizia dell'oggetto - vedi vecchio archiviatore
-		oggettoEl.setText(doc.getOggetto());		
+		String oggetto = doc.getOggetto();
+		oggetto = oggetto.replaceAll(Pattern.quote("|"), "-"); //il pipe disturba i titoli di extraway
+		oggetto = oggetto.replaceAll(Pattern.quote("\""), ""); //anche le virgolette disturbano il funzionamento
+		oggettoEl.setText(oggetto);
 
 		//voce_indice
 		if (doc.getVoceIndice() != null && !doc.getVoceIndice().isEmpty()) {
@@ -138,10 +141,11 @@ public class Docway4EntityToXmlUtils {
 		}
 
 		//scarto
-//TODO		
+//TODO
 		
 		//postit
-//TODO		
+		for (Postit postit: doc.getPostitL())
+			docEl.add(postitToXml(postit));
 		
 		//storia
 		Element storiaEl = DocumentHelper.createElement("storia");
@@ -277,5 +281,28 @@ public class Docway4EntityToXmlUtils {
 		allegatoEl.addAttribute("xml:space", "preserve");
 		return allegatoEl;
 	}	
+	
+	public static Element postitToXml(Postit postit) {
+		Element postitEl = DocumentHelper.createElement("postit");
+		postitEl.addAttribute("xml:space", "preserve");
+		postitEl.addAttribute("operatore", postit.getOperatore());
+		if (postit.getCodOperatore() != null && !postit.getCodOperatore().isEmpty())
+			postitEl.addAttribute("cod_operatore", postit.getCodOperatore());
+		postitEl.addAttribute("data", postit.getData());
+		postitEl.addAttribute("ora", postit.getOra());
+		postitEl.setText(postit.getText());
+		return postitEl;
+	}
+	
+	public static Element interoperabilitaItemToXml(InteroperabilitaItem interopItem) {
+        Element interopEl = DocumentHelper.createElement("interoperabilita");
+        interopEl.addAttribute("name", interopItem.getName());
+        interopEl.addAttribute("title", interopItem.getTitle());
+        interopEl.addAttribute("data", interopItem.getData());
+        interopEl.addAttribute("ora", interopItem.getOra());
+        interopEl.addAttribute("info", interopItem.getInfo());
+        interopEl.addAttribute("messageId", interopItem.getMessageId());	
+		return interopEl;
+	}
 	
 }

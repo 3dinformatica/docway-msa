@@ -110,7 +110,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		doc.setDataProt(conf.isCurrentDate()? (new SimpleDateFormat("yyyyMMdd")).format(currentDate) : "");
 		
 		//num_prot
-		doc.setNumProt("");
+		doc.setNumProt(conf.getNumProt());
 		
 		//messageId
 		doc.setMessageId(parsedMessage.getMessageId());
@@ -166,6 +166,16 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		List<RifInterno> rifInterni = createRifInterni(parsedMessage);
 		for (RifInterno rifInterno:rifInterni)
 			doc.addRifInterno(rifInterno);
+		
+		//parsedMessage.relevantMessages -> postit
+		for (String relevantMessage:parsedMessage.getRelevantMssages()) {
+			Postit postit = new Postit();
+			postit.setText(relevantMessage);
+			postit.setOperatore(conf.getOperatore());
+			postit.setData(currentDate);
+			postit.setOra(currentDate);
+			doc.addPostit(postit);
+		}
 		
 		//storia creazione
 		StoriaItem creazione = new StoriaItem("creazione");

@@ -1,5 +1,6 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +30,14 @@ public class DocwayParsedMessage extends ParsedMessage {
 
 	private Document annullamentoProtocollazioneInteropPADocument;
 	private boolean annullamentoProtocollazioneInteropPADocumentInCache = false;
-
+	
+	private final static String INTEROP_PA_FAILED_BASE_MESSAGE = "Il messaggio è stato archiviato come documento ordinario: ";
+	private final static String MORE_INTEROP_PA_XML_FILE_FOUND_MESSAGE = INTEROP_PA_FAILED_BASE_MESSAGE + "sono stati individuati (%s) file %s";
+	private final static String INTEROP_PA_XML_FILE_PARSING_ERROR_MESSAGE = INTEROP_PA_FAILED_BASE_MESSAGE + "si è verificato un errore durante il parsing di %s";
+	private final static String INTEROP_PA_XML_FILE_ROOT_MISMATCH_MESSAGE = INTEROP_PA_FAILED_BASE_MESSAGE + "l'elemento radice del file %s non corrisponde a quello previsto dalle specifiche di interoperabilità tra PA: %s";
+	private final static String INTEROP_PA_XML_FILE_COD_AMM_MISMATCH_MESSAGE = INTEROP_PA_FAILED_BASE_MESSAGE + "il Codice Amministrazione individuato nel file %s non corrisponde a quello previsto: %s";
+	private final static String INTEROP_PA_XML_FILE_COD_AOO_MISMATCH_MESSAGE = INTEROP_PA_FAILED_BASE_MESSAGE + "il Codice AOO individuato nel file %s non corrisponde a quello previsto: %s";
+	
 	public DocwayParsedMessage(Message message) throws Exception {
 		super(message);
 	}
@@ -45,6 +53,11 @@ public class DocwayParsedMessage extends ParsedMessage {
 			}
 		}
 		return false;
+	}
+	
+	public String extractNumProtFromOriginalSubject() throws Exception {
+		String originalSubject = super.getSubjectFromDatiCertPec();
+		return originalSubject.substring(0, originalSubject.indexOf("("));
 	}
 	
 	public boolean isPecReceiptForInteropPA(String codAmmInteropPA, String codAooInteropPA) throws Exception {
@@ -63,16 +76,23 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return false;
 	}	
 	
-	public String extractNumProtFromOriginalSubject() throws Exception {
-		String originalSubject = super.getSubjectFromDatiCertPec();
-		return originalSubject.substring(0, originalSubject.indexOf("("));
-	}
-	
-	public boolean isSegnaturaInteropPAMessage(String codAmmInteropPA, String codAooInteropPA) {
-		if (isPecMessage() && !MessageUtils.isReplyOrForward(message) && getSegnaturaInteropPADocument(codAmmInteropPA, codAooInteropPA) != null)
+	public boolean isSegnaturaInteropPAMessage() {
+		if (isPecMessage() && !MessageUtils.isReplyOrForward(message) && getSegnaturaInteropPADocument(null, null) != null)
 			return true;
 		return false;
 	}
+
+	public boolean isNotificaInteropPAMessage(String codAmmInteropPA, String codAooInteropPA) {
+		if (isConfermaRicezioneInteropPAMessage(codAmmInteropPA, codAooInteropPA))
+			return true;
+		if (isNotificaEccezioneInteropPAMessage(codAmmInteropPA, codAooInteropPA))
+			return true;
+		if (isAggiornamentoConfermaInteropPAMessage(codAmmInteropPA, codAooInteropPA))
+			return true;
+		if (isAnnullamentoProtocollazioneInteropPAMessage(codAmmInteropPA, codAooInteropPA))
+			return true;
+		return false;
+	}	
 	
 	public Document getSegnaturaInteropPADocument(String codAmmInteropPA, String codAooInteropPA) {
 		if (!segnaturaInteropPADocumentInCache) {
@@ -141,20 +161,34 @@ public class DocwayParsedMessage extends ParsedMessage {
 	private Document getInteropPAMessageDocument(String fileName, String rootElName, String codAmmInteropPA, String codAooInteropPA, String identificatoreElXpath) {
 		Document document = null;
 		try {
-			Part part = MessageUtils.getAttachmentPartByName(getAttachments(), fileName);
-			if (part != null) {
-				byte []b = (new PartContentProvider(part)).getContent();
-				document = DocumentHelper.parseText(new String(b));
-				if (!document.getRootElement().getName().equals(rootElName))
-					return null;
-				if (!document.selectSingleNode(identificatoreElXpath + "/CodiceAmministrazione").getText().equals(codAmmInteropPA))
-					return null;
-				if (!document.selectSingleNode(identificatoreElXpath + "/CodiceAOO").getText().equals(codAooInteropPA))
-					return null;
+			List<Part> partsL = MessageUtils.getAttachmentPartsByName(getAttachments(), fileName);
+			if (partsL.size() == 1) {
+				byte []b = (new PartContentProvider(partsL.get(0))).getContent();
+				try {
+					document = DocumentHelper.parseText(new String(b));
+					if (!document.getRootElement().getName().equals(rootElName)) {
+						super.addRelevantMessage(String.format(INTEROP_PA_XML_FILE_ROOT_MISMATCH_MESSAGE, fileName, rootElName));
+						return null;
+					}
+					if (codAmmInteropPA != null && !document.selectSingleNode(identificatoreElXpath + "/CodiceAmministrazione").getText().equals(codAmmInteropPA)) {
+						super.addRelevantMessage(String.format(INTEROP_PA_XML_FILE_COD_AMM_MISMATCH_MESSAGE, fileName, codAmmInteropPA));		
+						return null;
+					}
+					if (codAooInteropPA != null && !document.selectSingleNode(identificatoreElXpath + "/CodiceAOO").getText().equals(codAooInteropPA)) {
+						super.addRelevantMessage(String.format(INTEROP_PA_XML_FILE_COD_AOO_MISMATCH_MESSAGE, fileName, codAooInteropPA));
+						return null;					
+					}
+				}
+				catch (Exception e) {
+					super.addRelevantMessage(String.format(INTEROP_PA_XML_FILE_PARSING_ERROR_MESSAGE, fileName));
+					document = null;
+				}
 			}
+			else if (partsL.size() > 1)
+				super.addRelevantMessage(String.format(MORE_INTEROP_PA_XML_FILE_FOUND_MESSAGE, partsL.size(), fileName));
 		}
 		catch (Exception e) {
-			; //do nothing
+			document = null;
 		}
 		return document; 
 	}		
@@ -197,7 +231,6 @@ public class DocwayParsedMessage extends ParsedMessage {
 		String data = document.selectSingleNode(identificatoreElXpath + "/DataRegistrazione").getText();
 		String numero = document.selectSingleNode(identificatoreElXpath + "/NumeroRegistrazione").getText();
 		return data.substring(0, 4) + "-" + codAmm + codAoo + "-" + numero;
-		
 	}
 	
 	

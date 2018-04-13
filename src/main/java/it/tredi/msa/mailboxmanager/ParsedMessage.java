@@ -33,8 +33,11 @@ public class ParsedMessage {
 	private Document datiCertDocument;
 	private boolean datiCertDocumentInCache = false;
 	
+	private List<String> relevantMssages = new ArrayList<String>();
+	
 	public ParsedMessage(Message message) throws Exception {
 		this.message = message;
+		relevantMssages = new ArrayList<>();
 		getMessageId(); //force setting messageId
 	}
 
@@ -187,6 +190,18 @@ public class ParsedMessage {
 		if (el != null)
 			return el.getText();
 		return null;
+	}
+	
+	public List<String> getRelevantMssages() {
+		return relevantMssages;
+	}
+
+	public void setRelevantMssages(List<String> relevantMssages) {
+		this.relevantMssages = relevantMssages;
+	}
+	
+	public void addRelevantMessage(String message) {
+		this.relevantMssages.add(message);
 	}
 	
 }

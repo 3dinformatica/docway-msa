@@ -1,6 +1,5 @@
 package it.tredi.msa.mailboxmanager.docway;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +31,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	private int physDocForAttachingPecReceipt;
 	
 	private static final Logger logger = LogManager.getLogger(Docway4MailboxManager.class.getName());
+	
+	private final static String STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE = "Il messaggio è stato archiviato come documento ordinario: ";
+	private final static String DOC_NOT_FOUND_FOR_RECEIPT_MESSAGE = STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE + "non è stato possibile individuare il documento a cui associare la ricevuta. \n%s";
 	
 	@Override
     public void openSession() throws Exception {
@@ -67,27 +69,33 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		
-		if (conf.isPec() && parsedMessage.isPecReceipt()) { //casella PEC e messaggio è una ricevuta PEC
-			String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/@messageId]=\"" + parsedMessage.getMessageId() + "\")"
-					+ " AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
-			if (xwClient.search(query) > 0)
-				return StoreType.SKIP_DOCUMENT;
-				
-			query = "";
-			if (dcwParsedMessage.isPecReceiptForInteropPA(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) //1st try: individuazione ricevuta PEC di messaggio di interoperabilità (tramite identificazione degli allegati del messaggio originale)
-				query = "[/doc/@num_prot]=\"" + dcwParsedMessage.extractNumProtFromInteropPAMessage(conf.getCodAmm(), conf.getCodAoo(), conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()) + "\"";
-			else if (dcwParsedMessage.isPecReceiptForInteropPAbySubject()) //2nd try: non sempre nelle ricevute è presente il messaggi originale -> si cerca il numero di protocollo nel subject
-				query = "[/doc/@num_prot]=\"" + dcwParsedMessage.extractNumProtFromOriginalSubject() + "\"";			
-			else if (dcwParsedMessage.isPecReceiptForFatturaPAbySubject()) //ricevuta PEC di messaggio per la fattura PA
+		if (conf.isPec()) { //casella PEC
+			if (parsedMessage.isPecReceipt()) { //messaggio è una ricevuta PEC
+				String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\")"
+						+ " AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
+				if (xwClient.search(query) > 0)
+					return StoreType.SKIP_DOCUMENT;
+					
 				query = "";
-//TODO - realizzare parte delle fatture
-			if (query.length() > 0) { //trovato doc a cui allegare ricevuta PEC
-				int count = xwClient.search(query);
-				if (count > 0) {
-					this.physDocForAttachingPecReceipt = xwClient.getPhysdocByQueryResult(0);
-					return StoreType.ATTACH_PEC_RECEIPT;
-				}
+				if (dcwParsedMessage.isPecReceiptForInteropPA(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) //1st try: individuazione ricevuta PEC di messaggio di interoperabilità (tramite identificazione degli allegati del messaggio originale)
+					query = "[/doc/@num_prot]=\"" + dcwParsedMessage.extractNumProtFromInteropPAMessage(conf.getCodAmm(), conf.getCodAoo(), conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()) + "\"";
+				else if (dcwParsedMessage.isPecReceiptForInteropPAbySubject()) //2nd try: non sempre nelle ricevute è presente il messaggi originale -> si cerca il numero di protocollo nel subject
+					query = "[/doc/@num_prot]=\"" + dcwParsedMessage.extractNumProtFromOriginalSubject() + "\"";			
+				else if (dcwParsedMessage.isPecReceiptForFatturaPAbySubject()) //ricevuta PEC di messaggio per la fattura PA
+					query = "";
+	//TODO - realizzare parte delle fatture
+				if (query.length() > 0) { //trovato doc a cui allegare ricevuta PEC
+					int count = xwClient.search(query);
+					if (count > 0) {
+						this.physDocForAttachingPecReceipt = xwClient.getPhysdocByQueryResult(0);
+						return StoreType.ATTACH_PEC_RECEIPT;
+					}
+					else
+						parsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_RECEIPT_MESSAGE, query));
+				}				
 			}
+			
+
 		}
 		
 //TODO - inserire altre casistiche	(segnatura, notifiche interoperabilità, fattura pa, notifiche fattura PA)
@@ -706,14 +714,14 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			String fileId = xwClient.addAttach(fileName, fileContent, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 			
 			//build interoperabilita element
-            Element interopEl = DocumentHelper.createElement("interoperabilita");
-            interopEl.addAttribute("name", fileId);
-            interopEl.addAttribute("title", fileName);
-            interopEl.addAttribute("data", (new SimpleDateFormat("yyyyMMdd")).format(currentDate));
-            interopEl.addAttribute("ora", (new SimpleDateFormat("HH:mm:ss")).format(currentDate));
-            interopEl.addAttribute("info", receiptTypeBySubject);
-            interopEl.addAttribute("messageId", parsedMessage.getMessageId());			
-			
+			InteroperabilitaItem interopItem = new InteroperabilitaItem();
+			interopItem.setName(fileId);
+			interopItem.setTitle(fileName);
+			interopItem.setData(currentDate);
+			interopItem.setOra(currentDate);
+			interopItem.setInfo(receiptTypeBySubject);
+			interopItem.setMessageId(parsedMessage.getMessageId());
+				
 			//try to attach interopEl to rif esterno (by email)
             Element rifEsterniEl = (Element)xmlDocument.selectSingleNode("/doc/rif_esterni");
             @SuppressWarnings("unchecked")
@@ -731,7 +739,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
             }
 
             if (rifEl != null) {
-            	rifEl.add(interopEl);
+            	rifEl.add(Docway4EntityToXmlUtils.interoperabilitaItemToXml(interopItem));
             }
             else { 	//default -> attach interopEl to interoperabilita_multipla
     			Element interoperabilitaMultiplaEl = rifEsterniEl.element("interoperabilita_multipla");
@@ -739,7 +747,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
     				interoperabilitaMultiplaEl = DocumentHelper.createElement("interoperabilita_multipla");
     				rifEsterniEl.add(interoperabilitaMultiplaEl);
     			}
-    			interoperabilitaMultiplaEl.add(interopEl);            	
+    			interoperabilitaMultiplaEl.add(Docway4EntityToXmlUtils.interoperabilitaItemToXml(interopItem));
             }
             
 			xwClient.saveDocument(xmlDocument, this.physDocForAttachingPecReceipt);
