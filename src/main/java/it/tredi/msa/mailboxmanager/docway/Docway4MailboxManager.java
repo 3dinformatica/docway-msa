@@ -73,14 +73,15 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			if (parsedMessage.isPecReceipt()) { //messaggio è una ricevuta PEC
 				String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\")"
 						+ " AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
+//TODO - aggiungere la parte relavita alla fattura PA
 				if (xwClient.search(query) > 0)
 					return StoreType.SKIP_DOCUMENT;
 					
 				query = "";
 				if (dcwParsedMessage.isPecReceiptForInteropPA(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) //1st try: individuazione ricevuta PEC di messaggio di interoperabilità (tramite identificazione degli allegati del messaggio originale)
-					query = "[/doc/@num_prot]=\"" + dcwParsedMessage.extractNumProtFromInteropPAMessage(conf.getCodAmm(), conf.getCodAoo(), conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()) + "\"";
+					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPAPecReceipt(conf.getCodAmm(), conf.getCodAoo());
 				else if (dcwParsedMessage.isPecReceiptForInteropPAbySubject()) //2nd try: non sempre nelle ricevute è presente il messaggi originale -> si cerca il numero di protocollo nel subject
-					query = "[/doc/@num_prot]=\"" + dcwParsedMessage.extractNumProtFromOriginalSubject() + "\"";			
+					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPASubject();
 				else if (dcwParsedMessage.isPecReceiptForFatturaPAbySubject()) //ricevuta PEC di messaggio per la fattura PA
 					query = "";
 	//TODO - realizzare parte delle fatture
@@ -719,7 +720,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			interopItem.setTitle(fileName);
 			interopItem.setData(currentDate);
 			interopItem.setOra(currentDate);
-			interopItem.setInfo(receiptTypeBySubject);
+			interopItem.setInfo(receiptTypeBySubject.substring(0, 1).toUpperCase() + receiptTypeBySubject.substring(1).toLowerCase());
 			interopItem.setMessageId(parsedMessage.getMessageId());
 				
 			//try to attach interopEl to rif esterno (by email)
