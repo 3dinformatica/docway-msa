@@ -75,7 +75,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			if (dcwParsedMessage.isPecReceipt() || dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio è una ricevuta PEC oppure è una notifica di interoperabilità PA
 				String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\")"
 						+ " AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
-//TODO - aggiungere la parte relavita alla fattura PA
+//TODO - aggiungere la parte relavita alla fattura PA if (!cleanedMsgId.isEmpty() && document.selectNodes("/doc/extra/fatturaPA/notifica[@messageId='" + cleanedMsgId + "']").size() > 0) { 
 				if (xwClient.search(query) > 0)
 					return StoreType.SKIP_DOCUMENT;
 					
@@ -340,7 +340,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                 rifEsterno.setIndirizzo(indirizzo);
 
                 // search eventual struttura_esterna
-                List<Element> l = document.selectNodes("persona_esterna/appartenenza");
+                @SuppressWarnings("unchecked")
+				List<Element> l = document.selectNodes("persona_esterna/appartenenza");
                 String appartenenze = "";
                 for (int i = 0; i < l.size(); i++)
                     appartenenze += " OR \"" + ((Element)l.get(i)).attributeValue("cod_uff") + "\"";
