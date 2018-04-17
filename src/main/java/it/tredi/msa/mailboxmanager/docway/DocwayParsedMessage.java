@@ -50,13 +50,9 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return interopPaDocument;
 	}
 
-
-
 	public void setInteropPaDocument(Document interopPaDocument) {
 		this.interopPaDocument = interopPaDocument;
 	}
-
-
 
 	public boolean isPecReceiptForInteropPAbySubject() throws Exception {
 		if (isPecReceipt()) {
