@@ -191,6 +191,13 @@ public class ParsedMessage {
 			return el.getText();
 		return null;
 	}
+
+	public String getMittenteAddressFromDatiCertPec() throws Exception {
+		Element el = (Element)getDatiCertDocument().selectSingleNode("/postacert/intestazione/mittente");
+		if (el != null)
+			return el.getText();
+		return null;
+	}	
 	
 	public List<String> getRelevantMssages() {
 		return relevantMssages;

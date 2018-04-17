@@ -39,7 +39,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	    UPDATE_PARTIAL_DOCUMENT,
 	    UPDATE_NEW_RECIPIENT,
 	    SKIP_DOCUMENT,
-	    ATTACH_PEC_RECEIPT
+	    ATTACH_INTEROP_PA_PEC_RECEIPT,
+	    ATTACH_INTEROP_PA_NOTIFICATION
 	}
 	
 	@Override
@@ -79,10 +80,12 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 				sendNotificationEmails(doc, retObj);
 			}							
 		}
-		else if (storeType == StoreType.ATTACH_PEC_RECEIPT) {
-			attachPecReceiptToDocument(parsedMessage);
+		else if (storeType == StoreType.ATTACH_INTEROP_PA_PEC_RECEIPT) {
+			attachInteropPAPecReceiptToDocument(parsedMessage);
 		}
-		
+		else if (storeType == StoreType.ATTACH_INTEROP_PA_NOTIFICATION) {
+			attachInteropPANotificationToDocument(parsedMessage);
+		}		
 		
 //TODO - gestire altre casistiche
 		else if (storeType == StoreType.SKIP_DOCUMENT) //4. there's nothing to do (maybe message deletion/move failed)
@@ -249,7 +252,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception;
 	protected abstract void sendNotificationEmails(DocwayDocument doc, Object saveDocRetObj);
 	protected abstract StoreType decodeStoreType(ParsedMessage parsedMessage) throws Exception;
-	protected abstract void attachPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception;
+	protected abstract void attachInteropPAPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception;
+	protected abstract void attachInteropPANotificationToDocument(ParsedMessage parsedMessage) throws Exception;
 	
 	protected boolean isImage(String fileName) {
 		return fileName.toLowerCase().endsWith(".jpg")

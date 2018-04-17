@@ -45,6 +45,18 @@ public class DocwayParsedMessage extends ParsedMessage {
 	public DocwayParsedMessage(Message message) throws Exception {
 		super(message);
 	}
+	
+	public Document getInteropPaDocument() {
+		return interopPaDocument;
+	}
+
+
+
+	public void setInteropPaDocument(Document interopPaDocument) {
+		this.interopPaDocument = interopPaDocument;
+	}
+
+
 
 	public boolean isPecReceiptForInteropPAbySubject() throws Exception {
 		if (isPecReceipt()) {
@@ -55,6 +67,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 				Pattern pattern = Pattern.compile("\\d{4}-\\w{7}-\\d{7}\\((\\*|\\d{1,5})\\)");
 				Matcher matcher = pattern.matcher(originalSubject);
 				return matcher.matches();
+//TODO non tiene conto del fatto che potrebbe esserci solo iul numero del protocollo				
 			}
 		}
 		return false;
@@ -253,7 +266,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 			if (identificatoreEl == null) {
 				identificatoreEl = el.element("MessaggioRicevuto").element("Identificatore");
 				query = "[/doc/rif_esterni/rif/@n_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") +
-						identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\"";
+						identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";
 			}
 			else {
 				query = "[/doc/@num_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + codAmm + codAoo + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\"";
@@ -262,8 +275,21 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return query;
 	}
 
-	
-	
+	public String buildQueryForDocway4DocumentFromInteropPANotification(String codAmm, String codAoo) {
+		String query = "";
+		if (interopPaDocument != null) {
+			if (interopPaDocument.getRootElement().getName().equals("AnnullamentoProtocollazione")) {
+				Element identificatoreEl = interopPaDocument.getRootElement().element("Identificatore");
+				query = "[/doc/rif_esterni/rif/@n_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") +
+						identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";				
+			}
+			else {
+				Element identificatoreEl = interopPaDocument.getRootElement().element("MessaggioRicevuto").element("Identificatore");
+				query = "[/doc/@num_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + codAmm + codAoo + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\"";
+			}
+		}
+		return query;
+	}
 	
 	
 	
@@ -276,6 +302,6 @@ public class DocwayParsedMessage extends ParsedMessage {
 	public boolean isFatturaPAMessage() {
 		return false;
 //TODO - fare		
-	}	
+	}
 	
 }

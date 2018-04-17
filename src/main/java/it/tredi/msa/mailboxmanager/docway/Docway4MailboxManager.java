@@ -28,12 +28,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	protected ExtrawayClient aclClient;
 	private boolean extRestrictionsOnAcl;
 	private int physDocToUpdate;
-	private int physDocForAttachingPecReceipt;
+	private int physDocForAttachingFile;
 	
 	private static final Logger logger = LogManager.getLogger(Docway4MailboxManager.class.getName());
 	
 	private final static String STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE = "Il messaggio è stato archiviato come documento ordinario: ";
-	private final static String DOC_NOT_FOUND_FOR_RECEIPT_MESSAGE = STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE + "non è stato possibile individuare il documento a cui associare la ricevuta. \n%s";
+	private final static String DOC_NOT_FOUND_FOR_ATTACHING_FILE = STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE + "non è stato possibile individuare il documento a cui associare ls ricevuta/notifica. \n%s";
 	
 	@Override
     public void openSession() throws Exception {
@@ -66,11 +66,13 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	@Override
 	protected StoreType decodeStoreType(ParsedMessage parsedMessage) throws Exception {
+		StoreType storeType = null;
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		
 		if (conf.isPec()) { //casella PEC
-			if (parsedMessage.isPecReceipt()) { //messaggio è una ricevuta PEC
+			
+			if (dcwParsedMessage.isPecReceipt() || dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio è una ricevuta PEC oppure è una notifica di interoperabilità PA
 				String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\")"
 						+ " AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
 //TODO - aggiungere la parte relavita alla fattura PA
@@ -78,30 +80,39 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					return StoreType.SKIP_DOCUMENT;
 					
 				query = "";
-				if (dcwParsedMessage.isPecReceiptForInteropPA(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) //1st try: individuazione ricevuta PEC di messaggio di interoperabilità (tramite identificazione degli allegati del messaggio originale)
+				if (dcwParsedMessage.isPecReceiptForInteropPA(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //1st try: individuazione ricevuta PEC di messaggio di interoperabilità (tramite identificazione degli allegati del messaggio originale)
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPAPecReceipt(conf.getCodAmm(), conf.getCodAoo());
-				else if (dcwParsedMessage.isPecReceiptForInteropPAbySubject()) //2nd try: non sempre nelle ricevute è presente il messaggi originale -> si cerca il numero di protocollo nel subject
+					storeType = StoreType.ATTACH_INTEROP_PA_PEC_RECEIPT;
+				}
+				else if (dcwParsedMessage.isPecReceiptForInteropPAbySubject()) { //2nd try: non sempre nelle ricevute è presente il messaggio originale -> si cerca il numero di protocollo nel subject
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPASubject();
-				else if (dcwParsedMessage.isPecReceiptForFatturaPAbySubject()) //ricevuta PEC di messaggio per la fattura PA
+					storeType = StoreType.ATTACH_INTEROP_PA_PEC_RECEIPT;
+				}
+				else if (dcwParsedMessage.isPecReceiptForFatturaPAbySubject()) { //ricevuta PEC di messaggio per la fattura PA
 					query = "";
-	//TODO - realizzare parte delle fatture
-				if (query.length() > 0) { //trovato doc a cui allegare ricevuta PEC
+//TODO - realizzare parte delle fatture					
+				}
+				else if (dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //notifia di interoperabilità PA
+					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPANotification(conf.getCodAmm(), conf.getCodAoo());
+					storeType = StoreType.ATTACH_INTEROP_PA_NOTIFICATION;
+				}
+
+				if (query.length() > 0) { //trovato doc a cui allegare file
 					int count = xwClient.search(query);
 					if (count > 0) {
-						this.physDocForAttachingPecReceipt = xwClient.getPhysdocByQueryResult(0);
-						return StoreType.ATTACH_PEC_RECEIPT;
+						this.physDocForAttachingFile = xwClient.getPhysdocByQueryResult(0);
+						return storeType;
 					}
 					else
-						parsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_RECEIPT_MESSAGE, query));
+						parsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_ATTACHING_FILE, query));
 				}				
 			}
-			
 
 		}
 		
 //TODO - inserire altre casistiche	(segnatura, notifiche interoperabilità, fattura pa, notifiche fattura PA)
-		//casella ordinaria oppure casella PEC ma messaggio ordinario (oppure ricevuta che non si riesce ad allegare ad alcun documento)
-		String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
+		//casella ordinaria oppure casella PEC ma messaggio ordinario (oppure casella PEC ma non trovato documento a cui allegare ricevuta PEC o notifica di interoperabilità PA)
+		String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo]=\"" + conf.getCodAmmAoo() + "\"";
 		if (!conf.isCreateSingleDocByMessageId())
 			query += " AND [/doc/archiviatore/@recipientEmail]=\"" + conf.getEmail() + "\"";
 		
@@ -701,16 +712,46 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	}
 
 	@Override
-	protected void attachPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception {
+	protected void attachInteropPAPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception {
+		String receiptTypeBySubject = parsedMessage.getSubject().substring(0, parsedMessage.getSubject().indexOf(":"));
+		receiptTypeBySubject = receiptTypeBySubject.substring(0, 1).toUpperCase() + receiptTypeBySubject.substring(1).toLowerCase(); //capitalize only first letter		
+		String realToAddress = parsedMessage.getRealToAddressFromDatiCertPec();
+		attachInteropPAFileToDocument(parsedMessage, receiptTypeBySubject, realToAddress, "");
+	}
+
+	@Override
+	protected void attachInteropPANotificationToDocument(ParsedMessage parsedMessage) throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
+		String info = "";
+		if (dcwParsedMessage.isConfermaRicezioneInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()))
+			info = "Ricezione: Conferma Ricezione";
+		else if (dcwParsedMessage.isAggiornamentoConfermaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()))
+			info = "Ricezione: Aggiornamento Conferma";			
+		else if (dcwParsedMessage.isAnnullamentoProtocollazioneInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()))
+			info = "Ricezione: Annullamento Protocollazione";
+		else if (dcwParsedMessage.isNotificaEccezioneInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()))
+			info = "Ricezione: Notifica Eccezione";		
+		
+		String numero = "";
+		String data = "";
+		Element identificatoreEl = dcwParsedMessage.getInteropPaDocument().getRootElement().element("Identificatore");
+		if (identificatoreEl != null) {
+			numero = identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") + identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione");
+		}
+		
+		attachInteropPAFileToDocument(parsedMessage, info, dcwParsedMessage.getMittenteAddressFromDatiCertPec(), numero);
+	}
+	
+	private void attachInteropPAFileToDocument(ParsedMessage parsedMessage, String fileInfo, String rifEstAddress, String numero) throws Exception {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		
 		//load and lock existing document
-		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocForAttachingPecReceipt, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocForAttachingFile, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 		
 		try {
 			//upload file
-			String receiptTypeBySubject = parsedMessage.getSubject().substring(0, parsedMessage.getSubject().indexOf(":"));
-			String fileName =  receiptTypeBySubject + ".eml";
+			String fileName =  fileInfo.replaceAll(":", "") + ".eml";
 			byte []fileContent = (new MessageContentProvider(parsedMessage.getMessage(), false)).getContent();
 			String fileId = xwClient.addAttach(fileName, fileContent, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 			
@@ -720,7 +761,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			interopItem.setTitle(fileName);
 			interopItem.setData(currentDate);
 			interopItem.setOra(currentDate);
-			interopItem.setInfo(receiptTypeBySubject.substring(0, 1).toUpperCase() + receiptTypeBySubject.substring(1).toLowerCase());
+			interopItem.setInfo(fileInfo);
 			interopItem.setMessageId(parsedMessage.getMessageId());
 				
 			//try to attach interopEl to rif esterno (by email)
@@ -728,12 +769,13 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
             @SuppressWarnings("unchecked")
 			List<Element> rifsL = rifEsterniEl.elements("rif");
             Element rifEl = null;
-            String realToAddress = parsedMessage.getRealToAddressFromDatiCertPec();
-            if (realToAddress != null && !realToAddress.isEmpty()) {
+            if (rifEstAddress != null && !rifEstAddress.isEmpty()) {
                 for (Element el:rifsL) {
                 	Element emailCertificataEl = el.element("email_certificata");
-                	if (emailCertificataEl != null && emailCertificataEl.attributeValue("addr", "").equals(realToAddress)) {
+                	if (emailCertificataEl != null && emailCertificataEl.attributeValue("addr", "").equals(rifEstAddress)) {
                 		rifEl = el;
+                		if (numero != null && !numero.isEmpty() && rifEl.attributeValue("n_prot", "").isEmpty()) //si aggiunge il numero di protocollo al rif esterno se manca
+                			rifEl.addAttribute("n_prot", numero);
                 		break;
                 	}
                 }            	
@@ -751,17 +793,17 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
     			interoperabilitaMultiplaEl.add(Docway4EntityToXmlUtils.interoperabilitaItemToXml(interopItem));
             }
             
-			xwClient.saveDocument(xmlDocument, this.physDocForAttachingPecReceipt);
+			xwClient.saveDocument(xmlDocument, this.physDocForAttachingFile);
 		}
 		catch (Exception e) {
 			try {
-				xwClient.unlockDocument(this.physDocForAttachingPecReceipt);
+				xwClient.unlockDocument(this.physDocForAttachingFile);
 			}
 			catch (Exception unlockE) {
 				; //do nothing
 			}
 			throw e;
-		}
+		}		
 	}
 	
 }
