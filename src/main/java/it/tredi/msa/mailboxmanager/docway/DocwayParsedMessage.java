@@ -64,10 +64,13 @@ public class DocwayParsedMessage extends ParsedMessage {
 			originalSubject = cleanInteropPASubject(originalSubject);
 			if (originalSubject.indexOf(" ") != -1) {
 				originalSubject = originalSubject.substring(0, originalSubject.indexOf(" "));
-				Pattern pattern = Pattern.compile("\\d{4}-\\w{7}-\\d{7}\\((\\*|\\d{1,5})\\)");
+				Pattern pattern = Pattern.compile("\\d{4}-\\w{7}-\\d{7}\\((\\*|\\d{1,5})\\)"); //anno-cod_amm_aoo-num_prot(rif_est_index)
 				Matcher matcher = pattern.matcher(originalSubject);
+				if (matcher.matches())
+					return true;
+				Pattern.compile("\\d{5,10}\\((\\*|\\d{1,5})\\)"); //nrecord(rif_est_index)
+				matcher = pattern.matcher(originalSubject);				
 				return matcher.matches();
-//TODO non tiene conto del fatto che potrebbe esserci solo iul numero del protocollo				
 			}
 		}
 		return false;
