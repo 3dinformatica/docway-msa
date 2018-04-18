@@ -384,6 +384,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         		indirizzo += el.getText();
         	}
         }
+        if (!indirizzo.trim().isEmpty())
+        	rifEsterno.setIndirizzo(indirizzo.trim());
         rifEsterno.setEmailCertificata(segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Origine/IndirizzoTelematico").getText());
         Element el = (Element)segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Origine/Mittente//IndirizzoTelematico[text()!='']");
         if (el != null)
@@ -415,7 +417,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         if (el != null && !el.getText().isEmpty()) {
         	doc.setClassif(classif);
         	if (classif.indexOf(" ") > 0)
-        		doc.setClassifCod(classif.substring(0, classif.indexOf(" ")));	
+        		doc.setClassifCod(classif.substring(0, classif.indexOf(" ")));
+//TODO - sentire nicola x cosa fare        	
         }
 		
 		//rif interni
@@ -479,9 +482,6 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 				interopItem.setContentProvider(new PartContentProvider(attachment));
 				rifEsterno.addInteroperabilitaItem(interopItem);
 			}
-
-//TODO - aggiungere Segnatura.eml
-			
 			/*
 			
 			DocwayFile file = createDocwayFile();
@@ -496,11 +496,21 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			doc.addAllegato(file.getName());*/
 		}
 
+		//EML
+		InteroperabilitaItem interopItem = new InteroperabilitaItem();
+		interopItem.setName("Ricezione telematica.eml");
+		interopItem.setData(currentDate);
+		interopItem.setOra(currentDate);
+		interopItem.setInfo("Ricezione Telematica");
+		interopItem.setMessageId(parsedMessage.getMessageId());
+		interopItem.setContentProvider(new MessageContentProvider(parsedMessage.getMessage(), false));
+		rifEsterno.addInteroperabilitaItem(interopItem);
+		
 		//allegato - default
 		if (doc.getAllegato().isEmpty())
 			doc.addAllegato(DEFAULT_ALLEGATO);
 
-//TODO - gestione del campo allegato nel caso della segnatura		
+//TODO - gestione del campo allegato nel caso della segnatura
 
 	}	
 	

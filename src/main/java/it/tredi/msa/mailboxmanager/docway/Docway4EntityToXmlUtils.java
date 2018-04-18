@@ -260,6 +260,14 @@ public class Docway4EntityToXmlUtils {
 		if (rifEsterno.getCodiceAOO() != null && !rifEsterno.getCodiceAOO().isEmpty())
 			rifEl.addAttribute("CodiceAOO", rifEsterno.getCodiceAOO());
 		
+		//n_prot
+		if (rifEsterno.getnProt() != null && !rifEsterno.getnProt().isEmpty())
+			rifEl.addAttribute("n_prot", rifEsterno.getCodiceAOO());
+		
+		//data_prot
+		if (rifEsterno.getDataProt() != null && !rifEsterno.getDataProt().isEmpty())
+			rifEl.addAttribute("data_prot", rifEsterno.getDataProt());
+		
 		return rifEl;
 	}	
 	
