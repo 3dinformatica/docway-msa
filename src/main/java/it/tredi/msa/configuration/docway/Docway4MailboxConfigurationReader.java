@@ -36,6 +36,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_TIMEOUT = "docway4mailboxmanager.mail-reader.connection-timeout";
 	public final static String DOCWAY4MAILBOXMANAGER_NOTIFICATION_EMAILS = "docway4mailboxmanager.notification-emails.enable";
 	public final static String DOCWAY4MAILBOXMANAGER_CREATE_SINGLE_DOC_BY_MESSAGE_ID = "docway4mailboxmanager.create-single-doc-by-message-id";
+	public final static String DOCWAY4MAILBOXMANAGER_INTEROP_PA_PROTOCOLLA_SEGNATURA = "docway4mailboxmanager.interop-pa.protocolla-segnatura.enable";
+	public final static String DOCWAY4MAILBOXMANAGER_INTEROP_PA_MEZZO_TRAMISSIONE_SEGNATURA = "docway4mailboxmanager.interop-pa.mezzo-trasmissione-segnatura";
+	public final static String DOCWAY4MAILBOXMANAGER_INTEROP_PA_TIPOLOGIA_SEGNATURA = "docway4mailboxmanager.interop-pa.tipologia-segnatura";
 
 	private String host;
 	private int port;
@@ -312,6 +315,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setMailserverConnectionTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_TIMEOUT, -1));
     	conf.setNotificationEnabled(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_NOTIFICATION_EMAILS, false));
     	conf.setCreateSingleDocByMessageId(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_CREATE_SINGLE_DOC_BY_MESSAGE_ID, false));
+    	conf.setProtocollaSegnatura(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_INTEROP_PA_PROTOCOLLA_SEGNATURA, false));
+    	conf.setMezzoTrasmissioneSegnatura(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_INTEROP_PA_MEZZO_TRAMISSIONE_SEGNATURA, ""));
+    	conf.setTipologiaSegnatura(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_INTEROP_PA_TIPOLOGIA_SEGNATURA, ""));
     	
 		return conf;
 	}

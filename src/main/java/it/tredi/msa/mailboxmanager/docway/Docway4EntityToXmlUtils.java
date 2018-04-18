@@ -252,7 +252,14 @@ public class Docway4EntityToXmlUtils {
 				referenteEl.addAttribute("cod", rifEsterno.getReferenteCod());
 		}
 		
-			
+		//CodiceAmministrazione
+		if (rifEsterno.getCodiceAmministrazione() != null && !rifEsterno.getCodiceAmministrazione().isEmpty())
+			rifEl.addAttribute("CodiceAmministrazione", rifEsterno.getCodiceAmministrazione());
+
+		//CodiceAOO
+		if (rifEsterno.getCodiceAOO() != null && !rifEsterno.getCodiceAOO().isEmpty())
+			rifEl.addAttribute("CodiceAOO", rifEsterno.getCodiceAOO());
+		
 		return rifEl;
 	}	
 	
@@ -296,8 +303,8 @@ public class Docway4EntityToXmlUtils {
 	
 	public static Element interoperabilitaItemToXml(InteroperabilitaItem interopItem) {
         Element interopEl = DocumentHelper.createElement("interoperabilita");
-        interopEl.addAttribute("name", interopItem.getName());
-        interopEl.addAttribute("title", interopItem.getTitle());
+        interopEl.addAttribute("name", interopItem.getId());
+        interopEl.addAttribute("title", interopItem.getName());
         interopEl.addAttribute("data", interopItem.getData());
         interopEl.addAttribute("ora", interopItem.getOra());
         interopEl.addAttribute("info", interopItem.getInfo());

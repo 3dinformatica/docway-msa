@@ -1,5 +1,6 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -72,8 +73,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		
 		if (conf.isPec()) { //casella PEC
 			
-			if (dcwParsedMessage.isPecReceipt() || dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio è una ricevuta PEC oppure è una notifica di interoperabilità PA
-				String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/interoperabilita/@messageId]=\"" + parsedMessage.getMessageId() + "\")"
+			if (dcwParsedMessage.isPecReceipt() || dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio è una ricevuta PEC oppure è una notifica (messaggio di ritorno) di interoperabilità PA
+				String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/interoperabilita/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\")"
 						+ " AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
 //TODO - aggiungere la parte relavita alla fattura PA if (!cleanedMsgId.isEmpty() && document.selectNodes("/doc/extra/fatturaPA/notifica[@messageId='" + cleanedMsgId + "']").size() > 0) { 
 				if (xwClient.search(query) > 0)
@@ -88,7 +89,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPASubject();
 					storeType = StoreType.ATTACH_INTEROP_PA_PEC_RECEIPT;
 				}
-				else if (dcwParsedMessage.isPecReceiptForFatturaPAbySubject()) { //ricevuta PEC di messaggio per la fattura PA
+				else if (dcwParsedMessage.isPecReceiptForFatturaPAbySubject()) { //ricevuta PEC di messaggio per la fatturaPA
 					query = "";
 //TODO - realizzare parte delle fatture					
 				}
@@ -104,8 +105,24 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 						return storeType;
 					}
 					else
-						parsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_ATTACHING_FILE, query));
+						dcwParsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_ATTACHING_FILE, query));
 				}				
+			}
+			else if (dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio di segnatura di interoperabilità PA
+				String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo]=\"" + conf.getCodAmmAoo() + "\"";
+				int count = xwClient.search(query);
+				if (count > 0) { //messageId found
+					Document xmlDocument = xwClient.loadDocByQueryResult(0);
+					Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
+					if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
+						this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+						return StoreType.UPDATE_PARTIAL_DOCUMENT_INTEROP_PA;
+					}
+					else
+						return StoreType.SKIP_DOCUMENT;
+				}
+				else //messageId not found
+					return StoreType.SAVE_NEW_DOCUMENT_INTEROP_PA;
 			}
 
 		}
@@ -150,8 +167,17 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 		
 		try {
-			//upload files
 			boolean uploaded = false;
+			
+			//upload interopPA message files
+			if (doc.getRifEsterni().size() > 0) {
+				for (InteroperabilitaItem interopItem:doc.getRifEsterni().get(0).getInteroperabilitaItemL()) {
+					interopItem.setId(xwClient.addAttach(interopItem.getName(), interopItem.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
+					uploaded = true;
+				}
+			}
+			
+			//upload files
 			for (DocwayFile file:doc.getFiles()) {
 				file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
 				uploaded = true;
@@ -187,6 +213,14 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	}
 	
 	private void updateXmlWithDocwayFiles(Document xmlDocument, DocwayDocument doc) {
+		
+		//interopPA message files
+		if (doc.getRifEsterni().size() > 0) {
+			Element rifEstEl = (Element)xmlDocument.selectSingleNode("/doc/rif_esterni/rif");
+			for (InteroperabilitaItem interopItem:doc.getRifEsterni().get(0).getInteroperabilitaItemL()) {
+				rifEstEl.add(Docway4EntityToXmlUtils.interoperabilitaItemToXml(interopItem));
+			}
+		}
 		
 		//files
 		List<DocwayFile> files = doc.getFiles();
@@ -254,6 +288,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		return restrictions;
 	}
 	
+	@Override
     public RifEsterno createRifEsterno(String name, String address) throws Exception {
         RifEsterno rifEsterno = new RifEsterno();
         rifEsterno.setEmail(address);
@@ -475,6 +510,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		return rifInterno;
 	}
 	
+	@Override
 	protected List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		List<RifInterno> rifInterni = new ArrayList<RifInterno>();
@@ -611,6 +647,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocToUpdate, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 		
 		try {
+			
+//TODO - fare la parte di interoperabilità - SEGNATURA.xml
+			
 			//upload files
 			boolean uploaded = false;
 			for (DocwayFile file:doc.getFiles()) {
@@ -735,12 +774,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			info = "Ricezione: Notifica Eccezione";		
 		
 		String numero = "";
-		String data = "";
 		Element identificatoreEl = dcwParsedMessage.getInteropPaDocument().getRootElement().element("Identificatore");
-		if (identificatoreEl != null) {
+		if (identificatoreEl != null)
 			numero = identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") + identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione");
-		}
-		
 		attachInteropPAFileToDocument(parsedMessage, info, dcwParsedMessage.getMittenteAddressFromDatiCertPec(), numero);
 	}
 	
@@ -758,8 +794,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			
 			//build interoperabilita element
 			InteroperabilitaItem interopItem = new InteroperabilitaItem();
-			interopItem.setName(fileId);
-			interopItem.setTitle(fileName);
+			interopItem.setId(fileId);
+			interopItem.setName(fileName);
 			interopItem.setData(currentDate);
 			interopItem.setOra(currentDate);
 			interopItem.setInfo(fileInfo);
@@ -805,6 +841,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			}
 			throw e;
 		}		
+	}
+
+	@Override
+	protected String buildNewNumprotStringForSavingDocument() throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		return (new SimpleDateFormat("yyyy")).format(currentDate) + "-" + conf.getCodAmmAoo() + "-.";
 	}
 	
 }

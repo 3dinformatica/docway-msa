@@ -65,6 +65,9 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	//per interoperabilità PA
 	private String codAmmInteropPA;
 	private String codAooInteropPA;
+	private boolean protocollaSegnatura;
+	private String mezzoTrasmissioneSegnatura;
+	private String tipologiaSegnatura;
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -389,6 +392,31 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public void setCodAooInteropPA(String codAooInteropPA) {
 		this.codAooInteropPA = codAooInteropPA;
 	}
+
+	public boolean isProtocollaSegnatura() {
+		return protocollaSegnatura;
+	}
+
+	public void setProtocollaSegnatura(boolean protocollaSegnatura) {
+		this.protocollaSegnatura = protocollaSegnatura;
+	}
+
+	public String getMezzoTrasmissioneSegnatura() {
+		return mezzoTrasmissioneSegnatura;
+	}
+
+	public void setMezzoTrasmissioneSegnatura(String mezzoTrasmissioneSegnatura) {
+		this.mezzoTrasmissioneSegnatura = mezzoTrasmissioneSegnatura;
+	}
+
+	public String getTipologiaSegnatura() {
+		return tipologiaSegnatura;
+	}
+
+	public void setTipologiaSegnatura(String tipologiaSegnatura) {
+		this.tipologiaSegnatura = tipologiaSegnatura;
+	}
+	
 	
 	/**
 	 * 

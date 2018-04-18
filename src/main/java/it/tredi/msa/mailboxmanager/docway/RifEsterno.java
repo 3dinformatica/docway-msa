@@ -1,5 +1,8 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RifEsterno {
 	
 	private String nome;
@@ -13,7 +16,17 @@ public class RifEsterno {
 	private String tel;
 	private String referenteNominativo;
 	private String referenteCod;
+	private String CodiceAmministrazione;
+	private String CodiceAOO;
+	private String dataProt;
+	private String nProt;
+	private List<InteroperabilitaItem> interoperabilitaItemL;
 	
+	public RifEsterno() {
+		super();
+		this.interoperabilitaItemL = new ArrayList<>();
+	}
+
 	public String getNome() {
 		return nome;
 	}
@@ -100,6 +113,50 @@ public class RifEsterno {
 	
 	public void setReferenteCod(String referenteCod) {
 		this.referenteCod = referenteCod;
+	}
+
+	public String getCodiceAmministrazione() {
+		return CodiceAmministrazione;
+	}
+
+	public void setCodiceAmministrazione(String codiceAmministrazione) {
+		CodiceAmministrazione = codiceAmministrazione;
+	}
+
+	public String getCodiceAOO() {
+		return CodiceAOO;
+	}
+
+	public void setCodiceAOO(String codiceAOO) {
+		CodiceAOO = codiceAOO;
+	}
+
+	public String getDataProt() {
+		return dataProt;
+	}
+
+	public void setDataProt(String dataProt) {
+		this.dataProt = dataProt;
+	}
+
+	public String getnProt() {
+		return nProt;
+	}
+
+	public void setnProt(String nProt) {
+		this.nProt = nProt;
+	}
+
+	public List<InteroperabilitaItem> getInteroperabilitaItemL() {
+		return interoperabilitaItemL;
+	}
+
+	public void setInteroperabilitaItemL(List<InteroperabilitaItem> interoperabilitaItemL) {
+		this.interoperabilitaItemL = interoperabilitaItemL;
+	}
+
+	public void addInteroperabilitaItem(InteroperabilitaItem interoperabilitaItem) {
+		this.interoperabilitaItemL.add(interoperabilitaItem);
 	}
 	
 }

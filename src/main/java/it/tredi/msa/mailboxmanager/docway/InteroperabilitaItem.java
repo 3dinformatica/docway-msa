@@ -3,29 +3,34 @@ package it.tredi.msa.mailboxmanager.docway;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import it.tredi.msa.mailboxmanager.ContentProvider;
+
 public class InteroperabilitaItem {
 	
+	private String id;
 	private String name;
-	private String title;
 	private String info;
 	private String data;
 	private String ora;
 	private String messageId;
 	
+	//content
+	private ContentProvider contentProvider;	
+	
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
 	public String getName() {
 		return name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
 	}
 
 	public String getInfo() {
@@ -67,5 +72,17 @@ public class InteroperabilitaItem {
 	public void setMessageId(String messageId) {
 		this.messageId = messageId;
 	}
+
+	public ContentProvider getContentProvider() {
+		return contentProvider;
+	}
+
+	public void setContentProvider(ContentProvider contentProvider) {
+		this.contentProvider = contentProvider;
+	}
+	
+	public byte []getContent() throws Exception {
+		return contentProvider.getContent();
+	}	
 	
 }
