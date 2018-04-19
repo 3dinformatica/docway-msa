@@ -218,7 +218,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		if (doc.getRifEsterni().size() > 0) {
 			Element rifEstEl = (Element)xmlDocument.selectSingleNode("/doc/rif_esterni/rif");
 			for (InteroperabilitaItem interopItem:doc.getRifEsterni().get(0).getInteroperabilitaItemL()) {
-				rifEstEl.add(Docway4EntityToXmlUtils.interoperabilitaItemToXml(interopItem));
+				if (interopItem.getId() != null)
+					rifEstEl.add(Docway4EntityToXmlUtils.interoperabilitaItemToXml(interopItem));
 			}
 		}
 		
@@ -647,11 +648,21 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocToUpdate, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 		
 		try {
+			boolean uploaded = false;
 			
-//TODO - fare la parte di interoperabilità - SEGNATURA.xml
+			//upload interopPA message files
+			if (doc.getRifEsterni().size() > 0) {
+				for (InteroperabilitaItem interopItem:doc.getRifEsterni().get(0).getInteroperabilitaItemL()) {
+					if (isInteropPAFileNew(interopItem.getName(), xmlDocument)) {
+						interopItem.setId(xwClient.addAttach(interopItem.getName(), interopItem.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
+						uploaded = true;
+					}
+					else
+						interopItem.setId(null);
+				}
+			}			
 			
 			//upload files
-			boolean uploaded = false;
 			for (DocwayFile file:doc.getFiles()) {
 				if (isFileNew(file.getName(), xmlDocument, "files")) {
 					file.setId(xwClient.addAttach(file.getName(), file.getContent(), conf.getXwLockOpAttempts(), conf.getXwLockOpDelay()));
@@ -702,6 +713,16 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}
 		return true;
 	}
+	
+	private boolean isInteropPAFileNew(String fileName, Document xmlDocument) {
+		@SuppressWarnings("unchecked")
+		List<Element> filesL = xmlDocument.selectNodes("/doc/rif_esterni/rif/interoperabilita");
+		for (Element fileEl:filesL) {
+			if (fileEl.attributeValue("title").equals(fileName))
+				return false;
+		}
+		return true;
+	}	
 
 	@Override
 	protected Object updateDocumentWithRecipient(DocwayDocument doc) throws Exception {

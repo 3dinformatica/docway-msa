@@ -349,9 +349,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         String codiceAOO = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAOO").getText();
         String nProt = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/NumeroRegistrazione").getText();
         String dataProt = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/DataRegistrazione").getText();
+        Date dataProtD = new SimpleDateFormat("yyyy-MM-dd").parse(dataProt);
         rifEsterno.setCodiceAmministrazione(codiceAmministrazione);
         rifEsterno.setCodiceAOO(codiceAOO);
-        rifEsterno.setDataProt(dataProt);
+        rifEsterno.setDataProt(new SimpleDateFormat("yyyyMMdd").format(dataProtD));
         rifEsterno.setnProt(dataProt.substring(0, 4) + "-" + codiceAmministrazione + codiceAOO + "-" + nProt);
 		
         //rif esterno: denominazione mittente
@@ -376,7 +377,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         if (att != null && !att.getText().isEmpty())
         	indirizzo += att.getText();
         @SuppressWarnings("unchecked")
-		List<Element> els = segnaturaDocument.selectNodes("/Segnatura/Intestazione/Origine/Mittente/Amministrazione/IndirizzoPostale/*");
+		List<Element> els = segnaturaDocument.selectNodes("/Segnatura/Intestazione/Origine/Mittente/Amministrazione/UnitaOrganizzativa/IndirizzoPostale/*");
         for (Element el:els) {
         	if (!el.getText().isEmpty()) {
         		if (!indirizzo.isEmpty())
@@ -415,10 +416,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         String classif = "";
         el = (Element)segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Classifica/Denominazione");
         if (el != null && !el.getText().isEmpty()) {
+        	classif = el.getText();
         	doc.setClassif(classif);
         	if (classif.indexOf(" ") > 0)
         		doc.setClassifCod(classif.substring(0, classif.indexOf(" ")));
-//TODO - sentire nicola x cosa fare        	
         }
 		
 		//rif interni

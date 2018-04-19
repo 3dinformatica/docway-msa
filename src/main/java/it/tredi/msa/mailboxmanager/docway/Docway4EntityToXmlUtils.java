@@ -97,7 +97,7 @@ public class Docway4EntityToXmlUtils {
 		}		
 		
 		//classificazione
-		if (doc.getClassifCod() != null && !doc.getClassifCod().isEmpty()) {
+		if (doc.getClassif() != null && !doc.getClassif().isEmpty()) {
 			Element classifEl = DocumentHelper.createElement("classif");
 			docEl.add(classifEl);
 			classifEl.addAttribute("xml:space", "preserve");
@@ -262,7 +262,7 @@ public class Docway4EntityToXmlUtils {
 		
 		//n_prot
 		if (rifEsterno.getnProt() != null && !rifEsterno.getnProt().isEmpty())
-			rifEl.addAttribute("n_prot", rifEsterno.getCodiceAOO());
+			rifEl.addAttribute("n_prot", rifEsterno.getnProt());
 		
 		//data_prot
 		if (rifEsterno.getDataProt() != null && !rifEsterno.getDataProt().isEmpty())
