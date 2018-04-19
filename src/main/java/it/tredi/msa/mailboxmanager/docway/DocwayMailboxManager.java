@@ -16,6 +16,7 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import it.tredi.mail.MessageUtils;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.MailboxManager;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
@@ -445,7 +446,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		}
 		
 		//files + immagini + allegato
-		createDocwayFilesForInteropPAMessage(parsedMessage, doc);
+		createDocwayFilesForInteropPAMessage(segnaturaDocument, parsedMessage, doc);
 		
 		//parsedMessage.relevantMessages -> postit
 		for (String relevantMessage:parsedMessage.getRelevantMssages()) {
@@ -460,39 +461,34 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		return doc;
 	}	
 
-	private void createDocwayFilesForInteropPAMessage(ParsedMessage parsedMessage, DocwayDocument doc) throws Exception {
+	private void createDocwayFilesForInteropPAMessage(Document segnaturaDocument, ParsedMessage parsedMessage, DocwayDocument doc) throws Exception {
 		//get rif esterno
 		RifEsterno rifEsterno = doc.getRifEsterni().get(0);
-
-		//email attachments (files + immagini)
-		List<Part> attachments = parsedMessage.getAttachments();
-		for (Part attachment:attachments) {
-			if (attachment.getFileName().equals("Segnatura.xml")) {
-				InteroperabilitaItem interopItem = new InteroperabilitaItem();
-				interopItem.setName("Segnatura.xml");
-				interopItem.setData(currentDate);
-				interopItem.setOra(currentDate);
-				interopItem.setInfo("Ricezione Telematica (Segnatura.xml)");
-				interopItem.setMessageId(parsedMessage.getMessageId());
-				interopItem.setContentProvider(new PartContentProvider(attachment));
-				rifEsterno.addInteroperabilitaItem(interopItem);
-			}
-			/*
-			
-			DocwayFile file = createDocwayFile();
-			file.setContentProvider(new PartContentProvider(attachment));
-			file.setName(attachment.getFileName());
-			if (isImage(file.getName())) //immagine
-					doc.addImmagine(file);
-			else //file
-				doc.addFile(file);
-			
-			//allegato
-			doc.addAllegato(file.getName());*/
+		
+		//Segnatura.xml
+		Part attachment = MessageUtils.getAttachmentPartByName(parsedMessage.getMessage(), "Segnatura.xml");
+		InteroperabilitaItem interopItem = new InteroperabilitaItem();
+		interopItem.setName("Segnatura.xml");
+		interopItem.setData(currentDate);
+		interopItem.setOra(currentDate);
+		interopItem.setInfo("Ricezione Telematica (Segnatura.xml)");
+		interopItem.setMessageId(parsedMessage.getMessageId());
+		interopItem.setContentProvider(new PartContentProvider(attachment));
+		rifEsterno.addInteroperabilitaItem(interopItem);		
+		
+		//Doc principale
+		addFileFromSegnatura((Element)segnaturaDocument.selectSingleNode("/Segnatura/Descrizione/Documento"), doc, parsedMessage, false);
+		
+		//allegati
+		@SuppressWarnings("unchecked")
+		List<Element> documentoElL = segnaturaDocument.selectNodes("/Segnatura/Descrizione/Allegati/Documento");
+		if (documentoElL != null) {
+			for (Element documentoEl:documentoElL)
+				addFileFromSegnatura(documentoEl, doc, parsedMessage, true);
 		}
 
 		//EML
-		InteroperabilitaItem interopItem = new InteroperabilitaItem();
+		interopItem = new InteroperabilitaItem();
 		interopItem.setName("Ricezione telematica.eml");
 		interopItem.setData(currentDate);
 		interopItem.setOra(currentDate);
@@ -508,5 +504,23 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 //TODO - gestione del campo allegato nel caso della segnatura
 
 	}	
+	
+	private void addFileFromSegnatura(Element documentoEl, DocwayDocument doc, ParsedMessage parsedMessage, boolean addAllegato) throws Exception {
+		if (documentoEl != null && !documentoEl.attributeValue("nome", "").isEmpty()) {
+//TODO - controllare tipoRiferimento per segnalare con i postit problemi sui file e inviare notifica eccezione
+			
+			Part attachment = MessageUtils.getAttachmentPartByName(parsedMessage.getMessage(), documentoEl.attributeValue("nome"));
+			DocwayFile file = createDocwayFile();
+			file.setContentProvider(new PartContentProvider(attachment));
+			file.setName(attachment.getFileName());
+			if (isImage(file.getName())) //immagine
+					doc.addImmagine(file);
+			else //file
+				doc.addFile(file);
+			
+			if (addAllegato)
+				doc.addAllegato(file.getName());
+		}		
+	}
 	
 }
