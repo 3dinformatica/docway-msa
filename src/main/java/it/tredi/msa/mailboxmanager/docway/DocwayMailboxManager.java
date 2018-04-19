@@ -204,16 +204,6 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		for (RifInterno rifInterno:rifInterni)
 			doc.addRifInterno(rifInterno);
 		
-		//parsedMessage.relevantMessages -> postit
-		for (String relevantMessage:parsedMessage.getRelevantMssages()) {
-			Postit postit = new Postit();
-			postit.setText(relevantMessage);
-			postit.setOperatore(conf.getOperatore());
-			postit.setData(currentDate);
-			postit.setOra(currentDate);
-			doc.addPostit(postit);
-		}
-		
 		//storia creazione
 		StoriaItem creazione = new StoriaItem("creazione");
 		creazione.setOper(conf.getOper());
@@ -233,6 +223,16 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//files + immagini + allegato
 		createDocwayFiles(parsedMessage, doc);
+		
+		//parsedMessage.relevantMessages -> postit
+		for (String relevantMessage:parsedMessage.getRelevantMssages()) {
+			Postit postit = new Postit();
+			postit.setText(relevantMessage);
+			postit.setOperatore(conf.getOperatore());
+			postit.setData(currentDate);
+			postit.setOra(currentDate);
+			doc.addPostit(postit);
+		}		
 		
 		return doc;
 	}
@@ -427,16 +427,6 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		for (RifInterno rifInterno:rifInterni)
 			doc.addRifInterno(rifInterno);
 		
-		//parsedMessage.relevantMessages -> postit
-		for (String relevantMessage:parsedMessage.getRelevantMssages()) {
-			Postit postit = new Postit();
-			postit.setText(relevantMessage);
-			postit.setOperatore(conf.getOperatore());
-			postit.setData(currentDate);
-			postit.setOra(currentDate);
-			doc.addPostit(postit);
-		}
-		
 		//storia creazione
 		StoriaItem creazione = new StoriaItem("creazione");
 		creazione.setOper(conf.getOper());
@@ -456,12 +446,16 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//files + immagini + allegato
 		createDocwayFilesForInteropPAMessage(parsedMessage, doc);
-//TODO - gestire correttamente i file per la registrazione della segnatura	
-//<interoperabilita	 	data = "20171012" info = "Ricezione Telematica (Segnatura.xml)" name = "47339.xml" ora = "12:59:07" title = "Segnatura.xml" />
-//<interoperabilita	 	data = "20171012" info = "Ricezione telematica" name = "47343.eml" ora = "12:59:06" title = "Ricezione telematica.eml" />		
 		
-		//aggiungere elementi di interoperabilità
-		
+		//parsedMessage.relevantMessages -> postit
+		for (String relevantMessage:parsedMessage.getRelevantMssages()) {
+			Postit postit = new Postit();
+			postit.setText(relevantMessage);
+			postit.setOperatore(conf.getOperatore());
+			postit.setData(currentDate);
+			postit.setOra(currentDate);
+			doc.addPostit(postit);
+		}		
 		
 		return doc;
 	}	
