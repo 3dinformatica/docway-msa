@@ -33,6 +33,7 @@ public class MailboxManagerFactory {
 			if (mailboxConfiguration.getMailserverSocketTimeout() != -1)
 				mailReader.setSocketTimeout(mailboxConfiguration.getMailserverSocketTimeout());
 			mailboxManager.setMailReader(mailReader);
+			mailboxManager.init();
 		}
 	}
 

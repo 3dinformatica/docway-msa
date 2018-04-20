@@ -34,8 +34,7 @@ public class Docway4EntityToXmlUtils {
 		docEl.addAttribute("data_prot", doc.getDataProt());
 		
 		//num_prot
-		if (doc.isBozza())
-			docEl.addAttribute("num_prot", doc.getNumProt());
+		docEl.addAttribute("num_prot", doc.getNumProt());
 		
 		//annullato
 		docEl.addAttribute("annullato", doc.isAnnullato()? "si" : "no");

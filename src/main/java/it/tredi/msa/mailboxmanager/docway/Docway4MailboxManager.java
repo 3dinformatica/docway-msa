@@ -2,6 +2,7 @@ package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +36,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	private final static String STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE = "Il messaggio è stato archiviato come documento ordinario: ";
 	private final static String DOC_NOT_FOUND_FOR_ATTACHING_FILE = STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE + "non è stato possibile individuare il documento a cui associare ls ricevuta/notifica. \n%s";
+	private final static String INVIO_CONFERMA_RICEZIONE_FAILED = "Non è stato possibile inviare il messaggio di Conferma Ricezione di interoperabilità tra PA a causa di un errore: \n%s";
 	
 	@Override
     public void openSession() throws Exception {
@@ -63,7 +65,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		catch (Exception e) {
 			logger.warn("[" + conf.getName() + "] failed to close eXtraWay session [" + conf.getAclDb() + "]", e);
 		}
-	}  	
+	}
 	
 	@Override
 	protected StoreType decodeStoreType(ParsedMessage parsedMessage) throws Exception {
@@ -152,12 +154,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}
 		else //messageId not found
 			return StoreType.SAVE_NEW_DOCUMENT;
-		
 	}  	
 	
 	@Override
-	protected Object saveNewDocument(DocwayDocument doc) throws Exception {
+	protected Object saveNewDocument(DocwayDocument doc, ParsedMessage parsedMessage) throws Exception {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		
 		//save new document in Extraway
 		Document xmlDocument = Docway4EntityToXmlUtils.docwayDocumentToXml(doc, super.currentDate);
@@ -165,6 +167,39 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		
 		//load and lock document
 		xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+
+		//invio conferma ricezione - se doc è stato protocollato (anche se non richiesto dal mittente)
+		//circolare_23_gennaio_2013_n.60_segnatura_protocollo_informatico_-_rev_aipa_n.28-2001
+		//"In attuazione del principio generale della trasparenza dell’azione amministrativa sarebbe comunque opportuno inviare sempre in automatico il messaggio di conferma di ricezione."
+		if (conf.isPec() && conf.isProtocollaSegnatura() && dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) {
+			String numProt = xmlDocument.selectSingleNode("/doc/@num_prot").getText();
+			if (!numProt.isEmpty()) {//check se è stato realmente protocollato
+				try { 
+					String oggetto = xmlDocument.selectSingleNode("/doc/oggetto").getText();
+					oggetto = oggetto.replaceAll("\n", " ");
+					if (oggetto.length() > 255)
+						oggetto = oggetto.substring(0, 255);
+					String emailSubject = numProt + "(0) " + oggetto;
+			        Date dataProtD = new SimpleDateFormat("yyyyMMdd").parse(xmlDocument.selectSingleNode("/doc/@data_prot").getText());
+					sendConfermaRicezioneInteropPAMessage(parsedMessage, doc, "PROTOCOLLO", numProt.substring(numProt.lastIndexOf("-") + 1), new SimpleDateFormat("yyyy-MM-dd").format(dataProtD), emailSubject);
+				}
+				catch (Exception e) {
+					logger.error("[" + conf.getName() + "] error sending ConfermaRicezione InteropPA message.", e);
+						
+					//aggiunta postit e salvataggio immediato
+					Postit postit = new Postit();
+					postit.setText(String.format(INVIO_CONFERMA_RICEZIONE_FAILED, e.getMessage()));
+					postit.setOperatore(conf.getOperatore());
+					postit.setData(currentDate);
+					postit.setOra(currentDate);
+					doc.addPostit(postit);					
+					xmlDocument.getRootElement().add(Docway4EntityToXmlUtils.postitToXml(postit));
+					
+					xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
+					xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+				}				
+			}
+		}
 		
 		try {
 			boolean uploaded = false;

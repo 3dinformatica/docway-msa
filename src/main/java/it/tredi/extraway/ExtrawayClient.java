@@ -13,6 +13,7 @@ import it.highwaytech.broker.Broker;
 import it.highwaytech.broker.XMLCommand;
 import it.highwaytech.db.Doc;
 import it.highwaytech.db.QueryResult;
+import it.tredi.msa.Utils;
 
 public class ExtrawayClient {
 
@@ -104,13 +105,8 @@ public class ExtrawayClient {
 		Element rootEl = xmlDocument.getRootElement();
 		if (rootEl.getNamespaceForPrefix("xw") == null) //add xmlns:xw to root element
 			rootEl.addNamespace("xw", XW_NAMESPACE);
-		
-		StringWriter sw = new StringWriter();
-		OutputFormat outformat = new OutputFormat("  ", true, ENCODING);
-		outformat.setEncoding(ENCODING);
-        XMLWriter writer = new XMLWriter(sw, outformat);
-        writer.write(rootEl);
-        XMLCommand theCommand = new XMLCommand(XMLCommand.SaveDocument, XMLCommand.SaveDocument_Save, docNum, sw.toString(), rootEl.getName(), "", docNum == 0? null : theLock);
+		String xml = Utils.dom4jdocumentToString(xmlDocument, ENCODING, true);
+        XMLCommand theCommand = new XMLCommand(XMLCommand.SaveDocument, XMLCommand.SaveDocument_Save, docNum, xml, rootEl.getName(), "", docNum == 0? null : theLock);
         theCommand.encoding = ENCODING;
         String result = broker.XMLCommand(connId, db, theCommand.toString());
         return Integer.parseInt(XMLCommand.getDval(result, "ndoc"));

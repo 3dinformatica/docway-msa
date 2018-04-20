@@ -42,6 +42,10 @@ public abstract class MailboxManager implements Runnable {
 	public void setMailReader(MailReader mailReader) {
 		this.mailReader = mailReader;
 	}
+	
+	public void init() {
+		//do nothing - override this one for mailbox manager inizialization after creation
+	}
 		
 	@Override
     public void run() {
