@@ -1,29 +1,22 @@
 package it.tredi.msa.mailboxmanager.docway;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.Message;
-import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
-import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
-import org.dom4j.DocumentType;
 import org.dom4j.Element;
-import org.dom4j.tree.DefaultDocumentType;
 
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
@@ -344,20 +337,24 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();
 
 		String motivazioneNotificaEccezione = "";
-		
-		//validazione DTD
+	
 /*		
+		//validazione DTD
 		String dtdSchemaUrl = "segnatura.dtd";
 	    DocumentType docType = segnaturaDocument.getDocType();
 	    if (docType != null)
 	        docType.setSystemID(dtdSchemaUrl);
-	    else {
-	        docType = new DefaultDocumentType(segnaturaDocument.getRootElement().getName(), dtdSchemaUrl);
-	        segnaturaDocument.setDocType(docType);
+	    else
+	        segnaturaDocument.setDocType(new DefaultDocumentType(segnaturaDocument.getRootElement().getName(), dtdSchemaUrl));
+	    try {
+		    SAXReader reader = new SAXReader(true);
+		    reader.read(new StringReader(segnaturaDocument.asXML()));
 	    }
-*/
-//TODO
-		
+	    catch (Exception e) {
+	    	motivazioneNotificaEccezione += "Errore di validazione rispetto a segnatura.dtd: " + e;
+	    }
+*/	    
+
 		//check preliminari
 		
 		//oggetto
