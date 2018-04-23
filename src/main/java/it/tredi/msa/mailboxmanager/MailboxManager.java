@@ -22,7 +22,9 @@ public abstract class MailboxManager implements Runnable {
 	private boolean shutdown = false;
 	private static final Logger logger = LogManager.getLogger(MailboxManager.class.getName());
 	private AuditMailboxRun auditMailboxRun;
+	private boolean running;
 	
+	private final static int MAILREADER_CONNECTION_ATTEMPTS = 3;
 	private final static String PROCESS_MAILBOX_ERROR_MESSAGE = "Errore imprevisto durante le gestione della casella di posta [%s].\nControllare la configurazione [%s://%s:%s][User:%s]\nConsultare il log per maggiori dettagli.\n\n%s";
 	private final static String STORE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante l'archiviazione del messaggio di posta [%s].\nMessage Id: %s\nSent Date: %s\nSubject: %s\nConsultare il log per maggiori dettagli.\n\n%s";
 	private final static String HANDLE_ERROR_ERROR_MESSAGE = "Errore imprevisto durante la gestione di un errore in fase di archiviazione di un messaggio di posta\nConsultare il log per maggiori dettagli.\n\n%s";
@@ -43,12 +45,21 @@ public abstract class MailboxManager implements Runnable {
 		this.mailReader = mailReader;
 	}
 	
+	public boolean isRunning() {
+		return running;
+	}
+
+	public void setRunning(boolean running) {
+		this.running = running;
+	}
+
 	public void init() {
 		//do nothing - override this one for mailbox manager inizialization after creation
 	}
 		
 	@Override
     public void run() {
+		running = true;
     	try {
         	if (!shutdown) {
         		if (logger.isInfoEnabled()) {
@@ -68,7 +79,10 @@ public abstract class MailboxManager implements Runnable {
        	catch (Throwable t) {
     		logger.fatal("[" + configuration.getName() + "] execution failed: " + t);
     		shutdown();
-    	}    	
+    	}  
+    	finally {
+    		running = false;
+    	}
     }
     
     public void shutdown() {
@@ -96,13 +110,27 @@ public abstract class MailboxManager implements Runnable {
         	if (logger.isDebugEnabled())
         		logger.debug("[" + configuration.getName() + "] processMailbox() called");	
     		
-    		//TEMPLATE STEP - openSession
-    		openSession();	
-    		
-    		//loop messages
-    		if (shutdown)
-    			return;
-        	Message []messages = mailReader.getMessages();
+        	//connection attempts
+        	Message []messages = null;
+        	for (int attemptIndex = 1; attemptIndex <= MAILREADER_CONNECTION_ATTEMPTS; attemptIndex++) {
+            	try {
+            		//TEMPLATE STEP - openSession
+            		openSession();	
+            		
+            		//loop messages
+            		if (shutdown)
+            			return;
+                	messages = mailReader.getMessages();
+            		break;
+            	}
+            	catch (Exception e) {
+            		if (logger.isDebugEnabled())
+            			logger.debug("[" + configuration.getName() + "] connection failed: (" + attemptIndex + "/" +MAILREADER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
+            		if (attemptIndex == MAILREADER_CONNECTION_ATTEMPTS)
+            			throw e;
+            		Thread.sleep(1000); //1 sec delay
+            	}    		
+        	}        	
         	
         	if (logger.isInfoEnabled())
         		logger.info("[" + configuration.getName() + "] found (" + messages.length + ") messages");

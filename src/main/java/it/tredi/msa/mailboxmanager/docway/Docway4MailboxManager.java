@@ -36,7 +36,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	private final static String STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE = "Il messaggio è stato archiviato come documento ordinario: ";
 	private final static String DOC_NOT_FOUND_FOR_ATTACHING_FILE = STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE + "non è stato possibile individuare il documento a cui associare ls ricevuta/notifica. \n%s";
-	private final static String INVIO_CONFERMA_RICEZIONE_FAILED = "Non è stato possibile inviare il messaggio di Conferma Ricezione di interoperabilità tra PA a causa di un errore: \n%s";
+	private final static String INVIO_INTEROP_PA_MESSAGE_FAILED = "Non è stato possibile inviare il messaggio di %s di interoperabilità tra PA a causa di un errore: \n%s";
 	
 	@Override
     public void openSession() throws Exception {
@@ -87,7 +87,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPAPecReceipt(conf.getCodAmm(), conf.getCodAoo());
 					storeType = StoreType.ATTACH_INTEROP_PA_PEC_RECEIPT;
 				}
-				else if (dcwParsedMessage.isPecReceiptForInteropPAbySubject()) { //2nd try: non sempre nelle ricevute è presente il messaggio originale -> si cerca il numero di protocollo nel subject
+				if (query.isEmpty() && dcwParsedMessage.isPecReceiptForInteropPAbySubject()) { //2nd try: non sempre nelle ricevute è presente il messaggio originale -> si cerca il numero di protocollo nel subject
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPASubject();
 					storeType = StoreType.ATTACH_INTEROP_PA_PEC_RECEIPT;
 				}
@@ -164,41 +164,62 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		//save new document in Extraway
 		Document xmlDocument = Docway4EntityToXmlUtils.docwayDocumentToXml(doc, super.currentDate);
 		int lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
+		parsedMessage.clearRelevantMessages();
 		
 		//load and lock document
 		xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 
-		//invio conferma ricezione - se doc è stato protocollato (anche se non richiesto dal mittente)
-		//circolare_23_gennaio_2013_n.60_segnatura_protocollo_informatico_-_rev_aipa_n.28-2001
-		//"In attuazione del principio generale della trasparenza dell’azione amministrativa sarebbe comunque opportuno inviare sempre in automatico il messaggio di conferma di ricezione."
-		if (conf.isPec() && conf.isProtocollaSegnatura() && dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) {
-			String numProt = xmlDocument.selectSingleNode("/doc/@num_prot").getText();
-			if (!numProt.isEmpty()) {//check se è stato realmente protocollato
-				try { 
-					String oggetto = xmlDocument.selectSingleNode("/doc/oggetto").getText();
-					oggetto = oggetto.replaceAll("\n", " ");
-					if (oggetto.length() > 255)
-						oggetto = oggetto.substring(0, 255);
-					String emailSubject = numProt + "(0) " + oggetto;
-			        Date dataProtD = new SimpleDateFormat("yyyyMMdd").parse(xmlDocument.selectSingleNode("/doc/@data_prot").getText());
-					sendConfermaRicezioneInteropPAMessage(parsedMessage, doc, "PROTOCOLLO", numProt.substring(numProt.lastIndexOf("-") + 1), new SimpleDateFormat("yyyy-MM-dd").format(dataProtD), emailSubject);
+		if (conf.isPec() && dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //casella PEC e interopPA Segnatura message
+
+			//invio conferma ricezione - se doc è stato protocollato (anche se non richiesto dal mittente)
+			//circolare_23_gennaio_2013_n.60_segnatura_protocollo_informatico_-_rev_aipa_n.28-2001
+			//"In attuazione del principio generale della trasparenza dell’azione amministrativa sarebbe comunque opportuno inviare sempre in automatico il messaggio di conferma di ricezione."
+			if (conf.isProtocollaSegnatura()) {
+				String numProt = xmlDocument.selectSingleNode("/doc/@num_prot").getText();
+				if (!numProt.isEmpty()) { //check se è stato realmente protocollato
+					try { 
+						String emailSubject = numProt + "(0) " + getOggettoForEmailSubject(xmlDocument.selectSingleNode("/doc/oggetto").getText());
+				        Date dataProtD = new SimpleDateFormat("yyyyMMdd").parse(xmlDocument.selectSingleNode("/doc/@data_prot").getText());
+						sendConfermaRicezioneInteropPAMessage(parsedMessage, doc, "PROTOCOLLO", numProt.substring(numProt.lastIndexOf("-") + 1), new SimpleDateFormat("yyyy-MM-dd").format(dataProtD), emailSubject);
+					}
+					catch (Exception e) {
+						logger.error("[" + conf.getName() + "] error sending ConfermaRicezione InteropPA message.", e);
+						parsedMessage.addRelevantMessage(String.format(INVIO_INTEROP_PA_MESSAGE_FAILED, "Conferma Ricezione", e.getMessage()));
+					}				
+				}				
+			}
+			
+			//invio notifica eccezione
+			if (dcwParsedMessage.getMotivazioneNotificaEccezioneToSend() != null && !dcwParsedMessage.getMotivazioneNotificaEccezioneToSend().isEmpty()) {
+				String numProt = xmlDocument.selectSingleNode("/doc/@num_prot").getText();
+				String numero = numProt.isEmpty()? xmlDocument.selectSingleNode("/doc/@nrecord").getText() : numProt;
+				try {
+					String emailSubject = numero + "(0) " + getOggettoForEmailSubject(xmlDocument.selectSingleNode("/doc/oggetto").getText());
+					Date dataProtD = new SimpleDateFormat("yyyyMMdd").parse(xmlDocument.selectSingleNode("/doc/@data_prot").getText());
+					sendNotificaEccezioneInteropPAMessage(parsedMessage, doc, "PROTOCOLLO", numProt.isEmpty() ? null : numProt.substring(numProt.lastIndexOf("-") + 1), new SimpleDateFormat("yyyy-MM-dd").format(dataProtD), emailSubject, dcwParsedMessage.getMotivazioneNotificaEccezioneToSend());
 				}
 				catch (Exception e) {
-					logger.error("[" + conf.getName() + "] error sending ConfermaRicezione InteropPA message.", e);
-						
-					//aggiunta postit e salvataggio immediato
+					logger.error("[" + conf.getName() + "] error sending NotificaEccezione InteropPA message.", e);
+					parsedMessage.addRelevantMessage(String.format(INVIO_INTEROP_PA_MESSAGE_FAILED, "Notifica Eccezione", e.getMessage()));
+				}			
+			}
+			
+			//se occorre inserire i postit con i relevantMessages
+			if (!dcwParsedMessage.getRelevantMssages().isEmpty()) {
+				for (String message: dcwParsedMessage.getRelevantMssages()) {
 					Postit postit = new Postit();
-					postit.setText(String.format(INVIO_CONFERMA_RICEZIONE_FAILED, e.getMessage()));
+					postit.setText(message);
 					postit.setOperatore(conf.getOperatore());
 					postit.setData(currentDate);
 					postit.setOra(currentDate);
-					doc.addPostit(postit);					
 					xmlDocument.getRootElement().add(Docway4EntityToXmlUtils.postitToXml(postit));
-					
-					xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
-					xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
-				}				
+				}
+				
+				//salvataggio immediato
+				xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
+				xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 			}
+
 		}
 		
 		try {
@@ -904,5 +925,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		return (new SimpleDateFormat("yyyy")).format(currentDate) + "-" + conf.getCodAmmAoo() + "-.";
 	}
+
+	protected String getOggettoForEmailSubject(String oggetto) {
+		oggetto = oggetto.replaceAll("\n", " ");
+		if (oggetto.length() > 255)
+			oggetto = oggetto.substring(0, 255);
+		return oggetto;
+	}	
 	
 }

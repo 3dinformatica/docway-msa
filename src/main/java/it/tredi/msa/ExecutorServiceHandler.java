@@ -60,7 +60,10 @@ public class ExecutorServiceHandler implements Runnable {
     						if (logger.isDebugEnabled())
     							logger.debug("Updating mailbox configuration: [" + mailboxConfiguration.getName() + "]");
     						
-    						MailboxManagerFactory.update(mailboxManagersMap.get(mailboxConfiguration.getName()), mailboxConfiguration);
+    						if (!mailboxManagersMap.get(mailboxConfiguration.getName()).isRunning())
+    							MailboxManagerFactory.update(mailboxManagersMap.get(mailboxConfiguration.getName()), mailboxConfiguration);
+    						else if (logger.isDebugEnabled())
+    							logger.debug("Could not update mailbox configuration: [" + mailboxConfiguration.getName() + "] because mailbox manager is running");
     					}
     					
     				}
@@ -71,10 +74,15 @@ public class ExecutorServiceHandler implements Runnable {
     				if (!shutdown) {
     					if (!freshMailboxConfigurationsSet.contains(confName)) {
     						if (logger.isDebugEnabled())
-    							logger.debug("Found missing (deleted) mailbox configuration: [" + confName + "]");
+    							logger.debug("Found missing (deleted) mailbox configuration: [" + confName + "]. Removing it");
         					
-        					mailboxManagersMap.get(confName).shutdown();
-        					mailboxManagersMap.remove(confName);
+    						if (!mailboxManagersMap.get(confName).isRunning()) {
+            					mailboxManagersMap.get(confName).shutdown();
+            					mailboxManagersMap.remove(confName);    							
+    						}
+    						else if (logger.isDebugEnabled())
+    							logger.debug("Could not remove mailbox configuration: [" + confName + "] because mailbox manager is running");
+
         				}
     				}
     			}

@@ -1,15 +1,20 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,7 +44,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected static final String MESSAGGIO_ORIGINALE_EMAIL_FILENAME = "MessaggioOriginale.eml";
 	protected static final String DEFAULT_ALLEGATO = "0 - nessun allegato";
 	
-	private final static String FILE_NOT_FOUND_IN_SEGNATURA = "Non è stato possibile individuare tra gli allegati della mail il file referenziato nel messaggio di interoperabilità PA: %s";
+	private final static String FILE_NOT_FOUND_IN_SEGNATURA = "Non è stato possibile individuare tra gli allegati della mail il file referenziato nel messaggio di interoperabilità PA: %s\n";
+	private final static String SEGNATURA_MESSAGE_AS_BOZZA = "Il documento è stato creato come bozza a causa di errori in fase di importazione del messaggio di interoperabilità Segnatura.xml.\n";
+	private final static String SEGNATURA_PARSE_ERROR = "Si sono verificati degli errori in fase di importazione del messaggio di interoperabilità Segnatura.xml.\n";
+	private final static String SEGNATURA_NULL_EMPTY_FIELD = "Valore campo '%s' nullo o vuoto.\n";
 	
 	private static final Logger logger = LogManager.getLogger(DocwayMailboxManager.class.getName());
 	
@@ -333,26 +341,81 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();
 
+		String motivazioneNotificaEccezione = "";
+		
+		//validazione DTD
+//TODO - fare validazione DTD
+		
+		//check preliminari
+		
+		//oggetto
+		String oggetto = "[N/D]";
+		try {
+			oggetto = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Oggetto").getText();	
+		}
+		catch (Exception e) {
+			motivazioneNotificaEccezione += String.format(SEGNATURA_NULL_EMPTY_FIELD, "Oggetto");
+		}
+		
+		//email certificata
+		String emailCertificata = "";
+		try {
+			emailCertificata = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Origine/IndirizzoTelematico").getText();
+		}
+		catch (Exception e) {
+			motivazioneNotificaEccezione += String.format(SEGNATURA_NULL_EMPTY_FIELD, "IndirizzoTelematico");
+			emailCertificata = dcwParsedMessage.getMittenteAddressFromDatiCertPec();
+		}
+		
+		//CodiceAmministrazione
+		String codiceAmministrazione = "[N/D]";
+		try {
+			codiceAmministrazione = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAmministrazione").getText();
+		}
+		catch (Exception e) {
+			motivazioneNotificaEccezione += String.format(SEGNATURA_NULL_EMPTY_FIELD, "CodiceAmministrazione");
+		}
+		
+		//CodiceAOO
+		String codiceAOO = "[N/D]";
+		try {
+			codiceAOO = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAOO").getText();	
+		}
+		catch (Exception e) {
+			motivazioneNotificaEccezione += String.format(SEGNATURA_NULL_EMPTY_FIELD, "CodiceAOO");
+		}		
+
+		//CodiceAOO
+		String nProt = "[N/D]";
+		try {
+			nProt = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/NumeroRegistrazione").getText();	
+		}
+		catch (Exception e) {
+			motivazioneNotificaEccezione += String.format(SEGNATURA_NULL_EMPTY_FIELD, "NumeroRegistrazione");
+		}				
+
+		//DataRegistrazione
+		String dataProt = "9999-12-31";
+		Date dataProtD = new SimpleDateFormat("yyyy-MM-dd").parse(dataProt);
+		try {
+			dataProt = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/DataRegistrazione").getText();
+	        dataProtD = new SimpleDateFormat("yyyy-MM-dd").parse(dataProt);
+		}
+		catch (Exception e) {
+			motivazioneNotificaEccezione += "Valore campo 'DataRegistrazione' in formato scorretto: " + dataProt + ".\n";
+		}
+
 		//create DocwayDocument
 		DocwayDocument doc = new DocwayDocument();
 		
 		//tipo doc
 		doc.setTipo("arrivo");
 		
-		//bozza
-		doc.setBozza(!conf.isProtocollaSegnatura());
-		
 		//cod_amm_aoo
 		doc.setCodAmmAoo(conf.getCodAmmAoo());
 		
-		//anno
-		doc.setAnno(conf.isProtocollaSegnatura()? (new SimpleDateFormat("yyyy")).format(currentDate) : "");
-		
 		//data prot
 		doc.setDataProt((new SimpleDateFormat("yyyyMMdd")).format(currentDate));
-		
-		//num_prot
-		doc.setNumProt(conf.isProtocollaSegnatura()? buildNewNumprotStringForSavingDocument() : "");
 		
 		//messageId
 		doc.setMessageId(parsedMessage.getMessageId());
@@ -364,7 +427,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		doc.setAnnullato(false);
 		
 		//oggetto
-		doc.setOggetto(segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Oggetto").getText());
+		doc.setOggetto(oggetto);
 		
 		//tipologia
 		doc.setTipologia(conf.getTipologiaSegnatura());
@@ -373,13 +436,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		doc.setMezzoTrasmissione(conf.getMezzoTrasmissioneSegnatura());
 		
 		//rif esterno
-		RifEsterno rifEsterno = new RifEsterno();		
+		RifEsterno rifEsterno = new RifEsterno();
 		doc.addRifEsterno(rifEsterno);
-		String codiceAmministrazione = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAmministrazione").getText();
-        String codiceAOO = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAOO").getText();
-        String nProt = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/NumeroRegistrazione").getText();
-        String dataProt = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/DataRegistrazione").getText();
-        Date dataProtD = new SimpleDateFormat("yyyy-MM-dd").parse(dataProt);
         rifEsterno.setCodiceAmministrazione(codiceAmministrazione);
         rifEsterno.setCodiceAOO(codiceAOO);
         rifEsterno.setDataProt(new SimpleDateFormat("yyyyMMdd").format(dataProtD));
@@ -399,6 +457,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		}
 		if (!denominazione.isEmpty())
 			denominazione = denominazione.substring(3);
+		else
+			denominazione = "[N/D]";
         rifEsterno.setNome(denominazione);
         
         //rif esterno: indirizzo, tel, fax, email, email_certificata
@@ -417,7 +477,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         }
         if (!indirizzo.trim().isEmpty())
         	rifEsterno.setIndirizzo(indirizzo.trim());
-        rifEsterno.setEmailCertificata(segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Origine/IndirizzoTelematico").getText());
+        rifEsterno.setEmailCertificata(emailCertificata);
         Element el = (Element)segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Origine/Mittente//IndirizzoTelematico[text()!='']");
         if (el != null)
         	rifEsterno.setEmail(el.getText());
@@ -473,9 +533,29 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			storiaItem.setOra(currentDate);
 			doc.addStoriaItem(storiaItem);
 		}
+
+		//bozza
+		doc.setBozza(!conf.isProtocollaSegnatura() || !motivazioneNotificaEccezione.isEmpty());
 		
+		//anno
+		doc.setAnno(!doc.isBozza()? (new SimpleDateFormat("yyyy")).format(currentDate) : "");
+		
+		//num_prot
+		doc.setNumProt(!doc.isBozza()? buildNewNumprotStringForSavingDocument() : "");
+
 		//files + immagini + allegato
-		createDocwayFilesForInteropPAMessage(segnaturaDocument, parsedMessage, doc);
+		motivazioneNotificaEccezione += createDocwayFilesForInteropPAMessage(segnaturaDocument, parsedMessage, doc);		
+		
+		//motivazione -> relevant message
+		if (!motivazioneNotificaEccezione.isEmpty()) {
+			if (conf.isProtocollaSegnatura())
+				motivazioneNotificaEccezione = SEGNATURA_MESSAGE_AS_BOZZA + motivazioneNotificaEccezione;
+			else
+				motivazioneNotificaEccezione = SEGNATURA_PARSE_ERROR + motivazioneNotificaEccezione;
+
+			dcwParsedMessage.addRelevantMessage(motivazioneNotificaEccezione);
+			dcwParsedMessage.setMotivazioneNotificaEccezioneToSend(motivazioneNotificaEccezione);
+		}
 		
 		//parsedMessage.relevantMessages -> postit
 		for (String relevantMessage:parsedMessage.getRelevantMssages()) {
@@ -487,15 +567,12 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			doc.addPostit(postit);
 		}		
 		
-//TODO - gestire la logice dei controlli in ingresso e dell'invio della notifica di eccezione nel caso che le cose non funzionino (DTD e quantaltro)
-//TODO - in caso di problemi gravi non si protocolla il documento ma si crea la bozza
-//TODO - ricordarsi che la notifica di eccezione potrebbe non avere i dati di itentificatore ma solo quelli del messaggio originale	
-//in caso di errore popolare i relevantMessages	
-		
 		return doc;
 	}	
 
-	private void createDocwayFilesForInteropPAMessage(Document segnaturaDocument, ParsedMessage parsedMessage, DocwayDocument doc) throws Exception {
+	private String createDocwayFilesForInteropPAMessage(Document segnaturaDocument, ParsedMessage parsedMessage, DocwayDocument doc) throws Exception {
+		String motivazioneNotificaEccezione = "";
+		
 		//get rif esterno
 		RifEsterno rifEsterno = doc.getRifEsterni().get(0);
 		
@@ -510,15 +587,15 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		interopItem.setContentProvider(new PartContentProvider(attachment));
 		rifEsterno.addInteroperabilitaItem(interopItem);		
 		
-		//Doc principale
-		addFileFromSegnatura((Element)segnaturaDocument.selectSingleNode("/Segnatura/Descrizione/Documento"), doc, parsedMessage, false);
+		//doc principale
+		motivazioneNotificaEccezione += addFileFromSegnatura((Element)segnaturaDocument.selectSingleNode("/Segnatura/Descrizione/Documento"), doc, parsedMessage, false);
 		
 		//allegati
 		@SuppressWarnings("unchecked")
 		List<Element> documentoElL = segnaturaDocument.selectNodes("/Segnatura/Descrizione/Allegati/Documento");
 		if (documentoElL != null) {
 			for (Element documentoEl:documentoElL)
-				addFileFromSegnatura(documentoEl, doc, parsedMessage, true);
+				motivazioneNotificaEccezione += addFileFromSegnatura(documentoEl, doc, parsedMessage, true);
 		}
 
 		//EML
@@ -534,9 +611,11 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//allegato - default
 		if (doc.getAllegato().isEmpty())
 			doc.addAllegato(DEFAULT_ALLEGATO);
+		
+		return motivazioneNotificaEccezione;
 	}	
 	
-	private void addFileFromSegnatura(Element documentoEl, DocwayDocument doc, ParsedMessage parsedMessage, boolean addAllegato) throws Exception {
+	private String addFileFromSegnatura(Element documentoEl, DocwayDocument doc, ParsedMessage parsedMessage, boolean addAllegato) throws Exception {
 		if (documentoEl != null && !documentoEl.attributeValue("nome", "").isEmpty()) {
 			Part attachment = MessageUtils.getAttachmentPartByName(parsedMessage.getMessage(), documentoEl.attributeValue("nome"));
 			if (attachment != null) {
@@ -549,11 +628,13 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 					doc.addFile(file);
 				
 				if (addAllegato)
-					doc.addAllegato(file.getName());				
+					doc.addAllegato(file.getName());	
+				return "";
 			}
 			else if (documentoEl.attributeValue("TipoRiferimento", "").equals("MIME"))
-				parsedMessage.addRelevantMessage(String.format(FILE_NOT_FOUND_IN_SEGNATURA, documentoEl.attributeValue("nome")));
-		}		
+				return String.format(FILE_NOT_FOUND_IN_SEGNATURA, documentoEl.attributeValue("nome"));
+		}	
+		return "";
 	}
 	
 	protected void sendConfermaRicezioneInteropPAMessage(ParsedMessage parsedMessage, DocwayDocument doc, String codRegistro, String numProt, String dataProt, String subject) throws Exception {
@@ -561,9 +642,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();
 		
-		//ConfermaRicezione/Identificatore
 		Element confermaRicezioneEl = DocumentHelper.createElement("ConfermaRicezione");
-		Document confermaRicezioneDoc = DocumentHelper.createDocument(confermaRicezioneEl);
+		Document confermaRicezioneDoc = DocumentHelper.createDocument(confermaRicezioneEl);		
+		
+		//ConfermaRicezione/Identificatore
 		confermaRicezioneEl.add(createIdentificatoreEl(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA(), codRegistro, numProt, dataProt));
 	
 		//ConfermaRicezione/MessaggioRicevuto/Identificatore
@@ -574,7 +656,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//send interopPA email - Conferma.xml
 		RifEsterno rifEsterno = doc.getRifEsterni().get(0);
-		MimeBodyPart part = MailClientHelper.createMimeBodyPart(Utils.dom4jdocumentToString(confermaRicezioneDoc, "UTF-8", false).getBytes("UTF-8"), "text/xml", "Conferma.xml", false);
+		MimeBodyPart part = MailClientHelper.createMimeBodyPart(Utils.dom4jdocumentToString(confermaRicezioneDoc, "UTF-8", false).getBytes("UTF-8"), "application/xml", "Conferma.xml", false);
 		MimeBodyPart []mimeBodyParts = {part};
         mailSender.sendMail(conf.getSmtpEmail(), "", rifEsterno.getEmailCertificata(), null, "Conferma Ricezione: " + subject, mimeBodyParts);
 
@@ -620,6 +702,46 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		idEl.add(dataProtEl);		
 		
 		return idEl;
+	}
+	
+	protected void sendNotificaEccezioneInteropPAMessage(ParsedMessage parsedMessage, DocwayDocument doc, String codRegistro, String numProt, String dataProt, String subject, String motivazioneNotificaEccezione) throws Exception {
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
+		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();		
+		
+		Element notificaEccezioneEl = DocumentHelper.createElement("NotificaEccezione");
+		Document eccezioneDoc = DocumentHelper.createDocument(notificaEccezioneEl);		
+		
+		//NotificaEccezione/Identificatore
+		if (numProt != null)
+			notificaEccezioneEl.add(createIdentificatoreEl(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA(), codRegistro, numProt, dataProt));
+	
+		//NotificaEccezione/MessaggioRicevuto/Identificatore
+		Element messaggioRicevutoEl = DocumentHelper.createElement("MessaggioRicevuto");
+		notificaEccezioneEl.add(messaggioRicevutoEl);	
+		Element idEl = (Element)segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore");
+		messaggioRicevutoEl.add(createIdentificatoreEl(idEl.elementText("CodiceAmministrazione"), idEl.elementText("CodiceAOO"), idEl.elementText("CodiceRegistro"), idEl.elementText("NumeroRegistrazione"), idEl.elementText("DataRegistrazione")));
+		
+		//NotificaEccezione/Motivo
+		Element motivoEl = DocumentHelper.createElement("Motivo");
+		motivoEl.setText(motivazioneNotificaEccezione);
+		notificaEccezioneEl.add(motivoEl);
+		
+		//send interopPA email - Eccezione.xml
+		RifEsterno rifEsterno = doc.getRifEsterni().get(0);
+		MimeBodyPart part = MailClientHelper.createMimeBodyPart(Utils.dom4jdocumentToString(eccezioneDoc, "UTF-8", false).getBytes("UTF-8"), "application/xml", "Eccezione.xml", false);
+		MimeBodyPart []mimeBodyParts = {part};
+        mailSender.sendMail(conf.getSmtpEmail(), "", rifEsterno.getEmailCertificata(), null, "Notifica Eccezione: " + subject, mimeBodyParts);
+
+        //add Eccezione.xml attachment to rif esterno
+		InteroperabilitaItem interopItem = new InteroperabilitaItem();
+		interopItem.setName("Eccezione.xml");
+		interopItem.setData(currentDate);
+		interopItem.setOra(currentDate);
+		interopItem.setInfo("Invio Notifica Eccezione (Eccezione.xml)");
+		interopItem.setMessageId("");
+		interopItem.setContentProvider(new PartContentProvider(part));
+		rifEsterno.addInteroperabilitaItem(interopItem);
 	}
 	
 }

@@ -34,6 +34,8 @@ public class DocwayParsedMessage extends ParsedMessage {
 	
 	private Document interopPaDocument;
 	
+	private String motivazioneNotificaEccezioneToSend;
+	
 	private final static String INTEROP_PA_FAILED_BASE_MESSAGE = "Il messaggio è stato archiviato come documento ordinario: ";
 	private final static String MORE_INTEROP_PA_XML_FILE_FOUND_MESSAGE = INTEROP_PA_FAILED_BASE_MESSAGE + "sono stati individuati (%s) file %s";
 	private final static String INTEROP_PA_XML_FILE_PARSING_ERROR_MESSAGE = INTEROP_PA_FAILED_BASE_MESSAGE + "si è verificato un errore durante il parsing di %s";
@@ -54,6 +56,14 @@ public class DocwayParsedMessage extends ParsedMessage {
 		this.interopPaDocument = interopPaDocument;
 	}
 
+	public String getMotivazioneNotificaEccezioneToSend() {
+		return motivazioneNotificaEccezioneToSend;
+	}
+
+	public void setMotivazioneNotificaEccezioneToSend(String motivazioneNotificaEccezioneToSend) {
+		this.motivazioneNotificaEccezioneToSend = motivazioneNotificaEccezioneToSend;
+	}
+
 	public boolean isPecReceiptForInteropPAbySubject() throws Exception {
 		if (isPecReceipt()) {
 			String originalSubject = super.getSubjectFromDatiCertPec();
@@ -64,7 +74,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 				Matcher matcher = pattern.matcher(originalSubject);
 				if (matcher.matches())
 					return true;
-				Pattern.compile("\\d{5,10}\\((\\*|\\d{1,5})\\)"); //nrecord(rif_est_index)
+				pattern = Pattern.compile("\\d{5,10}\\((\\*|\\d{1,5})\\)"); //nrecord(rif_est_index)
 				matcher = pattern.matcher(originalSubject);				
 				return matcher.matches();
 			}
@@ -83,9 +93,9 @@ public class DocwayParsedMessage extends ParsedMessage {
 		if (subject.startsWith("Conferma Ricezione: "))
 			subject = subject.substring(20);
 		else if (subject.startsWith("Annullamento Protocollazione: "))
-			subject = subject.substring(30);		
-		else if (subject.startsWith("Notifica eccezione: "))
-			subject = subject.substring(20);		
+			subject = subject.substring(30);
+		else if (subject.startsWith("Notifica Eccezione: "))
+			subject = subject.substring(20);
 		return subject;
 	}
 	
@@ -153,7 +163,8 @@ public class DocwayParsedMessage extends ParsedMessage {
 		catch (Exception e) {
 			document = null;
 		}
-		interopPaDocument = document;
+		if (document != null)
+			interopPaDocument = document;
 		return document; 
 	}	
 	
@@ -264,8 +275,9 @@ public class DocwayParsedMessage extends ParsedMessage {
 			Element identificatoreEl = el.element("Identificatore");
 			if (identificatoreEl == null) {
 				identificatoreEl = el.element("MessaggioRicevuto").element("Identificatore");
-				query = "[/doc/rif_esterni/rif/@n_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") +
-						identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";
+//per ora disabilitata questa opzione perchè potrebbero esserci più documenti con lo stesso numero prot mittente -> si preferisce utilizzare il subject
+//				query = "[/doc/rif_esterni/rif/@n_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") +
+//						identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";
 			}
 			else {
 				query = "[/doc/@num_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + codAmm + codAoo + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\"";

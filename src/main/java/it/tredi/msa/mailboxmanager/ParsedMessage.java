@@ -211,4 +211,8 @@ public class ParsedMessage {
 		this.relevantMssages.add(message);
 	}
 	
+	public void clearRelevantMessages() {
+		this.relevantMssages.clear();
+	}
+	
 }
