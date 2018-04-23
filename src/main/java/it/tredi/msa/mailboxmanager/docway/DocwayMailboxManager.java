@@ -21,7 +21,9 @@ import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
+import org.dom4j.DocumentType;
 import org.dom4j.Element;
+import org.dom4j.tree.DefaultDocumentType;
 
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
@@ -344,7 +346,17 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		String motivazioneNotificaEccezione = "";
 		
 		//validazione DTD
-//TODO - fare validazione DTD
+/*		
+		String dtdSchemaUrl = "segnatura.dtd";
+	    DocumentType docType = segnaturaDocument.getDocType();
+	    if (docType != null)
+	        docType.setSystemID(dtdSchemaUrl);
+	    else {
+	        docType = new DefaultDocumentType(segnaturaDocument.getRootElement().getName(), dtdSchemaUrl);
+	        segnaturaDocument.setDocType(docType);
+	    }
+*/
+//TODO
 		
 		//check preliminari
 		
