@@ -12,6 +12,7 @@ import org.springframework.core.env.Environment;
 public class MsaLauncher implements CommandLineRunner {
 	
 	private static final Logger logger = LogManager.getLogger(MsaLauncher.class.getName());
+	private final static String DEFAULT_MSA_PORT = "8381";
 	
 	@Autowired
 	private Environment env;
@@ -56,7 +57,7 @@ public class MsaLauncher implements CommandLineRunner {
 		logSplashMessage();
 			
 		Msa msa = new Msa();
-		msa.run();
+		msa.run(Integer.parseInt(env.getProperty("msa.port", DEFAULT_MSA_PORT)));
 	}
 	
 }
