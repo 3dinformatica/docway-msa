@@ -8,6 +8,11 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	
 	private boolean storeEml = false;
 	
+	public final static String DEFAULT_FTR_PA_SDI_DOMAIN_ADDRESS = "@pec.fatturapa.it";
+	public final static String DEFAULT_FTR_PA_REPERTORIO = "Fattura Passiva";
+	public final static String DEFAULT_FTR_PA_REPERTORIO_COD = "FTRPAP";
+	public final static String DEFAULT_FTR_PA_CLASSIF = "00/00 - Non Classificato";
+	
 	//email address
 	private String email;
 	
@@ -68,6 +73,15 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private boolean protocollaSegnatura;
 	private String mezzoTrasmissioneSegnatura;
 	private String tipologiaSegnatura;
+	
+	//per fattura PA
+	private boolean enableFatturePA;
+	private String sdiDomainAddress;
+	private String repertorioFtrPA;
+	private String repertorioCodFtrPA;
+	private String classifFtrPA;
+	private String voceIndiceFtrPA;
+	private boolean overwriteOggettoFtrPA;
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -416,6 +430,62 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public void setTipologiaSegnatura(String tipologiaSegnatura) {
 		this.tipologiaSegnatura = tipologiaSegnatura;
 	}
+
+	public boolean isEnableFatturePA() {
+		return enableFatturePA;
+	}
+
+	public void setEnableFatturePA(boolean enableFatturePA) {
+		this.enableFatturePA = enableFatturePA;
+	}
+
+	public String getSdiDomainAddress() {
+		return sdiDomainAddress;
+	}
+
+	public void setSdiDomainAddress(String sdiDomainAddress) {
+		this.sdiDomainAddress = sdiDomainAddress;
+	}
+
+	public String getRepertorioFtrPA() {
+		return repertorioFtrPA;
+	}
+
+	public void setRepertorioFtrPA(String repertorioFtrPA) {
+		this.repertorioFtrPA = repertorioFtrPA;
+	}
+
+	public String getRepertorioCodFtrPA() {
+		return repertorioCodFtrPA;
+	}
+
+	public void setRepertorioCodFtrPA(String repertorioCodFtrPA) {
+		this.repertorioCodFtrPA = repertorioCodFtrPA;
+	}
+
+	public String getClassifFtrPA() {
+		return classifFtrPA;
+	}
+
+	public void setClassifFtrPA(String classifFtrPA) {
+		this.classifFtrPA = classifFtrPA;
+	}
+
+	public String getVoceIndiceFtrPA() {
+		return voceIndiceFtrPA;
+	}
+
+	public void setVoceIndiceFtrPA(String voceIndiceFtrPA) {
+		this.voceIndiceFtrPA = voceIndiceFtrPA;
+	}
+
+	public boolean isOverwriteOggettoFtrPA() {
+		return overwriteOggettoFtrPA;
+	}
+
+	public void setOverwriteOggettoFtrPA(boolean overwriteOggettoFtrPA) {
+		this.overwriteOggettoFtrPA = overwriteOggettoFtrPA;
+	}
 	
 	
 	/**
@@ -424,33 +494,16 @@ splitEmail.globalAttachments=daticert.xml,smime.p7s
 splitEmail.allowedExtensions=doc,docx,odt,ott,xls,xlsx,ods,ots,ppt,pptx,odp,otp,rtf,pdf,txt,tiff,tiff,p7m
 splitEmail.enableLinkInterni=false
 
--fcs
+
 
 enableRifiutoPecByAttachments=false
 rifiutoPec.allowedAttachments=
 rifiutoPec.mailRifiuto.testo=
 
-enableFatturePA=false
-sdiDomainAddress=@pec.fatturapa.it
-fatturePA.codRepertorio=FTRPAP
-fatturePA.descrRepertorio=Fattura Passiva
-fatturePA.descrClassificazione=00/00 - Non Classificato
-fatturePA.voceIndice=
-fatturaPA.overwriteOggettoEmail=false
 
-unknownInteropDestiny=import
 useFileNameForAttachments=true
 
-commandEncoding=UTF-8
 
-createOneDocByMessageId=false
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
 	 * 
  	
 <casellaPostaElettronica	 	splitByAttachments = "false" oper = "Archiviatore Email" nome = "Prova" uff_oper = "Protocollo" documentModel = "bozze_arrivo" interop = "no" cod_amm = "3DIN" cod_aoo = "BOL" nrecord = "00001322" cod_aoo_segnatura = "" db = "" cod_amm_segnatura = "" protocollaFattura = "false" >

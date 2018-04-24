@@ -39,7 +39,14 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_INTEROP_PA_PROTOCOLLA_SEGNATURA = "docway4mailboxmanager.interop-pa.protocolla-segnatura.enable";
 	public final static String DOCWAY4MAILBOXMANAGER_INTEROP_PA_MEZZO_TRAMISSIONE_SEGNATURA = "docway4mailboxmanager.interop-pa.mezzo-trasmissione-segnatura";
 	public final static String DOCWAY4MAILBOXMANAGER_INTEROP_PA_TIPOLOGIA_SEGNATURA = "docway4mailboxmanager.interop-pa.tipologia-segnatura";
-
+	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_ENABLE = "docway4mailboxmanager.ftr-pa.enable";
+	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_SDI_DOMAIN_ADDRESS = "docway4mailboxmanager.ftr-pa.sdi-domain-address";
+	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_REPERTORIO = "docway4mailboxmanager.ftr-pa.repertorio";
+	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_REPERTORIO_COD = "docway4mailboxmanager.ftr-pa.repertorio.cod";
+	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_CLASSIF = "docway4mailboxmanager.ftr-pa.classif";
+	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_VOCE_INDICE = "docway4mailboxmanager.ftr-voce-indice";
+	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_OVERWRITE_OGGETTO = "docway4mailboxmanager.overwriteOggettoEmail";
+	
 	private String host;
 	private int port;
 	private String user;
@@ -318,6 +325,13 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setProtocollaSegnatura(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_INTEROP_PA_PROTOCOLLA_SEGNATURA, false));
     	conf.setMezzoTrasmissioneSegnatura(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_INTEROP_PA_MEZZO_TRAMISSIONE_SEGNATURA, ""));
     	conf.setTipologiaSegnatura(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_INTEROP_PA_TIPOLOGIA_SEGNATURA, ""));
+    	conf.setEnableFatturePA(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_ENABLE, false));
+    	conf.setSdiDomainAddress(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_SDI_DOMAIN_ADDRESS, Docway4MailboxConfiguration.DEFAULT_FTR_PA_SDI_DOMAIN_ADDRESS));
+    	conf.setSdiDomainAddress(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_REPERTORIO, Docway4MailboxConfiguration.DEFAULT_FTR_PA_REPERTORIO));
+    	conf.setSdiDomainAddress(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_REPERTORIO_COD, Docway4MailboxConfiguration.DEFAULT_FTR_PA_REPERTORIO_COD));
+    	conf.setSdiDomainAddress(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_CLASSIF, Docway4MailboxConfiguration.DEFAULT_FTR_PA_CLASSIF));
+    	conf.setSdiDomainAddress(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_VOCE_INDICE, ""));
+    	conf.setEnableFatturePA(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_OVERWRITE_OGGETTO, false));
     	
 		return conf;
 	}
