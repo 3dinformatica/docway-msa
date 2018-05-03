@@ -1,5 +1,6 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -13,6 +14,9 @@ public class FatturaPAItem {
 	
 	private List<DatiFatturaContainer> datiFatturaL;
 
+	public FatturaPAItem() {
+		this.datiFatturaL = new ArrayList<>();
+	}
 
 	public String getFileNameFattura() {
 		return fileNameFattura;

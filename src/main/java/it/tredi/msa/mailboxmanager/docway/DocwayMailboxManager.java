@@ -11,6 +11,7 @@ import javax.mail.Part;
 import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
@@ -313,7 +314,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		for (Part attachment:attachments) {
 			file = createDocwayFile();
 			file.setContentProvider(new PartContentProvider(attachment));
-			file.setName(attachment.getFileName());
+			file.setName(MimeUtility.decodeText(attachment.getFileName()));
 			if (isImage(file.getName())) //immagine
 					doc.addImmagine(file);
 			else //file
@@ -655,7 +656,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			if (attachment != null) {
 				DocwayFile file = createDocwayFile();
 				file.setContentProvider(new PartContentProvider(attachment));
-				file.setName(attachment.getFileName());
+				file.setName(MimeUtility.decodeText(attachment.getFileName()));
 				if (isImage(file.getName())) //immagine
 						doc.addImmagine(file);
 				else //file

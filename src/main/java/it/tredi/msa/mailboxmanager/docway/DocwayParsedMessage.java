@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Part;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.cms.CMSProcessableByteArray;
@@ -318,7 +319,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 	
 	private Document getFileInterscambioFatturaPADocument(boolean isNotifica) throws Exception {
 		for (Part attachment:super.getAttachments()) {
-			String fileName = attachment.getFileName();
+			String fileName = MimeUtility.decodeText(attachment.getFileName());
 			if (fileName.toUpperCase().endsWith(".XML") || fileName.toUpperCase().endsWith(".XML.P7M")) {
 				if (isNotifica || (!isNotifica && fileName.replaceAll("[^_]", "").length() == 1)) {
 					String regex = "";

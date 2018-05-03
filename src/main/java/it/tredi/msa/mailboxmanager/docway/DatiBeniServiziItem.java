@@ -1,5 +1,6 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DatiBeniServiziItem {
@@ -7,6 +8,11 @@ public class DatiBeniServiziItem {
 	private List<DatiLineaItem>  linea;
 	private List<DatiRiepilogoItem>  riepilogo;
 	
+	public DatiBeniServiziItem() {
+		this.linea = new ArrayList<>();
+		this.riepilogo = new ArrayList<>();
+	}
+
 	public List<DatiLineaItem> getLinea() {
 		return linea;
 	}
