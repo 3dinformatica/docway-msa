@@ -126,6 +126,22 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				else //messageId not found
 					return StoreType.SAVE_NEW_DOCUMENT_INTEROP_PA;
 			}
+			else if (conf.isEnableFatturePA() && dcwParsedMessage.isFatturaPAMessage(conf.getSdiDomainAddress())) { //messaggio fattura PA
+				String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo]=\"" + conf.getCodAmmAoo() + "\"";
+				int count = xwClient.search(query);
+				if (count > 0) { //messageId found
+					Document xmlDocument = xwClient.loadDocByQueryResult(0);
+					Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
+					if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
+						this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+						return StoreType.UPDATE_PARTIAL_DOCUMENT_FATTURA_PA;
+					}
+					else
+						return StoreType.SKIP_DOCUMENT;
+				}
+				else //messageId not found
+					return StoreType.SAVE_NEW_DOCUMENT_FATTURA_PA;
+			}
 
 		}
 		
@@ -313,6 +329,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				xwFileEl.addAttribute("title", file.getName());
 				if (convert)
 					xwFileEl.addAttribute("convert", "yes");
+				if (file.isFromFatturaPA())
+					xwFileEl.addAttribute("fromFatturaPA", "si");
 				
 				//checkin
 				Element chkinEl = DocumentHelper.createElement("chkin");
@@ -926,6 +944,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		return (new SimpleDateFormat("yyyy")).format(currentDate) + "-" + conf.getCodAmmAoo() + "-.";
 	}
 
+	@Override
+	protected String buildNewNumrepStringForSavingDocument(String repertorioCod) throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		return repertorioCod + "^" + conf.getCodAmmAoo() + "-" + (new SimpleDateFormat("yyyy")).format(currentDate) + ".";
+	}	
+	
 	protected String getOggettoForEmailSubject(String oggetto) {
 		oggetto = oggetto.replaceAll("\n", " ");
 		if (oggetto.length() > 255)

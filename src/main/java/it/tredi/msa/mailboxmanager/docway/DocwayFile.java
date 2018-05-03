@@ -18,6 +18,8 @@ public class DocwayFile {
 	
 	//content
 	private ContentProvider contentProvider;
+	
+	private boolean fromFatturaPA = false;
 
 	public String getId() {
 		return id;
@@ -85,6 +87,14 @@ public class DocwayFile {
 
 	public byte []getContent() throws Exception {
 		return contentProvider.getContent();
+	}
+
+	public boolean isFromFatturaPA() {
+		return fromFatturaPA;
+	}
+
+	public void setFromFatturaPA(boolean fromFatturaPA) {
+		this.fromFatturaPA = fromFatturaPA;
 	}
 	
 }

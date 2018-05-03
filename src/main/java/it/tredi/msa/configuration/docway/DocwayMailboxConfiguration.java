@@ -8,10 +8,10 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	
 	private boolean storeEml = false;
 	
-	public final static String DEFAULT_FTR_PA_SDI_DOMAIN_ADDRESS = "@pec.fatturapa.it";
 	public final static String DEFAULT_FTR_PA_REPERTORIO = "Fattura Passiva";
 	public final static String DEFAULT_FTR_PA_REPERTORIO_COD = "FTRPAP";
 	public final static String DEFAULT_FTR_PA_CLASSIF = "00/00 - Non Classificato";
+	public final static String DEFAULT_FTR_PA_CLASSIF_COD = "00/00";
 	
 	//email address
 	private String email;
@@ -80,8 +80,10 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String repertorioFtrPA;
 	private String repertorioCodFtrPA;
 	private String classifFtrPA;
+	private String classifCodFtrPA;
 	private String voceIndiceFtrPA;
 	private boolean overwriteOggettoFtrPA;
+	private boolean protocollaFattura;
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -471,6 +473,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 		this.classifFtrPA = classifFtrPA;
 	}
 
+	public String getClassifCodFtrPA() {
+		return classifCodFtrPA;
+	}
+
+	public void setClassifCodFtrPA(String classifCodFtrPA) {
+		this.classifCodFtrPA = classifCodFtrPA;
+	}
+
 	public String getVoceIndiceFtrPA() {
 		return voceIndiceFtrPA;
 	}
@@ -486,6 +496,15 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public void setOverwriteOggettoFtrPA(boolean overwriteOggettoFtrPA) {
 		this.overwriteOggettoFtrPA = overwriteOggettoFtrPA;
 	}
+
+	public boolean isProtocollaFattura() {
+		return protocollaFattura;
+	}
+
+	public void setProtocollaFattura(boolean protocollaFattura) {
+		this.protocollaFattura = protocollaFattura;
+	}
+	
 	
 	
 	/**

@@ -1,12 +1,18 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Part;
 
+import org.apache.commons.codec.binary.Base64;
+import org.bouncycastle.cms.CMSProcessableByteArray;
+import org.bouncycastle.cms.CMSSignedData;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -17,6 +23,7 @@ import it.tredi.msa.mailboxmanager.PartContentProvider;
 
 public class DocwayParsedMessage extends ParsedMessage {
 	
+	//interopPA
 	private Document segnaturaInteropPADocument;
 	private boolean segnaturaInteropPADocumentInCache = false;
 	
@@ -43,6 +50,13 @@ public class DocwayParsedMessage extends ParsedMessage {
 	private final static String INTEROP_PA_XML_FILE_COD_AMM_MISMATCH_MESSAGE = INTEROP_PA_FAILED_BASE_MESSAGE + "il Codice Amministrazione individuato nel file %s non corrisponde a quello previsto: %s";
 	private final static String INTEROP_PA_XML_FILE_COD_AOO_MISMATCH_MESSAGE = INTEROP_PA_FAILED_BASE_MESSAGE + "il Codice AOO individuato nel file %s non corrisponde a quello previsto: %s";
 	private final static String SEGNATURA_COD_AMM_AOO_MATCH_MESSAGE = INTEROP_PA_FAILED_BASE_MESSAGE + "il codice Amministrazione e il codice AOO contenuti nel file Segnatura.xml coincidono con quelli dell'archivio corrente.";
+	
+	//fatturaPA
+	private Document fatturaPADocument;
+	private boolean fatturaPADocumentInCache = false;
+
+	private Document notificaFatturaPADocument;
+	private boolean notificaFatturaPADocumentInCache = false;
 	
 	public DocwayParsedMessage(Message message) throws Exception {
 		super(message);
@@ -302,17 +316,105 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return query;
 	}
 	
+	private Document getFileInterscambioFatturaPADocument(boolean isNotifica) throws Exception {
+		for (Part attachment:super.getAttachments()) {
+			String fileName = attachment.getFileName();
+			if (fileName.toUpperCase().endsWith(".XML") || fileName.toUpperCase().endsWith(".XML.P7M")) {
+				if (isNotifica || (!isNotifica && fileName.replaceAll("[^_]", "").length() == 1)) {
+					String regex = "";
+					if (fileName.toUpperCase().startsWith("IT"))
+						regex = "^[a-zA-Z]{2}[a-zA-Z0-9]{11,16}_[a-zA-Z0-9]{1,5}";
+					else
+						regex = "^[a-zA-Z]{2}[a-zA-Z0-9]{2,28}_[a-zA-Z0-9]{1,5}";
+					Pattern pattern = Pattern.compile(regex);
+					Matcher matcher = pattern.matcher(fileName);
+					if (matcher.find()) {
+						byte []b = (new PartContentProvider(attachment)).getContent();
+						
+			            //se base64 -> decode
+			            if (Base64.isBase64(b)) {
+			            	b = Base64.decodeBase64(b);
+			            }
+			            
+			            //se extensionFattura = p7m -> sbustamento
+			            if (fileName.toUpperCase().endsWith(".P7M")) {
+			            	CMSSignedData csd = new CMSSignedData(b);
+			            	CMSProcessableByteArray cpb = (CMSProcessableByteArray)csd.getSignedContent();
+			            	b = (byte[])cpb.getContent();
+			            }
+			            
+			            return DocumentHelper.parseText(new String(b));
+					}						
+				}
+			}
+		}
+		return null;
+	}
+
+	public Document getFatturaPADocument() throws Exception {
+		if (!fatturaPADocumentInCache) {
+			fatturaPADocument = getFileInterscambioFatturaPADocument(false);
+			fatturaPADocumentInCache = true;
+		}
+		return fatturaPADocument;
+	}
+	
+	public boolean isFatturaPAMessage(String sdiDomainAddress) throws Exception {
+		if (isPecMessage()) { // && MessageUtils.isReplyOrForward(message)
+			if (sdiDomainAddress.isEmpty() || super.getMittenteAddressFromDatiCertPec().contains(sdiDomainAddress)) { // controllo su mittente
+				return getFatturaPADocument() != null; 
+			}
+		}
+		return false;
+	}
+	
+	public Document getNotificaFatturaPADocument() throws Exception {
+		if (!notificaFatturaPADocumentInCache) {
+			notificaFatturaPADocument = getFileInterscambioFatturaPADocument(true);
+			notificaFatturaPADocumentInCache = true;
+		}
+		return notificaFatturaPADocument;
+	}	
+	
+	public boolean isNotificaFatturaPAMessage(String sdiDomainAddress) throws Exception {
+		if (isPecMessage()) { // && MessageUtils.isReplyOrForward(message)
+			if (sdiDomainAddress.isEmpty() || super.getMittenteAddressFromDatiCertPec().contains(sdiDomainAddress)) { // controllo su mittente
+				return getNotificaFatturaPADocument() != null; 
+			}
+		}
+		return false;
+	}	
 	
 	
+	
+	
+	
+	
+	public boolean isPecReceiptForFatturaPA() {
+		return false;
+//TODO		
+	}
 	
 	public boolean isPecReceiptForFatturaPAbySubject() {
 		return false;
 //TODO - fare		
 	}
 
-	public boolean isFatturaPAMessage() {
-		return false;
-//TODO - fare		
-	}
+
 	
+	
+	/*
+		file xml o zip o .xml.p7m (DEVE ESSERE COMUNQUE FIRMATO xades o cades)
+	
+	<codice paese> <id soggetto trasmittente> _ <progressivo file>
+	
+	cod paese: SO 3166 1 alpha 2 code;
+	id soggetto trasm: 11-16 nel caso di IT
+						2-28 altrimenti
+	prg file: stringa  alfanumerica  di lunghezza massima di  5 caratteri e con valori ammessi [a-z], [A-Z], [0-9]
+	
+	
+	
+	
+	*/
 }

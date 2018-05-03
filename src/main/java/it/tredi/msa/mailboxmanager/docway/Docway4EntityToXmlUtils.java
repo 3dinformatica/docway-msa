@@ -2,6 +2,7 @@ package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.dom4j.Document;
@@ -145,6 +146,16 @@ public class Docway4EntityToXmlUtils {
 		//postit
 		for (Postit postit: doc.getPostitL())
 			docEl.add(postitToXml(postit));
+		
+		//fatturaPA
+		if (doc.getFatturaPA() != null) {
+			Element extraEl = docEl.element("extra");
+			if (extraEl == null) {
+				extraEl = DocumentHelper.createElement("extra");
+				docEl.add(extraEl);
+			}
+			extraEl.add(fatturaPAToXml(doc.getFatturaPA()));
+		}
 		
 		//storia
 		Element storiaEl = DocumentHelper.createElement("storia");
@@ -319,4 +330,133 @@ public class Docway4EntityToXmlUtils {
 		return interopEl;
 	}
 	
+	public static Element fatturaPAToXml(FatturaPAItem fatturaPA) {
+		Element fatturaPAEl = DocumentHelper.createElement("fatturaPA");
+		
+		fatturaPAEl.addAttribute("fileNameFattura", fatturaPA.getFileNameFattura());
+		fatturaPAEl.addAttribute("extensionFattura", fatturaPA.getExtensionFattura());
+		fatturaPAEl.addAttribute("state", fatturaPA.getState());
+//		fatturaPAEl.addAttribute("sendDate", );
+		fatturaPAEl.addAttribute("versione", fatturaPA.getVersione());
+//TODO - mancanca ancora qualcosa		
+		
+		for (DatiFatturaContainer datiFattura: fatturaPA.getDatiFatturaL())
+			fatturaPAEl.add(datiFatturaContainerToXml(datiFattura));
+
+		return fatturaPAEl;
+	}
+	
+	public static Element datiFatturaContainerToXml(DatiFatturaContainer datiFattura) {
+		Element datiFatturaEl = DocumentHelper.createElement("datiFattura");
+
+		//DatiGenerali
+		Element dgEl = datiFatturaEl.addElement("datiGeneraliDocumento");
+		dgEl.addAttribute("tipoDocumento", datiFattura.getTipoDocumento_dg());
+		dgEl.addAttribute("divisa", datiFattura.getDivisa_dg());
+		dgEl.addAttribute("data", datiFattura.getData_dg());
+		dgEl.addAttribute("numero", datiFattura.getNumero_dg());
+		dgEl.addAttribute("importoTotaleDocumento", datiFattura.getImportoTotaleDocumento_dg());
+		dgEl.addAttribute("arrotondamento", datiFattura.getArrotondamento_dg());
+		dgEl.addAttribute("art73", datiFattura.getArt73_dg());
+		if (datiFattura.getCausale_dg() != null && !datiFattura.getCausale_dg().isEmpty()) {
+			Element causaleEl = DocumentHelper.createElement("causale");
+			causaleEl.addText(datiFattura.getCausale_dg());
+			dgEl.add(causaleEl);			
+		}
+		
+		//DatiOrdineAcquisto
+		for (DatiFatturaPAItem datiOrdineAcquisto: datiFattura.getDatiOrdineAcquisto())
+			datiFatturaEl.add(datiOrdineAcquistoToXml(datiOrdineAcquisto));
+		
+		//DatiContratto
+		for (DatiFatturaPAItem datiContratto: datiFattura.getDatiContratto())
+			datiFatturaEl.add(datiContrattoToXml(datiContratto));
+		
+		//DatiConvenzione
+		for (DatiFatturaPAItem datiConvenzione: datiFattura.getDatiConvenzione())
+			datiFatturaEl.add(datiConvenzioneToXml(datiConvenzione));
+		
+		//DatiRicezione
+		for (DatiFatturaPAItem datiRicezione: datiFattura.getDatiRicezione())
+			datiFatturaEl.add(datiRicezioneToXml(datiRicezione));		
+		
+		//DatiFattureCollegate
+		for (DatiFatturaPAItem datiFattureCollegate: datiFattura.getDatiFattureCollegate())
+			datiFatturaEl.add(datiFattureCollegateToXml(datiFattureCollegate));		
+		
+		//DatiSAL
+		for (String riferimentoFase: datiFattura.getRiferimentoFaseSAL()) {
+			Element datiSALEl = datiFatturaEl.addElement("datiSAL");
+			datiSALEl.addAttribute("riferimentoFase", riferimentoFase);
+		}
+
+		//DatiDDT
+		for (DatiDDTItem datiDDT: datiFattura.getDatiDDT()) {
+			Element datiDDTEl = datiFatturaEl.addElement("datiDDT");
+			datiDDTEl.addAttribute("numeroDDT", datiDDT.getNumero());
+			datiDDTEl.addAttribute("dataDDT", datiDDT.getData());
+		}
+			
+		//DatiBeniServizi
+		Element datiBeniServiziEl = datiFatturaEl.addElement("datiBeniServizi");
+		for (DatiLineaItem datiLinea: datiFattura.getDatiBeniServizi().getLinea()) {
+			Element lineaEl = datiBeniServiziEl.addElement("linea");
+			lineaEl.setText(datiLinea.getDescrizione());
+			lineaEl.addAttribute("prezzoTotale", datiLinea.getPrezzoTotale());
+		}
+		for (DatiRiepilogoItem datiRiepilogo: datiFattura.getDatiBeniServizi().getRiepilogo()) {
+			Element riepilogoEl = datiBeniServiziEl.addElement("riepilogo");
+			riepilogoEl.addAttribute("aliquotaIVA", datiRiepilogo.getAliquotaIVA());
+			riepilogoEl.addAttribute("imponibileImporto", datiRiepilogo.getImponibileImporto());
+			riepilogoEl.addAttribute("imposta", datiRiepilogo.getImposta());
+		}
+			
+		//DatiRegistroFatture
+		Element datiRegistroFattureEl = datiFatturaEl.addElement("datiRegistroFatture");
+		datiRegistroFattureEl.addAttribute("numFattura", datiFattura.getDatiRegistroFatture().getNumeroFattura());
+		datiRegistroFattureEl.addAttribute("dataEmissioneFattura", datiFattura.getDatiRegistroFatture().getDataEmissioneFattura());
+		Element oggettoFornituraEl = datiRegistroFattureEl.addElement("oggettoFornitura");
+		oggettoFornituraEl.addCDATA(datiFattura.getDatiRegistroFatture().getOggettoFornitura());
+		datiRegistroFattureEl.addAttribute("importoTotale", datiFattura.getDatiRegistroFatture().getImportoTotale());
+		if (datiFattura.getDatiRegistroFatture().getDataScadenzaFattura() != null)
+			datiRegistroFattureEl.addAttribute("dataScadenzaFattura", datiFattura.getDatiRegistroFatture().getDataScadenzaFattura());
+		
+		return datiFatturaEl;
+	}
+	
+	public static Element datiOrdineAcquistoToXml(DatiFatturaPAItem datiOrdineAcquisto) {
+		return datiFatturaPAItemToXml("datiOrdineAcquisto", datiOrdineAcquisto);
+	}
+
+	public static Element datiContrattoToXml(DatiFatturaPAItem datiContratto) {
+		return datiFatturaPAItemToXml("datiContratto", datiContratto);
+	}
+
+	public static Element datiConvenzioneToXml(DatiFatturaPAItem datiConvenzione) {
+		return datiFatturaPAItemToXml("datiConvenzione", datiConvenzione);
+	}	
+	
+	public static Element datiRicezioneToXml(DatiFatturaPAItem datiRicezione) {
+		return datiFatturaPAItemToXml("datiRicezione", datiRicezione);
+	}	
+
+	public static Element datiFattureCollegateToXml(DatiFatturaPAItem datiFattureCollegate) {
+		return datiFatturaPAItemToXml("datiFattureCollegate", datiFattureCollegate);
+	}		
+	
+	private static Element datiFatturaPAItemToXml(String elName, DatiFatturaPAItem dati) {
+		Element el = DocumentHelper.createElement(elName);
+		
+		el.addAttribute("riferimentoNumeroLinea", dati.getRiferimentoNumeroLinea());
+		el.addAttribute("idDocumento", dati.getIdDocumento());
+		el.addAttribute("data", dati.getData());
+		el.addAttribute("numItem", dati.getNumItem());
+		el.addAttribute("codiceCommessaConvenzione", dati.getCodiceCommessaConvenzione());
+		el.addAttribute("codiceCUP", dati.getCodiceCUP());
+		el.addAttribute("codiceCIG", dati.getCodiceCIG());
+		
+		return el;
+	}
+	
 }
+		    

@@ -62,6 +62,11 @@
     		<artifactId>dom4j</artifactId>
     		<version>2.0.0</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.bouncycastle</groupId>
+		    <artifactId>bcmail-jdk16</artifactId>
+		    <version>1.46</version>
+		</dependency>		
 		
 	</dependencies>
 	

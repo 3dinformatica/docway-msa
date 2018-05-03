@@ -24,6 +24,7 @@ public class DocwayDocument {
 	private String voceIndice;
 	private String repertorio;
 	private String repertorioCod;
+	private String repertorioNum;
 	private List<StoriaItem> storia;
 	private List<RifEsterno> rifEsterni;
 	private List<RifInterno> rifInterni;
@@ -31,6 +32,9 @@ public class DocwayDocument {
 	private List<DocwayFile> immagini;
 	private List<String> allegato;
 	private List<Postit> postitL;
+	
+	//fatturaPA
+	private FatturaPAItem fatturaPA;
 	
 	public DocwayDocument() {
 		this.storia = new ArrayList<StoriaItem>();
@@ -194,6 +198,14 @@ public class DocwayDocument {
 		this.repertorioCod = repertorioCod;
 	}
 
+	public String getRepertorioNum() {
+		return repertorioNum;
+	}
+
+	public void setRepertorioNum(String repertorioNum) {
+		this.repertorioNum = repertorioNum;
+	}
+
 	public List<StoriaItem> getStoria() {
 		return storia;
 	}
@@ -260,6 +272,10 @@ public class DocwayDocument {
 	public void addFile(DocwayFile file) {
 		files.add(file);
 	}	
+
+	public void addFile(int index, DocwayFile file) {
+		files.add(index, file);
+	}
 	
 	public List<DocwayFile> getImmagini() {
 		return immagini;
@@ -295,6 +311,14 @@ public class DocwayDocument {
 	
 	public void addPostit(Postit postit) {
 		postitL.add(postit);
+	}
+
+	public FatturaPAItem getFatturaPA() {
+		return fatturaPA;
+	}
+
+	public void setFatturaPA(FatturaPAItem fatturaPA) {
+		this.fatturaPA = fatturaPA;
 	}
 	
 }

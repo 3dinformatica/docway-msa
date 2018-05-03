@@ -1,6 +1,7 @@
 package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
@@ -23,6 +25,8 @@ import it.tredi.mail.MailSender;
 import it.tredi.mail.MessageUtils;
 import it.tredi.msa.Utils;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
+import it.tredi.msa.mailboxmanager.ByteArrayContentProvider;
+import it.tredi.msa.mailboxmanager.ContentProvider;
 import it.tredi.msa.mailboxmanager.MailboxManager;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
@@ -54,7 +58,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	    ATTACH_INTEROP_PA_PEC_RECEIPT,
 	    ATTACH_INTEROP_PA_NOTIFICATION,
 	    SAVE_NEW_DOCUMENT_INTEROP_PA,
-	    UPDATE_PARTIAL_DOCUMENT_INTEROP_PA
+	    UPDATE_PARTIAL_DOCUMENT_INTEROP_PA,
+	    SAVE_NEW_DOCUMENT_FATTURA_PA,
+	    UPDATE_PARTIAL_DOCUMENT_FATTURA_PA
 	}
 	
 	protected abstract Object saveNewDocument(DocwayDocument doc, ParsedMessage parsedMessage) throws Exception;
@@ -67,6 +73,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract void attachInteropPAPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception;
 	protected abstract void attachInteropPANotificationToDocument(ParsedMessage parsedMessage) throws Exception;	
 	protected abstract String buildNewNumprotStringForSavingDocument() throws Exception;
+	protected abstract String buildNewNumrepStringForSavingDocument(String repertorioCod) throws Exception;
 	
 	@Override
 	public void init() {
@@ -153,6 +160,24 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		}
 		else if (storeType == StoreType.ATTACH_INTEROP_PA_NOTIFICATION) { //interopPA notification (Aggiornamento.xml, Eccezione.xml, Annullamento.xml, Conferma.xml)
 			attachInteropPANotificationToDocument(parsedMessage);
+		}		
+		else if (storeType == StoreType.SAVE_NEW_DOCUMENT_FATTURA_PA || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT_FATTURA_PA) { //save new fatturaPA document or update existing one
+			//build new Docway document
+			DocwayDocument doc = createDocwayDocumentByFatturaPAMessage(parsedMessage);
+			
+			//save new document
+			Object retObj = null;
+			if (storeType == StoreType.SAVE_NEW_DOCUMENT_FATTURA_PA) //1. doc not found by messageId -> save new document
+				retObj = saveNewDocument(doc, parsedMessage);
+			else if (storeType == StoreType.UPDATE_PARTIAL_DOCUMENT_FATTURA_PA) //2. doc found by messageId flagged as partial (attachments upload not completed) -> update document adding missing attachments
+				retObj = updatePartialDocument(doc);
+
+			//notify emails
+			if (conf.isNotificationEnabled() && (conf.isNotifyRPA() || conf.isNotifyCC())) { //if notification is activated
+				if (logger.isInfoEnabled())
+					logger.info("[" + conf.getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
+				sendNotificationEmails(doc, retObj);
+			}
 		}		
 		else if (storeType == StoreType.SKIP_DOCUMENT) //4. there's nothing to do (maybe previous message deletion/move failed)
 			; 
@@ -752,5 +777,88 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		interopItem.setContentProvider(new PartContentProvider(part));
 		rifEsterno.addInteroperabilitaItem(interopItem);
 	}
+
+	private DocwayDocument createDocwayDocumentByFatturaPAMessage(ParsedMessage  parsedMessage) throws Exception {
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
+		Document fatturaPADocument = dcwParsedMessage.getFatturaPADocument();
+
+		//costruzione standard da document model
+		DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
+		
+		if (doc.getTipo().equals("arrivo")) {
+			doc.setAnno((new SimpleDateFormat("yyyy")).format(currentDate));
+			
+			//repertorio fatturaPA
+			doc.setRepertorio(conf.getRepertorioFtrPA());
+			doc.setRepertorioCod(conf.getRepertorioCodFtrPA());
+			
+			//bozza, num_prot, num_rep
+			if (conf.isProtocollaFattura()) {
+				doc.setRepertorioNum(buildNewNumrepStringForSavingDocument(doc.getRepertorioCod()));
+				if (doc.isBozza()) {
+		    		doc.setBozza(false);
+		    		doc.setDataProt((new SimpleDateFormat("yyyyMMdd")).format(currentDate));
+		    		doc.setNumProt(buildNewNumprotStringForSavingDocument());					
+				}
+			}
+		    
+	    	//classif fatturaPA
+	    	doc.setClassif(conf.getClassifFtrPA());
+	    	doc.setClassifCod(conf.getClassifCodFtrPA());
+	    	
+	    	//voce indice fatturaPA
+	    	if (!conf.getVoceIndiceFtrPA().isEmpty())
+	    		doc.setVoceIndice(conf.getVoceIndiceFtrPA());
+		    
+		    // gestione del mittente del documento:
+		    // Occorre individuare il mittente della fattura, ricercarlo in ACL. Se il mittente e' presente in ACL lo si assegna
+		    // direttamente al documento, in caso contrario, prima lo si inserisce in ACL e successivamento lo si assegna
+		    // al documento.
+//fattura.assegnaMittente(connessione, document, codamm, codaoo, dbacl, xwuser);
+		    
+		    //oggetto
+		    if (conf.isOverwriteOggettoFtrPA() && !FatturaPAUtils.getOggettoFatturaPA(fatturaPADocument, false).isEmpty())
+		    	doc.setOggetto(FatturaPAUtils.getOggettoFatturaPA(fatturaPADocument, false));
+		    
+		    FatturaPAItem fatturaPAItem = new FatturaPAItem();
+		    doc.setFatturaPA(fatturaPAItem);
+
+fatturaPAItem.setExtensionFattura("XML");
+fatturaPAItem.setFileNameFattura("pippo.xml");
+		    
+		    
+/*		    
+		    fatturaPaElement.addAttribute("fileNameFattura", fattura.getFileNameFattura());
+		    fatturaPaElement.addAttribute("extensionFattura", fattura.getExtensionFattura()); */
+			fatturaPAItem.setState(FatturaPAUtils.ATTESA_NOTIFICHE); // stato della fattura / lotto di fatture
+		    
+		    
+		    if (dcwParsedMessage.getSentDate() != null)
+		    	fatturaPAItem.setSendDate(dcwParsedMessage.getSentDate());
+/*		    
+		    if (notifica.getTipoNotifica().equals(NotificheUtils.TIPO_MESSAGGIO_MT) && notifica.getXmldocNotifica() != null) {
+		    	// recupero delle informazioni di servizio del Sistema di Interscambio (SdI)
+		    	notifica.addInformazioniServizioSdI(fatturaPaElement, from, to);
+		    }
+*/		    
+		    fatturaPAItem.setVersione(FatturaPAUtils.getVersioneFatturaPA(fatturaPADocument)); // versione di fatturaPA
+            
+		    // aggancio al documento i dati da estrarre dal file di fattura elettronica
+		    FatturaPAUtils.appendDatiFatturaToDocument(fatturaPADocument, fatturaPAItem);
+		}
+		
+		//aggiunta allegati contenuti nella fattura
+		int index = 0;
+		for (List<Object> fileAttrsL: FatturaPAUtils.getAllegatiFatturaPA(fatturaPADocument)) {
+			DocwayFile file = createDocwayFile();
+			file.setName((String)fileAttrsL.get(0));
+			file.setFromFatturaPA(true);
+			file.setContentProvider((ContentProvider)fileAttrsL.get(1));					
+			doc.addFile(index++, file);			
+		}
+		
+		return doc;
+	}	
 	
 }

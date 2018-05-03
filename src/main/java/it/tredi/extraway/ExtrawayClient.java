@@ -1,13 +1,10 @@
 package it.tredi.extraway;
 
-import java.io.StringWriter;
 import java.sql.SQLException;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
 
 import it.highwaytech.broker.Broker;
 import it.highwaytech.broker.XMLCommand;
