@@ -355,10 +355,10 @@ public class FatturaPAUtils {
 		
 		//el.addAttribute("progrReg", "."); //occorre gestirlo come progressivo oppure puo' essere il num repertorio?
 		Node node = xmlfattura.selectSingleNode("FatturaElettronicaBody/DatiGenerali/DatiGeneraliDocumento/Numero");
-		datiRegistroFattureItem.setNumeroFattura(node.getText() == null? "" : node.getText());
+		datiRegistroFattureItem.setNumeroFattura(node == null? "" : node.getText());
 		
 		node = xmlfattura.selectSingleNode("FatturaElettronicaBody/DatiGenerali/DatiGeneraliDocumento/Data");
-		datiRegistroFattureItem.setDataEmissioneFattura(node.getText() == null? "" : formatDataYYYYMMDD(node.getText(), "yyyyMMdd"));
+		datiRegistroFattureItem.setDataEmissioneFattura(node == null? "" : formatDataYYYYMMDD(node.getText(), "yyyyMMdd"));
 		
 		// mbernardini 03/03/2015 : adeguamento alla ver. 1.1 di fatturePA (modificata la molteplicita' dell'elemento Causale)
 		String oggettoFornitura = extractCausaliFromFattura(xmlfattura);
@@ -509,6 +509,41 @@ public class FatturaPAUtils {
 		
 		return currentDate;
 	}
+	
+	public static void appendDatiFileMetadatiToDocument(Document fileMetadatiDocument, FatturaPAItem fatturaPAItem) {
+		Node node = fileMetadatiDocument.selectSingleNode("//IdentificativoSdI");
+		fatturaPAItem.setIdentificativoSdI(node == null? "" : node.getText());
+		
+		node = fileMetadatiDocument.selectSingleNode("//NomeFile");
+		String nomeFile = (node == null)? "" : node.getText();
+		String fileNameFattura = nomeFile;
+		String extensionFattura = "";
+		int index = nomeFile.indexOf(".");
+		if (index != -1) {
+			fileNameFattura = nomeFile.substring(0, index);
+			extensionFattura = nomeFile.substring(index+1);
+		}
+		fatturaPAItem.setFileNameFattura(fileNameFattura);
+		fatturaPAItem.setExtensionFattura(extensionFattura);
+		
+		node = fileMetadatiDocument.selectSingleNode("//CodiceDestinatario");
+		fatturaPAItem.setCodiceDestinatario(node == null? "" : node.getText());
+
+		node = fileMetadatiDocument.selectSingleNode("//Formato");
+		fatturaPAItem.setFormato(node == null? "" : node.getText());
+
+		node = fileMetadatiDocument.selectSingleNode("//TentativiInvio");
+		fatturaPAItem.setTentativiInvio(node == null? "" : node.getText());		
+
+		node = fileMetadatiDocument.selectSingleNode("//MessageId");
+		fatturaPAItem.setMessageId(node == null? "" : node.getText());
+		
+		node = fileMetadatiDocument.selectSingleNode("//Note");
+		String note = (node == null)? "" : node.getText();
+		if (!note.isEmpty())
+			fatturaPAItem.setNote(note);   
+	}
+	
 	
 	
 	

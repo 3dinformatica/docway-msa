@@ -1,13 +1,10 @@
 package it.tredi.msa.mailboxmanager.docway;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.Message;
-import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeUtility;
 
@@ -55,6 +52,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 	//fatturaPA
 	private Document fatturaPADocument;
 	private boolean fatturaPADocumentInCache = false;
+	private Document fileMetadatiDocument;
 
 	private Document notificaFatturaPADocument;
 	private boolean notificaFatturaPADocumentInCache = false;
@@ -321,7 +319,8 @@ public class DocwayParsedMessage extends ParsedMessage {
 		for (Part attachment:super.getAttachments()) {
 			String fileName = MimeUtility.decodeText(attachment.getFileName());
 			if (fileName.toUpperCase().endsWith(".XML") || fileName.toUpperCase().endsWith(".XML.P7M")) {
-				if (isNotifica || (!isNotifica && fileName.replaceAll("[^_]", "").length() == 1)) {
+				int underscoreOccurrences = fileName.replaceAll("[^_]", "").length();
+				if (isNotifica && underscoreOccurrences > 1 || !isNotifica && underscoreOccurrences == 1) {
 					String regex = "";
 					if (fileName.toUpperCase().startsWith("IT"))
 						regex = "^[a-zA-Z]{2}[a-zA-Z0-9]{11,16}_[a-zA-Z0-9]{1,5}";
@@ -355,9 +354,14 @@ public class DocwayParsedMessage extends ParsedMessage {
 	public Document getFatturaPADocument() throws Exception {
 		if (!fatturaPADocumentInCache) {
 			fatturaPADocument = getFileInterscambioFatturaPADocument(false);
+			fileMetadatiDocument = getFileInterscambioFatturaPADocument(true);
 			fatturaPADocumentInCache = true;
 		}
 		return fatturaPADocument;
+	}
+	
+	public Document getFileMetadatiDocument() throws Exception {
+		return fileMetadatiDocument;
 	}
 	
 	public boolean isFatturaPAMessage(String sdiDomainAddress) throws Exception {

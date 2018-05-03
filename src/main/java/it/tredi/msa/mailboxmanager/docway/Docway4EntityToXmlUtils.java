@@ -336,10 +336,23 @@ public class Docway4EntityToXmlUtils {
 		fatturaPAEl.addAttribute("fileNameFattura", fatturaPA.getFileNameFattura());
 		fatturaPAEl.addAttribute("extensionFattura", fatturaPA.getExtensionFattura());
 		fatturaPAEl.addAttribute("state", fatturaPA.getState());
-//		fatturaPAEl.addAttribute("sendDate", );
+		fatturaPAEl.addAttribute("sendDate", (new SimpleDateFormat("yyyyMMdd")).format(fatturaPA.getSendDate()));
 		fatturaPAEl.addAttribute("versione", fatturaPA.getVersione());
-//TODO - mancanca ancora qualcosa		
-		
+		fatturaPAEl.addAttribute("identificativoSdI", fatturaPA.getIdentificativoSdI());
+		if (fatturaPA.getEmailSdI() != null)
+			fatturaPAEl.addAttribute("emailSdI", fatturaPA.getEmailSdI());
+		if (fatturaPA.getEmailToFattPassiva() != null)
+			fatturaPAEl.addAttribute("emailToFattPassiva", fatturaPA.getEmailToFattPassiva().toLowerCase());
+		fatturaPAEl.addAttribute("codiceDestinatario", fatturaPA.getCodiceDestinatario());
+		fatturaPAEl.addAttribute("formato", fatturaPA.getFormato());
+		fatturaPAEl.addAttribute("tentativiInvio", fatturaPA.getTentativiInvio());
+		fatturaPAEl.addAttribute("messageId", fatturaPA.getMessageId());
+		if (fatturaPA.getNote() != null && !fatturaPA.getNote().isEmpty()) {
+			Element noteEl = fatturaPAEl.addElement("note");
+			noteEl.setText(fatturaPA.getNote());
+		}
+
+		//Dati fattura
 		for (DatiFatturaContainer datiFattura: fatturaPA.getDatiFatturaL())
 			fatturaPAEl.add(datiFatturaContainerToXml(datiFattura));
 

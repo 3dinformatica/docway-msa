@@ -783,6 +783,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document fatturaPADocument = dcwParsedMessage.getFatturaPADocument();
+		Document fileMetadatiDocument = dcwParsedMessage.getFileMetadatiDocument();
 
 		//costruzione standard da document model
 		DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
@@ -824,28 +825,22 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		    
 		    FatturaPAItem fatturaPAItem = new FatturaPAItem();
 		    doc.setFatturaPA(fatturaPAItem);
-
-fatturaPAItem.setExtensionFattura("XML");
-fatturaPAItem.setFileNameFattura("pippo.xml");
-		    
-		    
-/*		    
-		    fatturaPaElement.addAttribute("fileNameFattura", fattura.getFileNameFattura());
-		    fatturaPaElement.addAttribute("extensionFattura", fattura.getExtensionFattura()); */
 			fatturaPAItem.setState(FatturaPAUtils.ATTESA_NOTIFICHE); // stato della fattura / lotto di fatture
-		    
-		    
 		    if (dcwParsedMessage.getSentDate() != null)
 		    	fatturaPAItem.setSendDate(dcwParsedMessage.getSentDate());
-/*		    
-		    if (notifica.getTipoNotifica().equals(NotificheUtils.TIPO_MESSAGGIO_MT) && notifica.getXmldocNotifica() != null) {
-		    	// recupero delle informazioni di servizio del Sistema di Interscambio (SdI)
-		    	notifica.addInformazioniServizioSdI(fatturaPaElement, from, to);
-		    }
-*/		    
 		    fatturaPAItem.setVersione(FatturaPAUtils.getVersioneFatturaPA(fatturaPADocument)); // versione di fatturaPA
+		    
+		    String emailFrom = dcwParsedMessage.getMessageIdFromDatiCertPec();
+//TODO - controllare questo siccome nel vecchio archiviatore veniva preso dalla header Reply-To
+			if (emailFrom != null)
+				fatturaPAItem.setEmailSdI(emailFrom);
+
+			fatturaPAItem.setEmailToFattPassiva(conf.getEmail());
+		    
+		    //aggiungo i dati estratti dal file dei metadati
+		    FatturaPAUtils.appendDatiFileMetadatiToDocument(fileMetadatiDocument, fatturaPAItem);
             
-		    // aggancio al documento i dati da estrarre dal file di fattura elettronica
+		    //aggiungo i dati estratti dal file di fattura elettronica
 		    FatturaPAUtils.appendDatiFatturaToDocument(fatturaPADocument, fatturaPAItem);
 		}
 		
