@@ -21,9 +21,11 @@ import it.tredi.mail.MailSender;
 import it.tredi.msa.Services;
 import it.tredi.msa.configuration.docway.AssegnatarioMailboxConfiguration;
 import it.tredi.msa.configuration.docway.Docway4MailboxConfiguration;
-import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
 import it.tredi.msa.notification.MailNotificationSender;
 
 public class Docway4MailboxManager extends DocwayMailboxManager {
@@ -77,10 +79,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		
 		if (conf.isPec()) { //casella PEC
 			
-			if (dcwParsedMessage.isPecReceipt() || dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio è una ricevuta PEC oppure è una notifica (messaggio di ritorno) di interoperabilità PA
-				String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/interoperabilita/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\")"
-						+ " AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
-//TODO - aggiungere la parte relavita alla fattura PA if (!cleanedMsgId.isEmpty() && document.selectNodes("/doc/extra/fatturaPA/notifica[@messageId='" + cleanedMsgId + "']").size() > 0) { 
+			if (dcwParsedMessage.isPecReceipt() || dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()) ||
+					(conf.isEnableFatturePA() && dcwParsedMessage.isNotificaFatturaPAMessage(conf.getSdiDomainAddress()))) { //messaggio è una ricevuta PEC oppure è una notifica (messaggio di ritorno) di interoperabilità PA oppure è una notifica di fatturaPA
+				String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/interoperabilita/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\""
+						+ " OR [/doc/extra/fatturaPA/notifica/@messageId=\"" + dcwParsedMessage.getMessageId() + "\") AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
 				if (xwClient.search(query) > 0)
 					return StoreType.SKIP_DOCUMENT;
 					
@@ -101,7 +103,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPANotification(conf.getCodAmm(), conf.getCodAoo());
 					storeType = StoreType.ATTACH_INTEROP_PA_NOTIFICATION;
 				}
-
+				else if (dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //notifia di fattura PA
+					query = dcwParsedMessage.buildQueryForDocway4DocumentFromFatturaPANotification();
+					storeType = StoreType.ATTACH_FATTURA_PA_NOTIFICATION;
+//TODO - bisognerebbe fare la ricerca e caricare il doc in caso ce ne siano più di uno per individuare quello giusto (IL CASE CONTA!!!!)
+				}
+				
 				if (query.length() > 0) { //trovato doc a cui allegare file
 					int count = xwClient.search(query);
 					if (count > 0) {
@@ -110,6 +117,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					}
 					else
 						dcwParsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_ATTACHING_FILE, query));
+//TODO - vedere se modificare il codice sopra per sollevare una eccezione nel caso di notifica di fattura PA e trovato 0 più di un doc a cui allegare (attualmente non si fa il check se il numero di risultati è maggiore di uno..e se zero il msg viene archiviato come messaggio standard)
 				}				
 			}
 			else if (dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio di segnatura di interoperabilità PA
@@ -965,7 +973,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	}	
 	
 	private RifEsterno createRifEsternoFatturaPA(String rifElemNameInFatturaPA, ParsedMessage parsedMessage) throws Exception {
-		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document fatturaPADocument = dcwParsedMessage.getFatturaPADocument();		
 		
@@ -1166,5 +1174,145 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		
 		return rif;
 	}
+
+	@Override
+	protected void attachFatturaPANotificationToDocument(ParsedMessage parsedMessage) throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
+		
+		//load and lock existing document
+		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocForAttachingFile, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		
+		try {
+			//upload file
+			byte []fileContent = (new MessageContentProvider(parsedMessage.getMessage(), false)).getContent();
+			String fileId = xwClient.addAttach(dcwParsedMessage.getFileNameNotificaFatturaPA(), fileContent, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+
+			Element fatturaPAEl = (Element)xmlDocument.selectSingleNode("//extra/fatturaPA");
+			NotificaItem notificaItem = new NotificaItem();
+			notificaItem.setName(fileId);
+			notificaItem.setTitle(dcwParsedMessage.getFileNameNotificaFatturaPA());
+			notificaItem.setTipo(dcwParsedMessage.getTipoNotificaFatturaPA());
+			notificaItem.setData(super.currentDate);
+			notificaItem.setOra(super.currentDate);
+			notificaItem.setInfo(FatturaPAUtils.getInfoNotifica(notificaItem.getTipo(), notificaItem.getTitle()));
+
+			Node node = dcwParsedMessage.getNotificaFatturaPADocument().selectSingleNode("//RiferimentoFattura/NumeroFattura");
+			if (node != null)
+				notificaItem.setNumeroFattura(node.getText());
+			
+			node = dcwParsedMessage.getNotificaFatturaPADocument().selectSingleNode("//RiferimentoFattura/AnnoFattura");
+			if (node != null)
+				notificaItem.setAnnoFattura(node.getText());			
+
+			notificaItem.setMessageId(dcwParsedMessage.getMessageId());
+			notificaItem.setEsito(FatturaPAUtils.getEsitoNotifica(dcwParsedMessage.getNotificaFatturaPADocument(), notificaItem.getTipo()));
+			notificaItem.setNote(FatturaPAUtils.getNoteNotifica(dcwParsedMessage.getNotificaFatturaPADocument(), notificaItem.getTipo()));
+			notificaItem.setRiferita("");
+			
+			for (ErroreItem erroreItem: FatturaPAUtils.getListaErroriNotifica(dcwParsedMessage.getNotificaFatturaPADocument(), notificaItem.getTipo()))
+				notificaItem.addErrore(erroreItem);
+
+			// in base al tipo di notifica occorre aggiornare lo stato del documento in termini di fatturaPA
+			// TODO occorre gestire le altre tipologie di notifiche (fatture attive)
+			if (notificaItem.getTipo().equals(FatturaPAUtils.TIPO_MESSAGGIO_DT))
+				fatturaPAEl.addAttribute("state", FatturaPAUtils.TIPO_MESSAGGIO_DT);
+			else if (notificaItem.getTipo().equals(FatturaPAUtils.TIPO_MESSAGGIO_SE) && !fatturaPAEl.attributeValue("state", "").equals(FatturaPAUtils.TIPO_MESSAGGIO_DT))
+				fatturaPAEl.addAttribute("state", FatturaPAUtils.ATTESA_NOTIFICHE);
+			else if (notificaItem.getTipo().equals(FatturaPAUtils.TIPO_MESSAGGIO_NS))
+				fatturaPAEl.addAttribute("state", FatturaPAUtils.ATTESA_INVIO); // occorrera' eseguire un nuovo invio
+			
+			// tentativo di collegamento fra le diverse ricevute sul documento
+			Element elNotifica = getNotificaRiferita(xmlDocument, notificaItem.getTipo(), notificaItem.getNumeroFattura(), notificaItem.getAnnoFattura());
+			if (elNotifica != null)
+				elNotifica.addAttribute("riferita", notificaItem.getTipo());
+				
+			fatturaPAEl.add(Docway4EntityToXmlUtils.notificaItemToXml(notificaItem));
+            
+			xwClient.saveDocument(xmlDocument, this.physDocForAttachingFile);
+			
+            // se si sta analizzando una notifica relativa ad un invio di fatturaPA attiva occorre verificare se in ACL e' gia' registrato
+            // l'indirizzo email del SdI da utilizzare per successive comunicazioni. In caso contrario occorre registrarlo sull'ufficio specificato
+            // come RPA del documento
+			String codUffRpa = "";
+            if (notificaItem.getTipo().equals(FatturaPAUtils.TIPO_MESSAGGIO_RC) || notificaItem.getTipo().equals(FatturaPAUtils.TIPO_MESSAGGIO_NS) || notificaItem.getTipo().equals(FatturaPAUtils.TIPO_MESSAGGIO_MC)) {
+    			Element rpa = (Element) xmlDocument.selectSingleNode("/doc/rif_interni/rif[@diritto = 'RPA']"); // recupero il codice ufficio impostato come RPA
+    			if (rpa != null)
+    				codUffRpa = rpa.attributeValue("cod_uff", "");
+    			String emailFrom = dcwParsedMessage.getMessageIdFromDatiCertPec();
+  //TODO - controllare questo siccome nel vecchio archiviatore veniva preso dalla header Reply-To
+            	updateEmailSdIinACL(codUffRpa, emailFrom);
+            }				
+			
+		}
+		catch (Exception e) {
+			try {
+				xwClient.unlockDocument(this.physDocForAttachingFile);
+			}
+			catch (Exception unlockE) {
+				; //do nothing
+			}
+			throw e;
+		}		
+	}
+	
+	private Element getNotificaRiferita(Document document, String tipoNotificaCorrente, String numeroFattura, String annoFattura) {
+		Element el = null;
+		String tipoNotificaRiferita = FatturaPAUtils.getTipoNotificaRiferita(tipoNotificaCorrente);
+		
+		if (tipoNotificaRiferita != null && tipoNotificaRiferita.length() > 0 
+				&& document != null && tipoNotificaCorrente != null && tipoNotificaCorrente.length() > 0) {
+			
+			// tento di recuperare la notifica alla quale si riferisce la notifica corrente
+			if (numeroFattura != null && numeroFattura.length() > 0 && annoFattura != null && annoFattura.length() > 0)
+				// notifica su specifica fattura
+				el = (Element) document.selectSingleNode("//extra/fatturaPA/notifica[@numeroFattura='" + numeroFattura + "' and @annoFattura='" + annoFattura + "' and @tipo='" + tipoNotificaRiferita + "' and @riferita='']");
+			else
+				// notifica su intero documento (fattura singola o intero lotto di fatture)
+				el = (Element) document.selectSingleNode("//extra/fatturaPA/notifica[@tipo='" + tipoNotificaRiferita + "' and @riferita='']");
+		}
+		return el;
+	}
+	
+	private void updateEmailSdIinACL(String codUff, String emailAddressSdI) throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		if (codUff != null && codUff.length() > 0 && emailAddressSdI != null && emailAddressSdI.length() > 0) {
+			try {
+	            int count = aclClient.search("[/struttura_interna/@cod_uff/]=\"" + codUff + "\"");
+				if (count > 0) {
+					Document document = aclClient.loadDocByQueryResult(0);
+					Node node = document.selectSingleNode("/struttura_interna/fatturaPA/@emailSdI");
+					if (node == null || node.getText().isEmpty()) {
+						if (logger.isInfoEnabled())
+							logger.info("[" + conf.getName() + "] updating SDI email [" + emailAddressSdI + "] for SI [" + codUff + "]");
+						
+						int pD = aclClient.getPhysdocByQueryResult(0);
+						try {
+							document = aclClient.loadAndLockDocument(pD, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+
+							Element fatturaPAEl = document.getRootElement().element("fatturaPA");
+							if (fatturaPAEl == null)
+								fatturaPAEl = document.getRootElement().addElement("fatturaPA");
+							fatturaPAEl.addAttribute("emailSdI", emailAddressSdI);
+							
+							aclClient.saveDocument(document, pD);
+						}
+						catch (Exception e) {
+							logger.error("[" + conf.getName() + "]. Unexpected error updating SDI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
+							try {
+								aclClient.unlockDocument(pD);
+							}
+							catch (Exception e1) {
+								; //do nothing
+							}
+						}						
+					}
+				}
+			}
+			catch (Exception e) {
+				logger.error("[" + conf.getName() + "]. Unexpected error updating SDI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
+			}
+		}
+	}	
 	
 }

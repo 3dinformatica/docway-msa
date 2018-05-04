@@ -2,6 +2,7 @@ package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.dom4j.Document;
@@ -13,7 +14,9 @@ import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiFatturaContainer;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiFatturaPAItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiLineaItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiRiepilogoItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
 
 public class Docway4EntityToXmlUtils {
 
@@ -475,6 +478,47 @@ public class Docway4EntityToXmlUtils {
 		el.addAttribute("codiceCIG", dati.getCodiceCIG());
 		
 		return el;
+	}
+
+	public static Element notificaItemToXml(NotificaItem notificaItem) {
+		Element notificaEl = DocumentHelper.createElement("notifica");
+		
+		notificaEl.addAttribute("name", notificaItem.getName());
+		notificaEl.addAttribute("title", notificaItem.getTitle());
+		notificaEl.addAttribute("tipo", notificaItem.getTipo());
+		notificaEl.addAttribute("data", notificaItem.getData());
+		notificaEl.addAttribute("ora", notificaItem.getOra());
+		notificaEl.addAttribute("info", notificaItem.getInfo());
+
+		if (notificaItem.getNumeroFattura() != null && !notificaItem.getNumeroFattura().isEmpty())
+			notificaEl.addAttribute("numeroFattura", notificaItem.getNumeroFattura());
+		
+		if (notificaItem.getAnnoFattura() != null && !notificaItem.getAnnoFattura().isEmpty())
+			notificaEl.addAttribute("annoFattura", notificaItem.getAnnoFattura());
+		
+		notificaEl.addAttribute("messageId", notificaItem.getMessageId());
+
+		if (notificaItem.getEsito() != null && !notificaItem.getEsito().isEmpty()) {
+			notificaEl.addAttribute("esito", notificaItem.getEsito());
+		}
+		
+		if (notificaItem.getNote() != null && !notificaItem.getNote().isEmpty()) {
+			Element elNote = notificaEl.addElement("note");
+			elNote.addCDATA(notificaItem.getNote());
+		}
+		
+		if (notificaItem.getErrori().size() > 0) {
+			Element elErrori = notificaEl.addElement("errori");
+			for (ErroreItem erroreItem: notificaItem.getErrori()) {
+				Element elErrore = elErrori.addElement("errore");
+				elErrore.addAttribute("codice", erroreItem.getCodice());
+				elErrore.addCDATA(erroreItem.getDescrizione());			
+			}			
+		}
+		
+		notificaEl.addAttribute("riferita", notificaItem.getRiferita());
+		
+		return notificaEl;
 	}
 	
 }

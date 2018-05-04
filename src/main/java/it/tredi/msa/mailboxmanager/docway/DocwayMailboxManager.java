@@ -60,7 +60,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	    SAVE_NEW_DOCUMENT_INTEROP_PA,
 	    UPDATE_PARTIAL_DOCUMENT_INTEROP_PA,
 	    SAVE_NEW_DOCUMENT_FATTURA_PA,
-	    UPDATE_PARTIAL_DOCUMENT_FATTURA_PA
+	    UPDATE_PARTIAL_DOCUMENT_FATTURA_PA,
+	    ATTACH_FATTURA_PA_NOTIFICATION,
 	}
 	
 	protected abstract Object saveNewDocument(DocwayDocument doc, ParsedMessage parsedMessage) throws Exception;
@@ -75,6 +76,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract String buildNewNumprotStringForSavingDocument() throws Exception;
 	protected abstract String buildNewNumrepStringForSavingDocument(String repertorioCod) throws Exception;
 	protected abstract RifEsterno createMittenteFatturaPA(ParsedMessage parsedMessage) throws Exception;
+	protected abstract void attachFatturaPANotificationToDocument(ParsedMessage parsedMessage) throws Exception;
 	
 	@Override
 	public void init() {
@@ -161,7 +163,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		}
 		else if (storeType == StoreType.ATTACH_INTEROP_PA_NOTIFICATION) { //interopPA notification (Aggiornamento.xml, Eccezione.xml, Annullamento.xml, Conferma.xml)
 			attachInteropPANotificationToDocument(parsedMessage);
-		}		
+		}
 		else if (storeType == StoreType.SAVE_NEW_DOCUMENT_FATTURA_PA || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT_FATTURA_PA) { //save new fatturaPA document or update existing one
 			//build new Docway document
 			DocwayDocument doc = createDocwayDocumentByFatturaPAMessage(parsedMessage);
@@ -179,6 +181,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 					logger.info("[" + conf.getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
 				sendNotificationEmails(doc, retObj);
 			}
+		}		
+		else if (storeType == StoreType.ATTACH_FATTURA_PA_NOTIFICATION) { //fatturaPA notification (Scarto, Mancata consegna, Esito committente, Scarto esito committente, Decorrenza dei termini)
+			attachFatturaPANotificationToDocument(parsedMessage);
 		}		
 		else if (storeType == StoreType.SKIP_DOCUMENT) //4. there's nothing to do (maybe previous message deletion/move failed)
 			; 

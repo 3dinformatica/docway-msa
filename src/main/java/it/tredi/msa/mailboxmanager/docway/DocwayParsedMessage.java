@@ -56,6 +56,9 @@ public class DocwayParsedMessage extends ParsedMessage {
 
 	private Document notificaFatturaPADocument;
 	private boolean notificaFatturaPADocumentInCache = false;
+	private String tipoNotificaFatturaPA;
+	private String fileNameNotificaFatturaPA;
+	private String fileNameFatturaRiferita;
 	
 	public DocwayParsedMessage(Message message) throws Exception {
 		super(message);
@@ -321,6 +324,14 @@ public class DocwayParsedMessage extends ParsedMessage {
 			if (fileName.toUpperCase().endsWith(".XML") || fileName.toUpperCase().endsWith(".XML.P7M")) {
 				int underscoreOccurrences = fileName.replaceAll("[^_]", "").length();
 				if (isNotifica && underscoreOccurrences > 1 || !isNotifica && underscoreOccurrences == 1) {
+					
+					if (isNotifica) { //estrazione tipo notifica e nome file fattura riferita
+						fileNameNotificaFatturaPA = fileName;
+						String fileNameParts[] = fileName.split("_"); // es nome file notifica: ITAAABBB99T99X999W_00001_AT_001.xml
+						tipoNotificaFatturaPA = fileNameParts[2];
+						fileNameFatturaRiferita = fileNameParts[0] + "_" + fileNameParts[1];
+					}
+					
 					String regex = "";
 					if (fileName.toUpperCase().startsWith("IT"))
 						regex = "^[a-zA-Z]{2}[a-zA-Z0-9]{11,16}_[a-zA-Z0-9]{1,5}";
@@ -382,16 +393,27 @@ public class DocwayParsedMessage extends ParsedMessage {
 	}	
 	
 	public boolean isNotificaFatturaPAMessage(String sdiDomainAddress) throws Exception {
-		if (isPecMessage()) { // && MessageUtils.isReplyOrForward(message)
-			if (sdiDomainAddress.isEmpty() || super.getMittenteAddressFromDatiCertPec().contains(sdiDomainAddress)) { // controllo su mittente
-				return getNotificaFatturaPADocument() != null; 
-			}
+		if (!isFatturaPAMessage(sdiDomainAddress)) { //check per evitare di essere ingannati dal file dei metadati (di fatto viene riconosciuto come una notifica)
+			if (isPecMessage()) { // && MessageUtils.isReplyOrForward(message)
+				if (sdiDomainAddress.isEmpty() || super.getMittenteAddressFromDatiCertPec().contains(sdiDomainAddress)) { // controllo su mittente
+					return getNotificaFatturaPADocument() != null; 
+				}
+			}			
 		}
 		return false;
 	}	
 	
+	public String buildQueryForDocway4DocumentFromFatturaPANotification() throws Exception {
+		return "([/doc/extra/fatturaPA/@fileNameFattura]=\"" + fileNameFatturaRiferita + "\")";
+	}
 	
+	public String getFileNameNotificaFatturaPA() {
+		return this.fileNameNotificaFatturaPA;
+	}
 	
+	public String getTipoNotificaFatturaPA() {
+		return this.tipoNotificaFatturaPA;
+	}
 	
 	
 	
@@ -404,22 +426,5 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return false;
 //TODO - fare		
 	}
-
-
 	
-	
-	/*
-		file xml o zip o .xml.p7m (DEVE ESSERE COMUNQUE FIRMATO xades o cades)
-	
-	<codice paese> <id soggetto trasmittente> _ <progressivo file>
-	
-	cod paese: SO 3166 1 alpha 2 code;
-	id soggetto trasm: 11-16 nel caso di IT
-						2-28 altrimenti
-	prg file: stringa  alfanumerica  di lunghezza massima di  5 caratteri e con valori ammessi [a-z], [A-Z], [0-9]
-	
-	
-	
-	
-	*/
 }

@@ -570,4 +570,112 @@ public class FatturaPAUtils {
 		}
 	}
 	
+	public static String getInfoNotifica(String tipoNotifica, String fileNameNotifica) {
+		String info = "";
+		if (tipoNotifica.equals(TIPO_MESSAGGIO_RC))
+			info = "Ricevuta di consegna";
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_NS))
+			info = "Notifica di scarto";
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_MC))
+			info = "Notifica di mancata consegna";
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_NE))
+			info = "Notifica esito cedente / prestatore";
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_MT))
+			info = "File dei metadati";
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_EC))
+			info = "Notifica di esito cessionario / committente";
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_SE))
+			info = "Notifica di scarto esito cessionario / committente";
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_DT))
+			info = "Notifica decorrenza termini";
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_AT))
+			info = "Attestazione di avvenuta trasmissione della fattura con impossibilità  di recapito";
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_SEND))
+			info = "FatturaPA inviata al Sistema di Interscambio";
+		
+		if (!tipoNotifica.equals(TIPO_MESSAGGIO_SEND))
+			info = info + " [" + tipoNotifica + "]";
+		
+		if (fileNameNotifica != null && !fileNameNotifica.equals(""))
+			info = info + " (" + fileNameNotifica + ")";
+		
+		return info;
+	}
+	
+	public static String getEsitoNotifica(Document notificaFatturaPADocument, String tipoNotifica) {
+		Node node = null;
+		if (tipoNotifica.equals(TIPO_MESSAGGIO_EC))
+			node = notificaFatturaPADocument.selectSingleNode("//Esito");
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_SE))
+			node = notificaFatturaPADocument.selectSingleNode("//Scarto");
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_NE))
+			node = notificaFatturaPADocument.selectSingleNode("//EsitoCommittente/Esito");
+		return (node == null)? "" : node.getText();
+	}
+	
+	public static String getNoteNotifica(Document notificaFatturaPADocument, String tipoNotifica) {
+		if (tipoNotifica.equals(TIPO_MESSAGGIO_NS)) {
+			List<?> errori = notificaFatturaPADocument.selectNodes("//ListaErrori/Errore");
+			if (errori != null && errori.size() > 0) {
+				String note = "";
+				for (int i=0; i<errori.size(); i++) {
+					Element errore = (Element) errori.get(i);
+					if (errore != null) {
+						note += "[" + errore.elementText("Codice") + "] " + errore.elementText("Descrizione") + "; ";
+					}
+				}
+				if (note.length() > 0)
+					note = note.substring(0, note.length() - 2);
+				
+				return note;
+			}
+		}
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_NE)) { // eventuale motivazione di rifiuto di una fatturaPA attiva
+			Node node = notificaFatturaPADocument.selectSingleNode("//EsitoCommittente/Descrizione");
+			return (node == null)? "" : node.getText();
+		}
+		else {
+			Node node = notificaFatturaPADocument.selectSingleNode("//Note");
+			return (node == null)? "" : node.getText();			
+		}
+		return "";
+	}	
+
+	public static List<ErroreItem> getListaErroriNotifica(Document notificaFatturaPADocument, String tipoNotifica) {
+		List<ErroreItem> errori = new ArrayList<ErroreItem>();
+		
+		if (tipoNotifica.equals(TIPO_MESSAGGIO_NS)) { // Notifica di scarto
+			List<?> nsErrors = notificaFatturaPADocument.selectNodes("//ListaErrori/Errore");
+			if (nsErrors != null && nsErrors.size() > 0) {
+				for (int i=0; i<nsErrors.size(); i++) {
+					Element nsError = (Element) nsErrors.get(i);
+					if (nsError != null) {
+						String code = nsError.elementText("Codice");
+						String description = nsError.elementText("Descrizione");
+						if (code != null && code.length() > 0) {
+							if (description == null)
+								description = "";
+							ErroreItem erroreItem = new ErroreItem();
+							erroreItem.setCodice(code);
+							erroreItem.setDescrizione(description);
+							errori.add(erroreItem);
+						}
+					}
+				}
+			}
+		}
+		
+		return errori;
+	}	
+
+	public static String getTipoNotificaRiferita(String tipoNotifica) {
+		if (tipoNotifica.equals(TIPO_MESSAGGIO_SE))
+			return TIPO_MESSAGGIO_EC;
+		else if (tipoNotifica.equals(TIPO_MESSAGGIO_NS))
+			return TIPO_MESSAGGIO_SEND;
+		// TODO gestire i casi mancanti
+		
+		return "";
+	}	
+	
 }
