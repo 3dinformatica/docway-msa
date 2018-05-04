@@ -1,4 +1,4 @@
-package it.tredi.msa.mailboxmanager.docway;
+package it.tredi.msa.mailboxmanager.docway.fatturapa;
 
 import java.util.ArrayList;
 import java.util.Date;

@@ -2,12 +2,18 @@ package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiDDTItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiFatturaContainer;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiFatturaPAItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiLineaItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiRiepilogoItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 
 public class Docway4EntityToXmlUtils {
 

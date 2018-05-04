@@ -13,6 +13,7 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.Node;
 
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
@@ -20,6 +21,7 @@ import it.tredi.mail.MailSender;
 import it.tredi.msa.Services;
 import it.tredi.msa.configuration.docway.AssegnatarioMailboxConfiguration;
 import it.tredi.msa.configuration.docway.Docway4MailboxConfiguration;
+import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.notification.MailNotificationSender;
@@ -669,7 +671,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				if (!dest.isEmpty() && !notifiedAddresses.contains(dest)) {
 					try {
 						if (logger.isInfoEnabled())
-							logger.warn("[" + conf.getName() + "] sending notification email [" + dest + "]");
+							logger.info("[" + conf.getName() + "] sending notification email [" + dest + "]");
 						notifiedAddresses.add(dest);
 						mailSender.sendMail(senderAddress, senderPersonal, dest, subject, body);	
 					}
@@ -955,6 +957,214 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		if (oggetto.length() > 255)
 			oggetto = oggetto.substring(0, 255);
 		return oggetto;
+	}
+
+	@Override
+	protected RifEsterno createMittenteFatturaPA(ParsedMessage parsedMessage) throws Exception {
+		return createRifEsternoFatturaPA("CedentePrestatore", parsedMessage);
 	}	
+	
+	private RifEsterno createRifEsternoFatturaPA(String rifElemNameInFatturaPA, ParsedMessage parsedMessage) throws Exception {
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
+		Document fatturaPADocument = dcwParsedMessage.getFatturaPADocument();		
+		
+		Node node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/IdFiscaleIVA/IdCodice");
+		String piva = (node == null)? "" : node.getText();
+		node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/CodiceFiscale");
+		String cf = (node == null)? "" : node.getText();
+		
+		boolean found = false;
+		RifEsterno rifEsterno = null;
+		
+		if (!piva.isEmpty()) { // ricerca in anagrafica su campo partita iva
+			int count = aclClient.search("[/struttura_esterna/@partita_iva/]=\"" + piva + "\" AND [/struttura_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\""); 
+			if (count == 1) { // e' stata individuata una struttura esterna con la partita iva indicata
+				if (logger.isInfoEnabled())
+					logger.info("[" + conf.getName() + "] found rif esterno in ACL. Piva [" + piva + "]");
+				
+				found = true;
+				rifEsterno = getRifEsternoFromAcl(aclClient.loadDocByQueryResult(0));
+			}
+		}
+		if (!found && !cf.isEmpty()) { // ricerca in anagrafica su campo codice fiscale
+			int count = aclClient.search("([/struttura_esterna/@codice_fiscale/]=\"" + cf + "\" AND [/struttura_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo()+ "\") OR ([/persona_esterna/@codice_fiscale/]=\"" + cf + "\" AND [/persona_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\")");
+			if (count == 1) { // e' stata individuata una struttura esterna con la partita iva indicata
+				if (logger.isInfoEnabled())
+					logger.info("[" + conf.getName() + "] found rif esterno in ACL. CF [" + cf + "]");
+				
+				found = true;
+				rifEsterno = getRifEsternoFromAcl(aclClient.loadDocByQueryResult(0));
+			}
+		}
+		
+		if (!found) { // inserimento nuova struttura/persona esterna: almento uno fra denominazione e nome/cognome deve essere valorizzato
+			Document aclDocument = DocumentHelper.createDocument();
+			
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/Anagrafica/Denominazione");
+			String denominazione = (node == null)? "" : node.getText();
+			String rootElementName = (!denominazione.isEmpty())? "struttura_esterna" : "persona_esterna"; 
+			
+			Element root = aclDocument.addElement(rootElementName);
+			root.addAttribute("nrecord", ".");
+			root.addAttribute("cod_amm", conf.getCodAmm());
+			root.addAttribute("cod_aoo", conf.getCodAoo());
+			
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/Indirizzo");
+			String indirizzo = (node == null)? "" : node.getText();
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/NumeroCivico");
+			if (node != null && !node.getText().isEmpty())
+				indirizzo += " " + node.getText();
+			
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/CAP");
+			String cap = (node == null)? "" : node.getText();
+			
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/Comune");
+			String comune = (node == null)? "" : node.getText();
+			
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/Provincia");
+			String provincia = (node == null)? "" : node.getText();
+			
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/Nazione");
+			String nazione = (node == null)? "" : node.getText();
+			
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Contatti/Email");
+			String email = (node == null)? "" : node.getText();
+			
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Contatti/Fax");
+			String fax = (node == null)? "" : node.getText();
+			
+			if (rootElementName.equals("struttura_esterna")) { //struttura esterna
+				root.addAttribute("cod_uff", ".");
+				
+				Element nomeEl = root.addElement("nome");
+				nomeEl.addText(denominazione);
+				
+				if (logger.isInfoEnabled())
+					logger.info("[" + conf.getName() + "] rif esterno NOT found in ACL. Inserting SE [" + denominazione + "]");				
+				
+				root.addAttribute("partita_iva", piva);
+				root.addAttribute("codice_fiscale", cf);
+				
+				// gestione del recapito (sede azienda)
+				Element elindirizzo = root.addElement("indirizzo");
+				elindirizzo.addText(indirizzo);
+				elindirizzo.addAttribute("cap", cap);
+				elindirizzo.addAttribute("comune", comune);
+				elindirizzo.addAttribute("prov", provincia);
+				elindirizzo.addAttribute("nazione", nazione);
+				
+				if (!email.equals("")) {
+					Element elemail = root.addElement("email");
+					elemail.addAttribute("addr", email);
+				}
+				if (!fax.equals("")) {
+					Element eltelefono = root.addElement("telefono");
+					eltelefono.addAttribute("tipo", "fax");
+					eltelefono.addAttribute("num", fax);
+				}
+			}
+			else { //persona esterna
+				root.addAttribute("matricola", ".");
+				
+				node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/Anagrafica/Nome");
+				root.addAttribute("nome", node == null? "" : node.getText());
+				
+				node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/Anagrafica/Cognome");
+				root.addAttribute("cognome", node == null? "" : node.getText());
+				
+				if (logger.isInfoEnabled())
+					logger.info("[" + conf.getName() + "] rif esterno NOT found in ACL. Inserting PE [" + root.attributeValue("cognome") + " " + root.attributeValue("nome") + "]");
+				
+				root.addAttribute("codice_fiscale", cf);
+				
+				// gestione del recapito (recapito attivita')
+				Element recapito = root.addElement("recapito");
+				Element elindirizzo = recapito.addElement("indirizzo");
+				elindirizzo.addText(indirizzo);
+				elindirizzo.addAttribute("cap", cap);
+				elindirizzo.addAttribute("comune", comune);
+				elindirizzo.addAttribute("prov", provincia);
+				elindirizzo.addAttribute("nazione", nazione);
+				
+				if (!email.equals("")) {
+					Element elemail = recapito.addElement("email");
+					elemail.addAttribute("addr", email);
+				}
+				if (!fax.equals("")) {
+					Element eltelefono = recapito.addElement("telefono");
+					eltelefono.addAttribute("tipo", "fax");
+					eltelefono.addAttribute("num", fax);
+				}
+			}
+			
+			//salvataggio nuova struttura/persona esterna
+			int pD = aclClient.saveNewDocument(aclDocument);
+			rifEsterno = getRifEsternoFromAcl(aclClient.loadDocByPhysdoc(pD));
+		}
+		
+		return rifEsterno;
+	}	
+
+	private RifEsterno getRifEsternoFromAcl(Document doc) {
+		RifEsterno rif = new RifEsterno();
+	
+		String pne = doc.getRootElement().getQualifiedName();
+		if (pne.equals("struttura_esterna")) {
+			rif.setNome(((Element) doc.selectSingleNode("struttura_esterna/nome")).getTextTrim());
+			rif.setCod(((Attribute) doc.selectSingleNode("struttura_esterna/@cod_uff")).getValue());
+		}
+		else { // pne = persona_esterna
+			rif.setNome(((Attribute) doc.selectSingleNode("persona_esterna/@cognome")).getValue() + " " + ((Attribute) doc.selectSingleNode("persona_esterna/@nome")).getValue());
+			rif.setCod(((Attribute) doc.selectSingleNode("persona_esterna/@matricola")).getValue());
+		}
+		
+		if (doc.selectSingleNode(pne + "/@partita_iva") != null)
+			rif.setPartitaIva(((Attribute) doc.selectSingleNode(pne + "/@partita_iva")).getValue());
+		if (doc.selectSingleNode(pne + "/@codice_fiscale") != null)
+			rif.setCodiceFiscale(((Attribute) doc.selectSingleNode(pne + "/@codice_fiscale")).getValue());
+		
+		// costruzione dell'indirizzo
+		String elementoRecapito = pne.equals("struttura_esterna") ? "" : "/recapito";
+		String indirizzo = "";
+		if (doc.selectSingleNode(pne + elementoRecapito + "/indirizzo") != null)
+			indirizzo = ((Element) doc.selectSingleNode(pne + elementoRecapito + "/indirizzo")).getTextTrim();
+		if (doc.selectSingleNode(pne + elementoRecapito + "/indirizzo/@cap") != null)
+			indirizzo = indirizzo + " - " + ((Attribute) doc.selectSingleNode(pne + elementoRecapito + "/indirizzo/@cap")).getValue();
+		if (doc.selectSingleNode(pne + elementoRecapito + "/indirizzo/@comune") != null)
+			indirizzo = indirizzo + " " + ((Attribute) doc.selectSingleNode(pne + elementoRecapito + "/indirizzo/@comune")).getValue();
+		if (doc.selectSingleNode(pne + elementoRecapito + "/indirizzo/@prov") != null)
+			indirizzo = indirizzo + " (" + ((Attribute) doc.selectSingleNode(pne + elementoRecapito + "/indirizzo/@prov")).getValue() + ")";
+		if (doc.selectSingleNode(pne + elementoRecapito + "/indirizzo/@nazione") != null)
+			indirizzo = indirizzo + " - " + ((Attribute) doc.selectSingleNode(pne + elementoRecapito + "/indirizzo/@nazione")).getValue();
+		
+		String email = "";
+		@SuppressWarnings("unchecked")
+		List<Attribute> emails = doc.selectNodes(pne + elementoRecapito + "/email/@addr");
+		if (emails != null && emails.size() > 0) {
+			for (int i=0; i<emails.size(); i++) {
+				if (emails.get(i) != null && emails.get(i).getValue() != null && !emails.get(i).getValue().equals(""))
+					email = email + emails.get(i).getValue() + ";";
+			}
+			
+			if (email.length() > 0)
+				email = email.substring(0, email.length()-1); // eliminazione dell'ultimo ;
+		}
+		
+		String fax = "";
+		if (doc.selectSingleNode(pne + elementoRecapito + "/telefono[@tipo = 'fax']") != null)
+			fax = ((Element) doc.selectSingleNode(pne + elementoRecapito + "/telefono[@tipo = 'fax']")).getTextTrim();
+		
+		if (!indirizzo.isEmpty()|| !email.isEmpty() || !fax.isEmpty()) {
+			if (!indirizzo.equals(""))
+				rif.setIndirizzo(indirizzo);
+			if (!email.equals(""))
+				rif.setEmail(email);
+			if (!fax.equals(""))
+				rif.setFax(fax);
+		}
+		
+		return rif;
+	}
 	
 }

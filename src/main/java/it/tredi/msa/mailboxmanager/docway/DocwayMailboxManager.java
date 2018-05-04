@@ -1,7 +1,6 @@
 package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -13,7 +12,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeUtility;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
@@ -26,13 +24,14 @@ import it.tredi.mail.MailSender;
 import it.tredi.mail.MessageUtils;
 import it.tredi.msa.Utils;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
-import it.tredi.msa.mailboxmanager.ByteArrayContentProvider;
 import it.tredi.msa.mailboxmanager.ContentProvider;
 import it.tredi.msa.mailboxmanager.MailboxManager;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
 import it.tredi.msa.mailboxmanager.StringContentProvider;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
 
 public abstract class DocwayMailboxManager extends MailboxManager {
 	
@@ -72,9 +71,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract void sendNotificationEmails(DocwayDocument doc, Object saveDocRetObj);
 	protected abstract StoreType decodeStoreType(ParsedMessage parsedMessage) throws Exception;
 	protected abstract void attachInteropPAPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception;
-	protected abstract void attachInteropPANotificationToDocument(ParsedMessage parsedMessage) throws Exception;	
+	protected abstract void attachInteropPANotificationToDocument(ParsedMessage parsedMessage) throws Exception;
 	protected abstract String buildNewNumprotStringForSavingDocument() throws Exception;
 	protected abstract String buildNewNumrepStringForSavingDocument(String repertorioCod) throws Exception;
+	protected abstract RifEsterno createMittenteFatturaPA(ParsedMessage parsedMessage) throws Exception;
 	
 	@Override
 	public void init() {
@@ -817,7 +817,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		    // Occorre individuare il mittente della fattura, ricercarlo in ACL. Se il mittente e' presente in ACL lo si assegna
 		    // direttamente al documento, in caso contrario, prima lo si inserisce in ACL e successivamento lo si assegna
 		    // al documento.
-//fattura.assegnaMittente(connessione, document, codamm, codaoo, dbacl, xwuser);
+	    	doc.getRifEsterni().clear();
+	    	doc.addRifEsterno(createMittenteFatturaPA(parsedMessage));
 		    
 		    //oggetto
 		    if (conf.isOverwriteOggettoFtrPA() && !FatturaPAUtils.getOggettoFatturaPA(fatturaPADocument, false).isEmpty())

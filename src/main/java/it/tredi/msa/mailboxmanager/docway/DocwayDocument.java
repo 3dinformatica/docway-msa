@@ -3,6 +3,8 @@ package it.tredi.msa.mailboxmanager.docway;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
+
 public class DocwayDocument {
 	
 	private String tipo;
