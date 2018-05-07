@@ -1313,6 +1313,6 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				logger.error("[" + conf.getName() + "]. Unexpected error updating SDI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
 			}
 		}
-	}	
+	}
 	
 }

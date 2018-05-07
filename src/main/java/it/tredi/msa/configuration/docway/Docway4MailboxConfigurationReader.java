@@ -226,6 +226,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	
     	//email
     	conf.setEmail(mailboxInEl.attributeValue("email"));
+    	
+    	//folderName
+    	conf.setFolderName(mailboxInEl.attributeValue("folder", "INBOX"));
     	/* ********************************************************************************* */
     	
     	/* *************************** mailbox-out ***************************************** */

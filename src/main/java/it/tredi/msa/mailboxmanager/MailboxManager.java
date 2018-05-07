@@ -191,7 +191,7 @@ public abstract class MailboxManager implements Runnable {
     	auditMailboxRun.setStatus(AuditMailboxRunStatus.SUCCESS);
     	
 		mailReader.connect();
-		mailReader.openInboxFolder();
+		mailReader.openFolder(configuration.getFolderName());
 		
 		if (configuration.getStoredMessagePolicy() == StoredMessagePolicy.MOVE_TO_FOLDER)
     		mailReader.createFolder(configuration.getStoredMessageFolderName()); //if folder exists this method has no effect

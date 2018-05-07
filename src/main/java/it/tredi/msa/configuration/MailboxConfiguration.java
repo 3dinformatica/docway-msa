@@ -15,6 +15,7 @@ public abstract class MailboxConfiguration {
 	private String password;
 	private int mailserverSocketTimeout = -1;
 	private int mailserverConnectionTimeout = -1;
+	private String folderName;
 	
 	boolean isPec;
 	
@@ -22,6 +23,7 @@ public abstract class MailboxConfiguration {
 	private StoredMessagePolicy storedMessagePolicy = StoredMessagePolicy.DELETE_FROM_FOLDER;
 	private String storedMessageFolderName;
 	
+	private final static String DEFAULT_FOLDER_NAME = "INBOX";
 	private final static String DEFAULT_STORED_MESSAGE_FOLDER_NAME = "MSA_STORED_MESSAGES";
 	
 	public String getName() {
@@ -94,6 +96,14 @@ public abstract class MailboxConfiguration {
 	
 	public void setMailserverConnectionTimeout(int mailserverConnectionTimeout) {
 		this.mailserverConnectionTimeout = mailserverConnectionTimeout;
+	}
+
+	public String getFolderName() {
+		return (folderName == null || folderName.isEmpty())? DEFAULT_FOLDER_NAME : folderName;
+	}
+
+	public void setFolderName(String folderName) {
+		this.folderName = folderName;
 	}
 
 	public int getDelay() {
