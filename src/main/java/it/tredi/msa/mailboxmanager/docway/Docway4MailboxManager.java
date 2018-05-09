@@ -39,8 +39,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	private static final Logger logger = LogManager.getLogger(Docway4MailboxManager.class.getName());
 	
 	private final static String STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE = "Il messaggio è stato archiviato come documento ordinario: ";
-	private final static String DOC_NOT_FOUND_FOR_ATTACHING_FILE = STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE + "non è stato possibile individuare il documento a cui associare ls ricevuta/notifica. \n%s";
+	private final static String DOC_NOT_FOUND_FOR_ATTACHING_FILE = STANDARD_DOCUMENT_STORAGE_BASE_MESSAGE + "non è stato possibile individuare il documento a cui associare la ricevuta/notifica. \n%s";
 	private final static String INVIO_INTEROP_PA_MESSAGE_FAILED = "Non è stato possibile inviare il messaggio di %s di interoperabilità tra PA a causa di un errore: \n%s";
+	private final static String DOC_NOT_FOUND_FOR_ATTACHING_NOTIFICA_PA_FILE = "Non è stato possibile individuare il documento a cui associare la notifica di Fattura PA. \n%s";
 	
 	@Override
     public void openSession() throws Exception {
@@ -103,10 +104,18 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPANotification(conf.getCodAmm(), conf.getCodAoo());
 					storeType = StoreType.ATTACH_INTEROP_PA_NOTIFICATION;
 				}
-				else if (dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //notifia di fattura PA
+				else if (dcwParsedMessage.isNotificaFatturaPAMessage(conf.getSdiDomainAddress())) { //notifia di fattura PA
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromFatturaPANotification();
-					storeType = StoreType.ATTACH_FATTURA_PA_NOTIFICATION;
-//TODO - bisognerebbe fare la ricerca e caricare il doc in caso ce ne siano più di uno per individuare quello giusto (IL CASE CONTA!!!!)
+					int count = xwClient.search(query);
+					for (int i=0; i<count; i++) {
+						Document xmlDocument = xwClient.loadDocByQueryResult(i);
+						Node node = xmlDocument.selectSingleNode("/doc/extra/fatturaPA[@fileNameFattura='" + dcwParsedMessage.getFileNameFatturaRiferita() + "']");
+						if (node != null) {
+							this.physDocForAttachingFile = xwClient.getPhysdocByQueryResult(i);
+							return StoreType.ATTACH_FATTURA_PA_NOTIFICATION;
+						}
+					}
+					throw new Exception(String.format(DOC_NOT_FOUND_FOR_ATTACHING_NOTIFICA_PA_FILE, query));
 				}
 				
 				if (query.length() > 0) { //trovato doc a cui allegare file
@@ -117,7 +126,6 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					}
 					else
 						dcwParsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_ATTACHING_FILE, query));
-//TODO - vedere se modificare il codice sopra per sollevare una eccezione nel caso di notifica di fattura PA e trovato 0 più di un doc a cui allegare (attualmente non si fa il check se il numero di risultati è maggiore di uno..e se zero il msg viene archiviato come messaggio standard)
 				}				
 			}
 			else if (dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio di segnatura di interoperabilità PA
@@ -1239,8 +1247,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
     			Element rpa = (Element) xmlDocument.selectSingleNode("/doc/rif_interni/rif[@diritto = 'RPA']"); // recupero il codice ufficio impostato come RPA
     			if (rpa != null)
     				codUffRpa = rpa.attributeValue("cod_uff", "");
-    			String emailFrom = dcwParsedMessage.getMessageIdFromDatiCertPec();
-  //TODO - controllare questo siccome nel vecchio archiviatore veniva preso dalla header Reply-To
+    			String emailFrom = dcwParsedMessage.getMittenteAddressFromDatiCertPec();
             	updateEmailSdIinACL(codUffRpa, emailFrom);
             }				
 			

@@ -836,8 +836,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		    	fatturaPAItem.setSendDate(dcwParsedMessage.getSentDate());
 		    fatturaPAItem.setVersione(FatturaPAUtils.getVersioneFatturaPA(fatturaPADocument)); // versione di fatturaPA
 		    
-		    String emailFrom = dcwParsedMessage.getMessageIdFromDatiCertPec();
-//TODO - controllare questo siccome nel vecchio archiviatore veniva preso dalla header Reply-To
+		    String emailFrom = dcwParsedMessage.getMittenteAddressFromDatiCertPec();
 			if (emailFrom != null)
 				fatturaPAItem.setEmailSdI(emailFrom);
 

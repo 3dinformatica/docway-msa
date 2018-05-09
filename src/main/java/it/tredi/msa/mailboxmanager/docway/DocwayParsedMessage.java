@@ -415,6 +415,10 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return this.tipoNotificaFatturaPA;
 	}
 	
+	public String getFileNameFatturaRiferita() {
+		return this.fileNameFatturaRiferita;
+	}
+	
 	
 	
 	public boolean isPecReceiptForFatturaPA() {
