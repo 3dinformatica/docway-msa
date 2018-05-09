@@ -83,7 +83,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			if (dcwParsedMessage.isPecReceipt() || dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()) ||
 					(conf.isEnableFatturePA() && dcwParsedMessage.isNotificaFatturaPAMessage(conf.getSdiDomainAddress()))) { //messaggio è una ricevuta PEC oppure è una notifica (messaggio di ritorno) di interoperabilità PA oppure è una notifica di fatturaPA
 				String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/interoperabilita/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\""
-						+ " OR [/doc/extra/fatturaPA/notifica/@messageId=\"" + dcwParsedMessage.getMessageId() + "\") AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
+						+ " OR [/doc/extra/fatturaPA/notifica/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\") AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
 				if (xwClient.search(query) > 0)
 					return StoreType.SKIP_DOCUMENT;
 					
@@ -97,8 +97,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					storeType = StoreType.ATTACH_INTEROP_PA_PEC_RECEIPT;
 				}
 				else if (dcwParsedMessage.isPecReceiptForFatturaPAbySubject()) { //ricevuta PEC di messaggio per la fatturaPA
-					query = "";
-//TODO - realizzare parte delle fatture					
+					query = dcwParsedMessage.buildQueryForDocway4DocumentFromFatturaPASubject();
+					storeType = StoreType.ATTACH_FATTURA_PA_PEC_RECEIPT;
 				}
 				else if (dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //notifia di interoperabilità PA
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPANotification(conf.getCodAmm(), conf.getCodAoo());
@@ -1291,7 +1291,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					Node node = document.selectSingleNode("/struttura_interna/fatturaPA/@emailSdI");
 					if (node == null || node.getText().isEmpty()) {
 						if (logger.isInfoEnabled())
-							logger.info("[" + conf.getName() + "] updating SDI email [" + emailAddressSdI + "] for SI [" + codUff + "]");
+							logger.info("[" + conf.getName() + "] updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]");
 						
 						int pD = aclClient.getPhysdocByQueryResult(0);
 						try {
@@ -1305,7 +1305,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 							aclClient.saveDocument(document, pD);
 						}
 						catch (Exception e) {
-							logger.error("[" + conf.getName() + "]. Unexpected error updating SDI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
+							logger.error("[" + conf.getName() + "]. Unexpected error updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
 							try {
 								aclClient.unlockDocument(pD);
 							}
@@ -1317,9 +1317,83 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				}
 			}
 			catch (Exception e) {
-				logger.error("[" + conf.getName() + "]. Unexpected error updating SDI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
+				logger.error("[" + conf.getName() + "]. Unexpected error updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
 			}
 		}
+	}
+
+	@Override
+	protected void attachFatturaPAPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception {
+		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		
+		String subject = parsedMessage.getSubject().trim();
+		String receiptTypeBySubject = subject.substring(0, parsedMessage.getSubject().indexOf(":"));
+		receiptTypeBySubject = receiptTypeBySubject.substring(0, 1).toUpperCase() + receiptTypeBySubject.substring(1).toLowerCase(); //capitalize only first letter		
+		
+  		int fatturaPosition = -1;
+		try {
+			String identificazioneFattura = subject.substring(subject.indexOf("(FTRPA-") + 7, subject.indexOf(")") );
+			if (!identificazioneFattura.equals("doc"))
+				fatturaPosition = Integer.parseInt(identificazioneFattura);
+		}
+		catch (NumberFormatException e) {
+			logger.warn("[" + conf.getName() + "]. Unexpected error parsing fatturaPA index number from subject [" + parsedMessage.getSubject() + "]", e);
+		}		
+		
+		//load and lock existing document
+		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocForAttachingFile, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		
+		try {
+			//upload file
+			byte []fileContent = (new MessageContentProvider(parsedMessage.getMessage(), false)).getContent();
+			String fileId = xwClient.addAttach(receiptTypeBySubject + ".eml", fileContent, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+			
+			//identificazione fattura per aggangio ricevuta PEC
+			Element fatturaPAEl = (Element)xmlDocument.selectSingleNode("//extra/fatturaPA");
+        	String numFattura = "";
+        	String annoFattura = "";
+        	if (fatturaPosition > 0) {
+        		try {
+            		List<?> listafatture = fatturaPAEl.elements("datiFattura");
+            		if ((fatturaPosition-1) < listafatture.size()) {
+            			Element datiSingolaFattura = (Element) listafatture.get(fatturaPosition-1);
+            			if (datiSingolaFattura != null) {
+            				numFattura = datiSingolaFattura.element("datiGeneraliDocumento").attributeValue("numero");
+            				String dataFattura = datiSingolaFattura.element("datiGeneraliDocumento").attributeValue("data");
+            				if (dataFattura != null && dataFattura.length() > 0)
+            					annoFattura = dataFattura.substring(0, 4);
+            			}
+            		}
+        		}
+        		catch (Exception e) {
+        			logger.warn("[" + conf.getName() + "]. Unexpected error identifing fatturaPA [index: " + fatturaPosition + "] in document [physodc: " + this.physDocForAttachingFile + "]", e);
+        		}
+        	}			
+			
+			NotificaItem notificaItem = new NotificaItem();
+			notificaItem.setName(fileId);
+			notificaItem.setTitle(receiptTypeBySubject + ".eml");
+			notificaItem.setData(super.currentDate);
+			notificaItem.setOra(super.currentDate);
+			notificaItem.setInfo(receiptTypeBySubject);
+			notificaItem.setMessageId(parsedMessage.getMessageId());
+            if (numFattura != null && numFattura.trim().length() > 0 && annoFattura != null && annoFattura.trim().length() > 0) { //si collega la ricevuta a una specifica fattura
+    			notificaItem.setNumeroFattura(numFattura);
+    			notificaItem.setAnnoFattura(annoFattura);
+    		}
+			fatturaPAEl.add(Docway4EntityToXmlUtils.notificaItemToXml(notificaItem));
+            
+			xwClient.saveDocument(xmlDocument, this.physDocForAttachingFile);
+		}
+		catch (Exception e) {
+			try {
+				xwClient.unlockDocument(this.physDocForAttachingFile);
+			}
+			catch (Exception unlockE) {
+				; //do nothing
+			}
+			throw e;
+		}				
 	}
 	
 }

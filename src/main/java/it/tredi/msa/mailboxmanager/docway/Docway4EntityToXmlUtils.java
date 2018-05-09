@@ -485,7 +485,10 @@ public class Docway4EntityToXmlUtils {
 		
 		notificaEl.addAttribute("name", notificaItem.getName());
 		notificaEl.addAttribute("title", notificaItem.getTitle());
-		notificaEl.addAttribute("tipo", notificaItem.getTipo());
+		
+		if (notificaItem.getTipo() != null)
+			notificaEl.addAttribute("tipo", notificaItem.getTipo());
+		
 		notificaEl.addAttribute("data", notificaItem.getData());
 		notificaEl.addAttribute("ora", notificaItem.getOra());
 		notificaEl.addAttribute("info", notificaItem.getInfo());
@@ -516,7 +519,8 @@ public class Docway4EntityToXmlUtils {
 			}			
 		}
 		
-		notificaEl.addAttribute("riferita", notificaItem.getRiferita());
+		if (notificaItem.getRiferita() != null)
+			notificaEl.addAttribute("riferita", notificaItem.getRiferita());
 		
 		return notificaEl;
 	}

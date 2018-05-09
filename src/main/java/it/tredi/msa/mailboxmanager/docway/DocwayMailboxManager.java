@@ -62,6 +62,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	    SAVE_NEW_DOCUMENT_FATTURA_PA,
 	    UPDATE_PARTIAL_DOCUMENT_FATTURA_PA,
 	    ATTACH_FATTURA_PA_NOTIFICATION,
+	    ATTACH_FATTURA_PA_PEC_RECEIPT,
 	}
 	
 	protected abstract Object saveNewDocument(DocwayDocument doc, ParsedMessage parsedMessage) throws Exception;
@@ -77,6 +78,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract String buildNewNumrepStringForSavingDocument(String repertorioCod) throws Exception;
 	protected abstract RifEsterno createMittenteFatturaPA(ParsedMessage parsedMessage) throws Exception;
 	protected abstract void attachFatturaPANotificationToDocument(ParsedMessage parsedMessage) throws Exception;
+	protected abstract void attachFatturaPAPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception;
 	
 	@Override
 	public void init() {
@@ -184,6 +186,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		}		
 		else if (storeType == StoreType.ATTACH_FATTURA_PA_NOTIFICATION) { //fatturaPA notification (Scarto, Mancata consegna, Esito committente, Scarto esito committente, Decorrenza dei termini)
 			attachFatturaPANotificationToDocument(parsedMessage);
+		}		
+		else if (storeType == StoreType.ATTACH_FATTURA_PA_PEC_RECEIPT) { //PEC receipt for fatturaPA message/notification
+			attachFatturaPAPecReceiptToDocument(parsedMessage);
 		}		
 		else if (storeType == StoreType.SKIP_DOCUMENT) //4. there's nothing to do (maybe previous message deletion/move failed)
 			; 

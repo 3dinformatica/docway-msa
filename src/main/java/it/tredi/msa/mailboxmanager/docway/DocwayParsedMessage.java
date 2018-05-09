@@ -419,16 +419,24 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return this.fileNameFatturaRiferita;
 	}
 	
-	
-	
-	public boolean isPecReceiptForFatturaPA() {
+	public boolean isPecReceiptForFatturaPAbySubject() throws Exception {
+		if (isPecReceipt()) {
+			String originalSubject = super.getSubjectFromDatiCertPec();
+			if (originalSubject.indexOf(" ") != -1) {
+				originalSubject = originalSubject.substring(0, originalSubject.indexOf(" "));
+				Pattern pattern = Pattern.compile("\\d{4}-\\w{7}-\\d{7}\\((FTRPA-doc|FTRPA-\\d{1,5})\\)"); //anno-cod_amm_aoo-num_prot(FTRPA-ftr_index)
+				Matcher matcher = pattern.matcher(originalSubject);
+				return matcher.matches();
+			}
+		}
 		return false;
-//TODO		
 	}
 	
-	public boolean isPecReceiptForFatturaPAbySubject() {
-		return false;
-//TODO - fare		
+	public String buildQueryForDocway4DocumentFromFatturaPASubject() throws Exception {
+		String originalSubject = super.getSubjectFromDatiCertPec();
+		String numero = originalSubject.substring(0, originalSubject.indexOf("("));
+		return "[/doc/@num_prot]=\"" + numero + "\"";
 	}
 	
 }
+
