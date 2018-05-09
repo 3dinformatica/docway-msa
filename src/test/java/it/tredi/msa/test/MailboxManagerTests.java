@@ -14,6 +14,7 @@ public class MailboxManagerTests {
 	
 	private static MailboxManager []mailboxManagers;
 	
+	/*
 	@Test
 	public void test_001_createConfigurationService() throws Exception {
 		Services.getConfigurationService().init();
@@ -29,6 +30,6 @@ public class MailboxManagerTests {
 	public void test_003_runMailboxManagers() throws Exception {
 		mailboxManagers[0].run();
 	}
-	
+	*/
 	
 }
