@@ -45,12 +45,12 @@
 		<dependency>
 			<groupId>it.tredi</groupId>
 			<artifactId>utils</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
+			<version>0.0.3</version>
 		</dependency>
 		<dependency>
   			<groupId>it.tredi</groupId>
   			<artifactId>mail</artifactId>
-  			<version>1.0.1-SNAPSHOT</version>
+  			<version>1.0.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>it.tredi</groupId>
