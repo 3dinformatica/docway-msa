@@ -547,6 +547,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         if (!referente.trim().isEmpty())
         	rifEsterno.setReferenteNominativo(referente.trim());
 
+        /*
 		//classif
         String classif = "";
         el = (Element)segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Classifica/Denominazione");
@@ -556,6 +557,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         	if (classif.indexOf(" ") > 0)
         		doc.setClassifCod(classif.substring(0, classif.indexOf(" ")));
         }
+        */
 		
 		//rif interni
 		List<RifInterno> rifInterni = createRifInterni(parsedMessage);
