@@ -213,7 +213,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setHost(mailboxInEl.attributeValue("host"));
     	
     	//port
-    	conf.setPort(Integer.parseInt(mailboxInEl.attributeValue("port", "-1")));
+    	String port = mailboxInEl.attributeValue("port", "-1");
+    	conf.setPort(Integer.parseInt(port.isEmpty()?"-1":port)); 
     	
     	//user
     	conf.setUser(mailboxInEl.attributeValue("login"));
@@ -233,12 +234,13 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	
     	/* *************************** mailbox-out ***************************************** */
     	Element mailboxOutEl = casellaEl.element("mailbox_out");
-    	if (mailboxOutEl != null) {
+    	if (mailboxOutEl != null && !mailboxOutEl.attributeValue("host", "").isEmpty()) {
         	//host
         	conf.setSmtpHost(mailboxOutEl.attributeValue("host"));
         	
         	//port
-        	conf.setSmtpPort(Integer.parseInt(mailboxOutEl.attributeValue("port", "-1")));
+        	port = mailboxOutEl.attributeValue("port", "-1");
+        	conf.setSmtpPort(Integer.parseInt(port.isEmpty()?"-1":port));
         	
         	//user
         	conf.setSmtpUser(mailboxOutEl.attributeValue("login"));
@@ -298,12 +300,14 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	
     	//assegnatari cc
     	List<AssegnatarioMailboxConfiguration> ccS = new ArrayList<AssegnatarioMailboxConfiguration>();
-    	@SuppressWarnings("unchecked")
-		List<Element> ccElsL = casellaEl.element("assegnazione_cc").elements("assegnatario");
-    	for (Element ccEl:ccElsL) {
-    		AssegnatarioMailboxConfiguration cc = createAssegnatarioByConfig("CC", ccEl);
-    		if (!cc.getCodPersona().isEmpty() || !cc.getCodUff().isEmpty() || !cc.getCodRuolo().isEmpty()) //purtroppo nell'xml se non ci sono CC compare un assegnatario vuoto
-    			ccS.add(cc);
+    	if (casellaEl.element("assegnazione_cc") != null) {
+        	@SuppressWarnings("unchecked")
+    		List<Element> ccElsL = casellaEl.element("assegnazione_cc").elements("assegnatario");
+        	for (Element ccEl:ccElsL) {
+        		AssegnatarioMailboxConfiguration cc = createAssegnatarioByConfig("CC", ccEl);
+        		if (!cc.getCodPersona().isEmpty() || !cc.getCodUff().isEmpty() || !cc.getCodRuolo().isEmpty()) //purtroppo nell'xml se non ci sono CC compare un assegnatario vuoto
+        			ccS.add(cc);
+        	}
     	}
     	conf.setAssegnatariCC(ccS);
     	
@@ -362,7 +366,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		conf.setTipoDoc(tipoDoc);
 		
 		//bozza
-		String bozzaS = ((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@bozza']")).attributeValue("value");
+		Element itemEl = (Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@bozza']");
+		String bozzaS =  (itemEl == null)? "no" : itemEl.attributeValue("value", "no");
 		conf.setBozza(bozzaS.equalsIgnoreCase("si"));
 
 		//data prot
@@ -372,7 +377,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		conf.setCurrentYear(((Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@anno']")).attributeValue("value").equals("getYear()")? true : false);
 		
 		//tipologia
-		Element itemEl = (Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/tipologia/@cod']");
+		itemEl = (Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/tipologia/@cod']");
 		if (itemEl != null)
 			conf.setTipologia(itemEl.attributeValue("value"));
 		
