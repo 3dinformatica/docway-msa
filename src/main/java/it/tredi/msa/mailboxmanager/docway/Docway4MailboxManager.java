@@ -126,7 +126,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					}
 					else
 						dcwParsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_ATTACHING_FILE, query));
-				}				
+				}
+				else if (dcwParsedMessage.isPecReceipt() && conf.isIgnoreStandardOrphanPecReceipts()) { //ricevuta PEC (non relativa a interopPA/fatturaPA) e property attiva per evitare l'archiviazione -> il messaggio viene ignorato e rimane sulla casella di posta
+					return StoreType.IGNORE_MESSAGE;
+				}
 			}
 			else if (dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio di segnatura di interoperabilità PA
 				String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo]=\"" + conf.getCodAmmAoo() + "\"";

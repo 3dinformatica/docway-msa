@@ -85,6 +85,9 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private boolean overwriteOggettoFtrPA;
 	private boolean protocollaFattura;
 	
+	//ricevute PEC orfane
+	private boolean ignoreStandardOrphanPecReceipts;
+	
 	public boolean isStoreEml() {
 		return storeEml;
 	}
@@ -504,7 +507,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public void setProtocollaFattura(boolean protocollaFattura) {
 		this.protocollaFattura = protocollaFattura;
 	}
-	
+
+	public boolean isIgnoreStandardOrphanPecReceipts() {
+		return ignoreStandardOrphanPecReceipts;
+	}
+
+	public void setIgnoreStandardOrphanPecReceipts(boolean ignoreStandardOrphanPecReceipts) {
+		this.ignoreStandardOrphanPecReceipts = ignoreStandardOrphanPecReceipts;
+	}
 	
 	
 	/**

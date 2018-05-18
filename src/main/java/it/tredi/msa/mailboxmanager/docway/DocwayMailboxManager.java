@@ -3,6 +3,8 @@ package it.tredi.msa.mailboxmanager.docway;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.Message;
@@ -22,6 +24,7 @@ import org.dom4j.Element;
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
 import it.tredi.mail.MessageUtils;
+import it.tredi.msa.Services;
 import it.tredi.msa.Utils;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.ContentProvider;
@@ -29,6 +32,7 @@ import it.tredi.msa.mailboxmanager.MailboxManager;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
+import it.tredi.msa.mailboxmanager.StoredMessagePolicy;
 import it.tredi.msa.mailboxmanager.StringContentProvider;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
@@ -37,6 +41,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	protected Date currentDate;
 	protected MailSender mailSender;
+	protected boolean ignoreMessage;
 	
 	protected static final String TESTO_EMAIL_FILENAME = "testo email.txt";
 	protected static final String TESTO_HTML_EMAIL_FILENAME = "testo email.html";
@@ -47,6 +52,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	private final static String SEGNATURA_MESSAGE_AS_BOZZA = "Il documento è stato creato come bozza a causa di errori in fase di importazione del messaggio di interoperabilità Segnatura.xml.\n";
 	private final static String SEGNATURA_PARSE_ERROR = "Si sono verificati degli errori in fase di importazione del messaggio di interoperabilità Segnatura.xml.\n";
 	private final static String SEGNATURA_NULL_EMPTY_FIELD = "Valore campo '%s' nullo o vuoto.\n";
+	private final static String SEGNATURA_FIELD_FORMAT_ERROR = "Valore campo '%s' in formato scorretto: %s\n";
 	
 	private static final Logger logger = LogManager.getLogger(DocwayMailboxManager.class.getName());
 	
@@ -63,6 +69,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	    UPDATE_PARTIAL_DOCUMENT_FATTURA_PA,
 	    ATTACH_FATTURA_PA_NOTIFICATION,
 	    ATTACH_FATTURA_PA_PEC_RECEIPT,
+	    IGNORE_MESSAGE
 	}
 	
 	protected abstract Object saveNewDocument(DocwayDocument doc, ParsedMessage parsedMessage) throws Exception;
@@ -117,6 +124,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		super.storeMessage(parsedMessage);
 		
 		this.currentDate = new Date();
+		this.ignoreMessage = false;
 		
 		StoreType storeType = decodeStoreType(parsedMessage);
 		if (logger.isInfoEnabled())
@@ -191,7 +199,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			attachFatturaPAPecReceiptToDocument(parsedMessage);
 		}		
 		else if (storeType == StoreType.SKIP_DOCUMENT) //4. there's nothing to do (maybe previous message deletion/move failed)
-			; 
+			;
+		else if (storeType == StoreType.IGNORE_MESSAGE) //ignore message without moving/deleting it
+			ignoreMessage = true;
 		else
 			throw new Exception("Unsupported store type: " + storeType);
 	}
@@ -416,6 +426,12 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		String codiceAmministrazione = "[N/D]";
 		try {
 			codiceAmministrazione = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAmministrazione").getText();
+			
+			Pattern pattern = Pattern.compile("([A-Z]|[a-z]|[0-9]|-){1,16}");
+			Matcher matcher = pattern.matcher(codiceAmministrazione);
+			if (!matcher.matches())
+				motivazioneNotificaEccezione += "Valore campo 'CodiceAmministrazione' in formato scorretto: " + codiceAmministrazione + ".\n";
+
 		}
 		catch (Exception e) {
 			motivazioneNotificaEccezione += String.format(SEGNATURA_NULL_EMPTY_FIELD, "CodiceAmministrazione");
@@ -424,16 +440,28 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//CodiceAOO
 		String codiceAOO = "[N/D]";
 		try {
-			codiceAOO = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAOO").getText();	
+			codiceAOO = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAOO").getText();
+			
+			Pattern pattern = Pattern.compile("([A-Z]|[a-z]|[0-9]|-){1,16}");
+			Matcher matcher = pattern.matcher(codiceAOO);
+			if (!matcher.matches())
+				motivazioneNotificaEccezione += "Valore campo 'CodiceAOO' in formato scorretto: " + codiceAOO + ".\n";
+
 		}
 		catch (Exception e) {
 			motivazioneNotificaEccezione += String.format(SEGNATURA_NULL_EMPTY_FIELD, "CodiceAOO");
-		}		
+		}
 
-		//CodiceAOO
+		//NumeroRegistrazione
 		String nProt = "[N/D]";
 		try {
-			nProt = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/NumeroRegistrazione").getText();	
+			nProt = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/NumeroRegistrazione").getText();
+			
+			Pattern pattern = Pattern.compile("[0-9]{7}");
+			Matcher matcher = pattern.matcher(nProt);
+			if (!matcher.matches())
+				motivazioneNotificaEccezione += "Valore campo 'NumeroRegistrazione' in formato scorretto: " + nProt + ".\n";
+			
 		}
 		catch (Exception e) {
 			motivazioneNotificaEccezione += String.format(SEGNATURA_NULL_EMPTY_FIELD, "NumeroRegistrazione");
@@ -447,7 +475,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	        dataProtD = new SimpleDateFormat("yyyy-MM-dd").parse(dataProt);
 		}
 		catch (Exception e) {
-			motivazioneNotificaEccezione += "Valore campo 'DataRegistrazione' in formato scorretto: " + dataProt + ".\n";
+			motivazioneNotificaEccezione += String.format(SEGNATURA_FIELD_FORMAT_ERROR, "DataRegistrazione", dataProt);
 		}
 
 		//create DocwayDocument
@@ -868,5 +896,13 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		return doc;
 	}	
+
+	@Override
+    public void messageStored(ParsedMessage parsedMessage) throws Exception {
+    	if (!ignoreMessage)
+    		super.messageStored(parsedMessage);
+    	else
+    		; //DO NOTHING
+    }
 	
 }

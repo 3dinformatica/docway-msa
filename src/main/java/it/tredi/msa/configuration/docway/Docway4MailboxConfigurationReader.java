@@ -48,6 +48,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_VOCE_INDICE = "docway4mailboxmanager.ftr-pa.voce-indice";
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_OVERWRITE_OGGETTO = "docway4mailboxmanager.ftr-pa.overwrite-oggetto";
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA = "docway4mailboxmanager.ftr-pa.protocolla-fattura.enable";
+	public final static String DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS = "docway4mailboxmanager.pec.ignore-standard-orphan-receipts";
 	
 	private String host;
 	private int port;
@@ -343,6 +344,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setVoceIndiceFtrPA(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_VOCE_INDICE, ""));
     	conf.setOverwriteOggettoFtrPA(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_OVERWRITE_OGGETTO, false));
     	conf.setProtocollaFattura(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA, true));
+    	
+    	conf.setIgnoreStandardOrphanPecReceipts(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS, false));
     	
 		return conf;
 	}
