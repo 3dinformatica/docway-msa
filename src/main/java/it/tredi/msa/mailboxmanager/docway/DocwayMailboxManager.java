@@ -54,6 +54,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	private final static String SEGNATURA_NULL_EMPTY_FIELD = "Valore campo '%s' nullo o vuoto.\n";
 	private final static String SEGNATURA_FIELD_FORMAT_ERROR = "Valore campo '%s' in formato scorretto: %s\n";
 	
+	private final static int MAILSENDER_CONNECTION_ATTEMPTS = 3;
+	
 	private static final Logger logger = LogManager.getLogger(DocwayMailboxManager.class.getName());
 	
 	public enum StoreType {
@@ -90,15 +92,35 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	@Override
 	public void init() {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
-		if (conf.getSmtpHost() != null && !conf.getSmtpHost().isEmpty())
+		if (conf.getSmtpHost() != null && !conf.getSmtpHost().isEmpty()) {
 			mailSender = MailClientHelper.createMailSender(conf.getSmtpHost(), conf.getSmtpPort(), conf.getSmtpUser(), conf.getSmtpPassword(), conf.getSmtpProtocol());
+			mailSender.setSocketTimeout(conf.getSmtpSocketTimeout());
+			mailSender.setConnectionTimeout(conf.getSmtpConnectionTimeout());
+		}
 	}
 	
 	@Override
     public void openSession() throws Exception {
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		super.openSession();
-		if (mailSender != null)
-			mailSender.connect();
+		if (mailSender != null) {
+
+			//n-tentivi di connessione al server smtp
+        	for (int attemptIndex = 1; attemptIndex <= MAILSENDER_CONNECTION_ATTEMPTS; attemptIndex++) {
+            	try {
+            		mailSender.connect();
+            		break;
+            	}
+            	catch (Exception e) {
+            		if (logger.isDebugEnabled())
+            			logger.debug("[" + conf.getName() + "] connection failed: (" + attemptIndex + "/" +MAILSENDER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
+            		if (attemptIndex == MAILSENDER_CONNECTION_ATTEMPTS)
+            			throw e;
+            		Thread.sleep(1000); //1 sec delay
+            	}    		
+        	}			
+			
+		}
     }
 	
 	@Override

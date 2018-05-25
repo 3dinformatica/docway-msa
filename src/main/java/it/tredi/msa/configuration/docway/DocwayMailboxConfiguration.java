@@ -65,7 +65,9 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private int smtpPort;
 	private String smtpProtocol;
 	private String smtpUser;
-	private String smtpPassword;	
+	private String smtpPassword;
+	private int smtpSocketTimeout = -1;
+	private int smtpConnectionTimeout = -1;
 	
 	//per interoperabilità PA
 	private String codAmmInteropPA;
@@ -394,6 +396,22 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setSmtpPassword(String smtpPassword) {
 		this.smtpPassword = smtpPassword;
+	}
+
+	public int getSmtpSocketTimeout() {
+		return smtpSocketTimeout;
+	}
+
+	public void setSmtpSocketTimeout(int smtpSocketTimeout) {
+		this.smtpSocketTimeout = smtpSocketTimeout;
+	}
+
+	public int getSmtpConnectionTimeout() {
+		return smtpConnectionTimeout;
+	}
+
+	public void setSmtpConnectionTimeout(int smtpConnectionTimeout) {
+		this.smtpConnectionTimeout = smtpConnectionTimeout;
 	}
 
 	public String getCodAmmInteropPA() {

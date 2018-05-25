@@ -49,6 +49,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_OVERWRITE_OGGETTO = "docway4mailboxmanager.ftr-pa.overwrite-oggetto";
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA = "docway4mailboxmanager.ftr-pa.protocolla-fattura.enable";
 	public final static String DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS = "docway4mailboxmanager.pec.ignore-standard-orphan-receipts";
+	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_SOCKET_TIMEOUT = "docway4mailboxmanager.mail-sender.socket-timeout";
+	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_CONNECTION_TIMEOUT = "docway4mailboxmanager.mail-sender.connection-timeout";
 	
 	private String host;
 	private int port;
@@ -254,6 +256,11 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
         	
         	//email
         	conf.setSmtpEmail(mailboxOutEl.attributeValue("email"));
+        	
+        	//timeout
+        	PropertiesReader propertiesReader = (PropertiesReader)Services.getConfigurationService().getMSAConfiguration().getRawData();
+        	conf.setSmtpSocketTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_SENDER_SOCKET_TIMEOUT, -1));
+        	conf.setSmtpConnectionTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_SENDER_CONNECTION_TIMEOUT, -1));
     	}
 		/* ******************************************************************************** */
     	

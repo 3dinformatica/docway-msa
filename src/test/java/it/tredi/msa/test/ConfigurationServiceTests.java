@@ -10,12 +10,12 @@ import org.junit.FixMethodOrder;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ConfigurationServiceTests {
 	
-	@Test
+	//@Test
 	public void test_001_createConfigurationService() throws Exception {
 		Services.getConfigurationService().init();
 	}
 	
-	@Test
+	//@Test
 	public void test_002_readMailboxConfigurations() throws Exception {
 		MailboxConfiguration []configurations = Services.getConfigurationService().readMailboxConfigurations();
 	}

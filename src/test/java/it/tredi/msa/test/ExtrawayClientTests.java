@@ -40,26 +40,26 @@ public class ExtrawayClientTests {
 		query = properties.getProperty("extraway.query");
 	}
 	
-	@Test
+	//@Test
 	public void test_001_connect() throws Exception {
 		client = new ExtrawayClient(host, port, db, user, password);
 		client.connect();
 	}
 
-	@Test
+	//@Test
 	public void test_003_search() throws Exception {
 		int count = client.search(query);
 		Assert.assertTrue(count > 0);
 	}
 	
-	@Test
+	//@Test
 	public void test_004_loadDocument() throws Exception {
 		Document document = client.loadDocByQueryResult(0);
 		
 		org.dom4j.Element el = document.getRootElement();
 	}	
 	
-	@Test
+	//@Test
 	public void test_999_disconnect() throws Exception {
 		client.disconnect();
 	}		
