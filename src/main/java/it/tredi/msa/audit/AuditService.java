@@ -63,15 +63,20 @@ public class AuditService {
 	public boolean auditMessageInErrorFound (MailboxConfiguration mailboxConfiguration, ParsedMessage parsedMessage) throws Exception {
 		return auditWriter.auditMessageInErrorFound(mailboxConfiguration, parsedMessage);
 	}
-	
+
 	public void writeAuditMailboxRun(AuditMailboxRun auditMailboxRun) {
+		writeAuditMailboxRun(auditMailboxRun, true);
+	}
+	
+	public void writeAuditMailboxRun(AuditMailboxRun auditMailboxRun, boolean notifyError) {
 		try {
 			logger.info(String.format(WRITE_AUDIT_MAILBOX_RUN_LOG_MESSAGE, auditMailboxRun.getMailboxName(), auditMailboxRun.getStatus()));
 			auditWriter.writeAuditMailboxRun(auditMailboxRun);
 		}
 		catch (Exception e) {
 			logger.error(String.format(WRITE_AUDIT_MAILBOX_RUN_LOG_ERROR_MESSAGE, auditMailboxRun.getMailboxName()), e);
-			Services.getNotificationService().notifyError(String.format(WRITE_AUDIT_MAILBOX_RUN_MAIL_ERROR_MESSAGE, auditMailboxRun.getMailboxName(), e.getMessage()));	
+			if (notifyError)
+				Services.getNotificationService().notifyError(String.format(WRITE_AUDIT_MAILBOX_RUN_MAIL_ERROR_MESSAGE, auditMailboxRun.getMailboxName(), e.getMessage()));	
 		}		
 	}
 	

@@ -204,7 +204,7 @@ public abstract class MailboxManager implements Runnable {
     	//audit - mailbox run
     	if (auditMailboxRun != null) { //call it just one time
         	auditMailboxRun.setEndDate(new Date());
-    		Services.getAuditService().writeAuditMailboxRun(auditMailboxRun);
+    		Services.getAuditService().writeAuditMailboxRun(auditMailboxRun, !shutdown);
     		auditMailboxRun = null;    		
     	}
     	
