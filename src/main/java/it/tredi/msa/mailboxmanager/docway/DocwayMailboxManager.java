@@ -273,8 +273,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		doc.setMezzoTrasmissione(conf.getMezzoTrasmissione());
 		
 		//rif esterni
-		if (doc.getTipo().toUpperCase().equals("ARRIVO"))
-			doc.addRifEsterno(createRifEsterno((parsedMessage.getFromPersonal() == null || parsedMessage.getFromPersonal().isEmpty())? parsedMessage.getFromAddress() : parsedMessage.getFromPersonal(), parsedMessage.getFromAddress()));
+		if (doc.getTipo().toUpperCase().equals("ARRIVO")) {
+			String address = parsedMessage.isPecMessage()? parsedMessage.getMittenteAddressFromDatiCertPec() : parsedMessage.getFromAddress();
+			doc.addRifEsterno(createRifEsterno((parsedMessage.getFromPersonal() == null || parsedMessage.getFromPersonal().isEmpty())? address : parsedMessage.getFromPersonal(), address));
+		}
 		else if (doc.getTipo().toUpperCase().equals("PARTENZA")) {
 			Address []recipients = parsedMessage.getMessage().getRecipients(RecipientType.TO);
 			for (Address recipient:recipients) {

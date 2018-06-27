@@ -417,6 +417,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                 //email = document.getAttributeValue("/struttura_esterna/email/@addr", "");
                 Attribute tempAttr = (Attribute)document.selectSingleNode("/struttura_esterna/email_certificata/@addr");
                 rifEsterno.setEmailCertificata(tempAttr == null? "" : tempAttr.getValue());
+                if (rifEsterno.getEmailCertificata().equals(address)) {
+                	tempAttr = (Attribute)document.selectSingleNode("/struttura_esterna/email/@addr");
+                    rifEsterno.setEmail(tempAttr == null? "" : tempAttr.getValue());
+                }
                 tempAttr = (Attribute)document.selectSingleNode("/struttura_esterna/telefono[@tipo='tel']/@num");
                 rifEsterno.setTel(tempAttr == null? "" : tempAttr.getValue());
                 tempAttr = (Attribute)document.selectSingleNode("/struttura_esterna/telefono[@tipo='fax']/@num");
@@ -448,6 +452,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                 //email = document.getAttributeValue("/persona_esterna/recapito/email/@addr", "");
                 Attribute tempAttr = (Attribute)document.selectSingleNode("/persona_esterna/recapito/email_certificata/@addr");
                 rifEsterno.setEmailCertificata(tempAttr == null? "" : tempAttr.getValue());
+                if (rifEsterno.getEmailCertificata().equals(address)) {
+                	tempAttr = (Attribute)document.selectSingleNode("/persona_esterna/recapito/email/@addr");
+                    rifEsterno.setEmail(tempAttr == null? "" : tempAttr.getValue());
+                }
                 tempAttr = (Attribute)document.selectSingleNode("/persona_esterna/recapito/telefono[@tipo='tel']/@num");
                 rifEsterno.setTel(tempAttr == null? "" : tempAttr.getValue());
                 tempAttr = (Attribute)document.selectSingleNode("/persona_esterna/recapito/telefono[@tipo='fax']/@num");

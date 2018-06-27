@@ -6,3 +6,6 @@
 	mvn package
 -Prelevare il file 'target/msa-<VERSION_NUMBER>.jar' e decomprimerlo
  
+## START
+-Posizionarsi nella cartella 'msa-<VERSION_NUMBER>' ed eseguire il comando
+	java -Xmx1024m org.springframework.boot.loader.JarLauncher

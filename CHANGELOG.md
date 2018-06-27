@@ -10,8 +10,9 @@
 	docway4mailboxmanager.mail-sender.connection-timeout=10000
 -In DocwayMailboxManager realizzato codice per eseguire n-tentativi in fase di connessione al server smtp
 
-## [1.0.2-SNAPSHOT] - 2017-06-04
--Modificato codice in maniera da non inviare messaggio di errore via email del tipo interruped exception su MongoDb in stop del servizio 
+## [1.0.2] - 2017-06-27
+-Modificato codice in maniera da non inviare messaggio di errore via email del tipo interruped exception su MongoDb in stop del servizio
+-Corretto problema di estrazione del mittente da ACL nel caso di PEC (l'indirizzo del mittente per la ricerca in ACL ora viene estratto da daticert.xml)
 
  
  
