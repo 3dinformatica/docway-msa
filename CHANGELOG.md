@@ -1,6 +1,6 @@
 # Change Log
 
-## [5.0.0] - 
+## [3.0.0] - SNAPSHOT 
 
 ### Added
 - Aggiunta la possibilità di disabilitare l'invio delle mail di notifica in caso di errori in fase di scaricamento delle mail o di connessione

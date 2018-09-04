@@ -1,7 +1,6 @@
 package it.tredi.msa.configuration;
 
 import it.tredi.msa.ObjectFactoryConfiguration;
-import it.tredi.msa.notification.DummySender;
 import it.tredi.utils.properties.PropertiesReader;
 
 public class MSAConfigurationReader {
@@ -35,8 +34,8 @@ public class MSAConfigurationReader {
 		msaConfiguration.setAuditWriterConfiguration(readConfiguration(propertiesReader, AUDIT_WRITER_PROPERTY));
 		
 		//NotificationSender configuration
-		String notificationSender = propertiesReader.getProperty(NOTIFICATION_SENDER__PROPERTY, "dummySender");
-		if (notificationSender.equalsIgnoreCase("dummySender"))
+		String notificationSender = propertiesReader.getProperty(NOTIFICATION_SENDER__PROPERTY, "");
+		if (notificationSender.isEmpty())
 			msaConfiguration.setNotificationSenderConfiguration(new ObjectFactoryConfiguration("it.tredi.msa.notification.DummySender", ""));
 		else
 			msaConfiguration.setNotificationSenderConfiguration(readConfiguration(propertiesReader, NOTIFICATION_SENDER__PROPERTY));
