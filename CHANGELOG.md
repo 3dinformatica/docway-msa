@@ -12,9 +12,10 @@ alle caselle di posta
 - Allineata la gestione delle FatturePA agli ultimi interventi svolti sulla libreria inclusa nella vecchia release di MSA
 
 ### Fixed
+- La configurazione della protocollazione delle fatturePA deve essere recuperata dalla configurazione della casella di posta su eXtraWay e non dal file di
+properties di MSA
 
-
-## [1.0.2] - 2017-06-27
+## [1.0.2] - 2018-06-27
 
 ### Changed
 - Modificato codice in maniera da non inviare messaggio di errore via email del tipo interruped exception su MongoDb in stop del servizio
@@ -22,7 +23,7 @@ alle caselle di posta
 ### Fixed
 - Corretto problema di estrazione del mittente da ACL nel caso di PEC (l'indirizzo del mittente per la ricerca in ACL ora viene estratto da daticert.xml)
 
-## [1.0.1] - 2017-05-25 
+## [1.0.1] - 2018-05-25 
 
 ### Added
 - Aggiunti in it.tredi.msa.properties parametri per impostare timeout per la connessione al server smtp  per DocWay4
@@ -31,7 +32,7 @@ alle caselle di posta
     - docway4mailboxmanager.mail-sender.connection-timeout=10000
 - In DocwayMailboxManager realizzato codice per eseguire n-tentativi in fase di connessione al server smtp
 
-## [1.0.0] - 2017-05-13
+## [1.0.0] - 2018-05-13
 
 ### Added
 - Riscrittura MSA su framework Spring con gestione scaricamento email multithread

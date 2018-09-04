@@ -49,7 +49,6 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_VOCE_INDICE = "docway4mailboxmanager.ftr-pa.voce-indice";
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_TEMPLATE_OGGETTO = "docway4mailboxmanager.ftr-pa.template-oggetto";
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_OGGETTO_PARSE_MODE = "docway4mailboxmanager.ftr-pa.oggetto-parse-mode";
-	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA = "docway4mailboxmanager.ftr-pa.protocolla-fattura.enable";
 	public final static String DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS = "docway4mailboxmanager.pec.ignore-standard-orphan-receipts";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_SOCKET_TIMEOUT = "docway4mailboxmanager.mail-sender.socket-timeout";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_CONNECTION_TIMEOUT = "docway4mailboxmanager.mail-sender.connection-timeout";
@@ -353,7 +352,10 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setVoceIndiceFtrPA(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_VOCE_INDICE, ""));
     	conf.setOggettoParseMode(OggettoParseMode.getParseMode(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_OGGETTO_PARSE_MODE, "predefinito")));
     	conf.setTemplateOggetto(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_TEMPLATE_OGGETTO, ""));
-    	conf.setProtocollaFattura(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA, true));
+    	
+    	// mbernardini 04/09/2018 : protocollazione della fattura recuperato dalla configurazione della casella e non dal file di properties di MSA
+    	conf.setProtocollaFattura(casellaEl.attributeValue("protocollaFattura", "false").equalsIgnoreCase("true"));
+    	//conf.setProtocollaFattura(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA, true));
     	
     	conf.setIgnoreStandardOrphanPecReceipts(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS, false));
     	
