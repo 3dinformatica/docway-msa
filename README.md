@@ -27,13 +27,13 @@ cancellare il messaggio alla fine dell’elaborazione o se spostarlo su un diver
 
 Per poter installare l'MSA occorre configurare alcuni file:
 
-1) ***application.properties***: descrive la porta da utilizzare per l'applicazione MSA e i parametri di connessione a
+1. ***application.properties***: descrive la porta da utilizzare per l'applicazione MSA e i parametri di connessione a
 MongoDB per i vari audit per la registrazione dello stato dell'elaborazione delle caselle di posta.
-2) ***it.highwaytech.broker.properties***: per i parametri di connessione al broker ExtraWay e le varie configurazioni
+2. ***it.highwaytech.broker.properties***: per i parametri di connessione al broker ExtraWay e le varie configurazioni
 dell'audit applicativo.
-3) ***it.tredi.msa.properties***: configurazioni generali delle modalità operative di esecuzione dell'agent (per maggiori
+3. ***it.tredi.msa.properties***: configurazioni generali delle modalità operative di esecuzione dell'agent (per maggiori
 informazioni controllare i commenti presenti sul file).
-4) ***log4j2.xml***: parametri di configurazione dei log applicativi.
+4. ***log4j2.xml***: parametri di configurazione dei log applicativi.
 
 ## Configurazione servizi
 
@@ -164,20 +164,8 @@ uninstall.bat
 
 Rispetto alla precedente release di MSA non stati portati i seguenti sviluppi:
 
-* splitEmailByAttachments: suddivisione della mail in più documenti in base agli allegati contenuti (un allegato per ogni
+* _splitEmailByAttachments_: suddivisione della mail in più documenti in base agli allegati contenuti (un allegato per ogni
 documento). **N.B.** teoricamente questa funzione non dovrebbe essere necessaria su alcun cliente.
 
-* rifiutoEmail: rifiuto (skip della conversione in documento) di un email in base alle estensioni degli
+* _rifiutoEmail_: rifiuto (skip della conversione in documento) di un email in base alle estensioni degli
 allegati contenuti (possibilità di definire un set di estensioni non supportate).
-
-## BUILD
--compilare da Eclipse
--Posizionarsi nella home del progetto (Es: 'user/git/it.tredi.msa') ed eseguire il comando:
-	mvn package
--Prelevare il file 'target/msa-<VERSION_NUMBER>.jar' e decomprimerlo
- 
-## START
--Posizionarsi nella cartella 'msa-<VERSION_NUMBER>' ed eseguire il comando
-	java -Xmx1024m org.springframework.boot.loader.JarLauncher
-	
-	
