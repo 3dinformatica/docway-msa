@@ -82,7 +82,7 @@ public class Msa {
 		}
 	}		
 	
-	private void shutdown() {
+	protected void shutdown() {
 		if (logger.isInfoEnabled())
 			logger.info("shutdown() called");
 

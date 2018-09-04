@@ -3,6 +3,7 @@ package it.tredi.msa.configuration.docway;
 import java.util.List;
 
 import it.tredi.msa.configuration.MailboxConfiguration;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
 
 public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	
@@ -84,9 +85,10 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String classifFtrPA;
 	private String classifCodFtrPA;
 	private String voceIndiceFtrPA;
-	private boolean overwriteOggettoFtrPA;
+	private String templateOggetto;
+	private OggettoParseMode oggettoParseMode;
 	private boolean protocollaFattura;
-	
+
 	//ricevute PEC orfane
 	private boolean ignoreStandardOrphanPecReceipts;
 	
@@ -510,12 +512,20 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 		this.voceIndiceFtrPA = voceIndiceFtrPA;
 	}
 
-	public boolean isOverwriteOggettoFtrPA() {
-		return overwriteOggettoFtrPA;
+	public String getTemplateOggetto() {
+		return templateOggetto;
 	}
 
-	public void setOverwriteOggettoFtrPA(boolean overwriteOggettoFtrPA) {
-		this.overwriteOggettoFtrPA = overwriteOggettoFtrPA;
+	public void setTemplateOggetto(String templateOggetto) {
+		this.templateOggetto = templateOggetto;
+	}
+
+	public OggettoParseMode getOggettoParseMode() {
+		return oggettoParseMode;
+	}
+
+	public void setOggettoParseMode(OggettoParseMode oggettoParseMode) {
+		this.oggettoParseMode = oggettoParseMode;
 	}
 
 	public boolean isProtocollaFattura() {

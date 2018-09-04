@@ -7,6 +7,7 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.DESKeySpec;
 
+import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
 import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -46,7 +47,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_CLASSIF = "docway4mailboxmanager.ftr-pa.classif";
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_CLASSIF_COD = "docway4mailboxmanager.ftr-pa.classif.cod";
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_VOCE_INDICE = "docway4mailboxmanager.ftr-pa.voce-indice";
-	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_OVERWRITE_OGGETTO = "docway4mailboxmanager.ftr-pa.overwrite-oggetto";
+	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_TEMPLATE_OGGETTO = "docway4mailboxmanager.ftr-pa.template-oggetto";
+	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_OGGETTO_PARSE_MODE = "docway4mailboxmanager.ftr-pa.oggetto-parse-mode";
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA = "docway4mailboxmanager.ftr-pa.protocolla-fattura.enable";
 	public final static String DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS = "docway4mailboxmanager.pec.ignore-standard-orphan-receipts";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_SOCKET_TIMEOUT = "docway4mailboxmanager.mail-sender.socket-timeout";
@@ -323,8 +325,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	PropertiesReader propertiesReader = (PropertiesReader)Services.getConfigurationService().getMSAConfiguration().getRawData();
     	conf.setXwHost(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_HOST_PROPERTY, "localhost"));
     	conf.setXwPort(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_XW_PORT_PROPERTY, -1));
-    	conf.setXwUser(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_USER_PROPERTY, "lettore"));
-    	conf.setXwPassword(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_PASSWORD_PROPERTY, "reader"));
+    	conf.setXwUser(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_USER_PROPERTY, "xw.msa"));
+    	conf.setXwPassword(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_XW_PASSWORD_PROPERTY, ""));
     	conf.setAclDb(db);
     	conf.setXwLockOpAttempts(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_XW_LOCK_OP_ATTEMPTS, Docway4MailboxConfiguration.DEFAULT_XW_LOCK_OP_ATTEMPTS));
     	conf.setXwLockOpDelay(propertiesReader.getLongProperty(DOCWAY4MAILBOXMANAGER_XW_LOCK_OP_DELAY, Docway4MailboxConfiguration.DEFAULT_XW_LOCK_OP_DELAY));
@@ -349,7 +351,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setClassifFtrPA(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_CLASSIF, Docway4MailboxConfiguration.DEFAULT_FTR_PA_CLASSIF));
     	conf.setClassifCodFtrPA(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_CLASSIF_COD, Docway4MailboxConfiguration.DEFAULT_FTR_PA_CLASSIF_COD));
     	conf.setVoceIndiceFtrPA(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_VOCE_INDICE, ""));
-    	conf.setOverwriteOggettoFtrPA(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_OVERWRITE_OGGETTO, false));
+    	conf.setOggettoParseMode(OggettoParseMode.getParseMode(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_OGGETTO_PARSE_MODE, "predefinito")));
+    	conf.setTemplateOggetto(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_TEMPLATE_OGGETTO, ""));
     	conf.setProtocollaFattura(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA, true));
     	
     	conf.setIgnoreStandardOrphanPecReceipts(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS, false));

@@ -59,13 +59,15 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
     	super.closeSession();
 		try {
-			xwClient.disconnect();
+			if (xwClient != null)
+				xwClient.disconnect();
 		}
 		catch (Exception e) {
 			logger.warn("[" + conf.getName() + "] failed to close eXtraWay session [" + conf.getXwDb() + "]", e);			
 		}
 		try {
-			aclClient.disconnect();
+			if (aclClient != null)
+				aclClient.disconnect();
 		}
 		catch (Exception e) {
 			logger.warn("[" + conf.getName() + "] failed to close eXtraWay session [" + conf.getAclDb() + "]", e);
@@ -1005,7 +1007,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		RifEsterno rifEsterno = null;
 		
 		if (!piva.isEmpty()) { // ricerca in anagrafica su campo partita iva
-			int count = aclClient.search("[/struttura_esterna/@partita_iva/]=\"" + piva + "\" AND [/struttura_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\""); 
+
+			int count = aclClient.search("([/struttura_esterna/@partita_iva/]=\"" + piva + "\" AND [/struttura_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\") OR ([/persona_esterna/@partita_iva/]=\"" + piva + "\" AND [/persona_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\")");
 			if (count == 1) { // e' stata individuata una struttura esterna con la partita iva indicata
 				if (logger.isInfoEnabled())
 					logger.info("[" + conf.getName() + "] found rif esterno in ACL. Piva [" + piva + "]");
@@ -1103,8 +1106,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				if (logger.isInfoEnabled())
 					logger.info("[" + conf.getName() + "] rif esterno NOT found in ACL. Inserting PE [" + root.attributeValue("cognome") + " " + root.attributeValue("nome") + "]");
 				
+				root.addAttribute("partita_iva", piva);
 				root.addAttribute("codice_fiscale", cf);
-				
+
 				// gestione del recapito (recapito attivita')
 				Element recapito = root.addElement("recapito");
 				Element elindirizzo = recapito.addElement("indirizzo");

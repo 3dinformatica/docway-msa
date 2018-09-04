@@ -1,18 +1,19 @@
 package it.tredi.msa.configuration;
 
 import it.tredi.msa.ObjectFactoryConfiguration;
+import it.tredi.msa.notification.DummySender;
 import it.tredi.utils.properties.PropertiesReader;
 
 public class MSAConfigurationReader {
 	
-	public final static String PROPERTIES_FILENAME = "it.tredi.msa.properties";
-	public final static String AUDIT_WRITER_PROPERTY = "audit.writer";
-	public final static String NOTIFICATION_SENDER__PROPERTY = "notification.sender";
-	public final static String MAILBOXCONFIGURATION_READERS_PROPERTY = "mailboxconfiguration.readers";
-	public final static String MAILBOXMANAGERS_DELAY_PROPERTY = "mailboxmanagers.delay";
-	public final static String MAILBOXMANAGERS_POOLSIZE_PROPERTY = "mailboxmanagers.poolsize";
-	public final static String MAILBOXMANAGERS_REFRESHTIME_PROPERTY = "mailboxmanagers.refresh.time";
-	public final static String MAILBOXMANAGERS_HOT_RELOADING_PROPERTY = "mailboxmanagers.hot-reloading";
+	private final static String PROPERTIES_FILENAME = "it.tredi.msa.properties";
+	private final static String AUDIT_WRITER_PROPERTY = "audit.writer";
+	private final static String NOTIFICATION_SENDER__PROPERTY = "notification.sender";
+	private final static String MAILBOXCONFIGURATION_READERS_PROPERTY = "mailboxconfiguration.readers";
+	private final static String MAILBOXMANAGERS_DELAY_PROPERTY = "mailboxmanagers.delay";
+	private final static String MAILBOXMANAGERS_POOLSIZE_PROPERTY = "mailboxmanagers.poolsize";
+	private final static String MAILBOXMANAGERS_REFRESHTIME_PROPERTY = "mailboxmanagers.refresh.time";
+	private final static String MAILBOXMANAGERS_HOT_RELOADING_PROPERTY = "mailboxmanagers.hot-reloading";
 	public final static String MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES_PROPERTY = "mailboxmanagers.allow-email-duplicates";
 
 	public MSAConfiguration read() throws Exception {
@@ -34,19 +35,23 @@ public class MSAConfigurationReader {
 		msaConfiguration.setAuditWriterConfiguration(readConfiguration(propertiesReader, AUDIT_WRITER_PROPERTY));
 		
 		//NotificationSender configuration
-		msaConfiguration.setNotificationSenderConfiguration(readConfiguration(propertiesReader, NOTIFICATION_SENDER__PROPERTY));
-		
+		String notificationSender = propertiesReader.getProperty(NOTIFICATION_SENDER__PROPERTY, "dummySender");
+		if (notificationSender.equalsIgnoreCase("dummySender"))
+			msaConfiguration.setNotificationSenderConfiguration(new ObjectFactoryConfiguration("it.tredi.msa.notification.DummySender", ""));
+		else
+			msaConfiguration.setNotificationSenderConfiguration(readConfiguration(propertiesReader, NOTIFICATION_SENDER__PROPERTY));
+
 		//MailboxConfigurationReader(s) configuration
 		msaConfiguration.setMailboxConfigurationReadersConfiguration(readConfigurations(propertiesReader, MAILBOXCONFIGURATION_READERS_PROPERTY));
 		
 		return msaConfiguration;			
 	}
 	
-	public ObjectFactoryConfiguration readConfiguration(PropertiesReader propertiesReader, String property) throws Exception {
+	private ObjectFactoryConfiguration readConfiguration(PropertiesReader propertiesReader, String property) throws Exception {
 		return this.readConfigurations(propertiesReader, property)[0];
 	}
 	
-	public ObjectFactoryConfiguration []readConfigurations(PropertiesReader propertiesReader, String property) throws Exception {
+	private ObjectFactoryConfiguration []readConfigurations(PropertiesReader propertiesReader, String property) throws Exception {
 		String s_names = propertiesReader.getProperty(property, "");
 		if (s_names.isEmpty())
 			throw new Exception("Wrong MSA configuration. Property not found or empty: " + property);

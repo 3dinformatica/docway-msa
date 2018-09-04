@@ -14,6 +14,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeUtility;
 
+import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoDocumentoBuilder;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
@@ -883,11 +885,13 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		    // al documento.
 	    	doc.getRifEsterni().clear();
 	    	doc.addRifEsterno(createMittenteFatturaPA(parsedMessage));
-		    
+
 		    //oggetto
-		    if (conf.isOverwriteOggettoFtrPA() && !FatturaPAUtils.getOggettoFatturaPA(fatturaPADocument, false).isEmpty())
-		    	doc.setOggetto(FatturaPAUtils.getOggettoFatturaPA(fatturaPADocument, false));
-		    
+	    	OggettoParseMode oggettoParseMode = conf.getOggettoParseMode();
+			if (oggettoParseMode != null && oggettoParseMode != OggettoParseMode.NO_OVERWRITE) {
+				doc.setOggetto(FatturaPAUtils.getOggettoFatturaPA(fatturaPADocument, false, new OggettoDocumentoBuilder(oggettoParseMode, conf.getTemplateOggetto())));
+			}
+
 		    FatturaPAItem fatturaPAItem = new FatturaPAItem();
 		    doc.setFatturaPA(fatturaPAItem);
 			fatturaPAItem.setState(FatturaPAUtils.ATTESA_NOTIFICHE); // stato della fattura / lotto di fatture

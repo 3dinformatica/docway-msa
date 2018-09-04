@@ -128,7 +128,7 @@ public class MailNotificationSender extends NotificationSender {
 	}
 
 	@Override
-	public boolean notifiyError(String message) throws Exception {
+	public boolean notifyError(String message) throws Exception {
 		boolean done = false;
 		MailSender mailSender = createMailSender();
 		mailSender.connect();

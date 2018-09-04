@@ -36,7 +36,7 @@ public class MongodbAuditWriter extends AuditWriter {
 		if (isFull()) { //full audit -> update or create new audit message collection in mongoDb
 			auditMessage = (auditMessage == null)? new AuditMessage() : auditMessage;
 			auditMessage.setDate(new Date());
-			if (auditMessage.getEmlId() != null) { //delete previos EML (if found)
+			if (auditMessage.getEmlId() != null) { //delete previous EML (if found)
 				gridFsOperations.delete(new Query(Criteria.where("_id").is(new ObjectId(auditMessage.getEmlId()))));
 			}			
 			auditMessage.setEmlId(null);
@@ -52,7 +52,7 @@ public class MongodbAuditWriter extends AuditWriter {
 		}	
 		else { //base audit -> (if found) remove audit message from mongoDb collection
 			if (auditMessage != null) {
-				if (auditMessage.getEmlId() != null) { //delete previos EML (if found)
+				if (auditMessage.getEmlId() != null) { //delete previous EML (if found)
 					gridFsOperations.delete(new Query(Criteria.where("_id").is(new ObjectId(auditMessage.getEmlId()))));
 				}				
 				auditMessageRepository.delete(auditMessage);
@@ -70,7 +70,7 @@ public class MongodbAuditWriter extends AuditWriter {
 		//store EML
 		byte []b = (new MessageContentProvider(parsedMessage.getMessage(), false)).getContent();			
 		ObjectId objId = gridFsOperations.store(new ByteArrayInputStream(b), MESSAGGIO_EMAIL_FILENAME);
-		if (auditMessage.getEmlId() != null) { //delete previos EML (if found)
+		if (auditMessage.getEmlId() != null) { //delete previous EML (if found)
 			gridFsOperations.delete(new Query(Criteria.where("_id").is(new ObjectId(auditMessage.getEmlId()))));
 		}
 		auditMessage.setEmlId(objId.toHexString());

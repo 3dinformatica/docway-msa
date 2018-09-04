@@ -13,7 +13,9 @@ public class MsaLauncher implements CommandLineRunner {
 	
 	private static final Logger logger = LogManager.getLogger(MsaLauncher.class.getName());
 	private final static String DEFAULT_MSA_PORT = "8381";
-	
+
+	private static Msa msa;
+
 	@Autowired
 	private Environment env;
 	
@@ -56,8 +58,19 @@ public class MsaLauncher implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 		logSplashMessage();
 			
-		Msa msa = new Msa();
+		msa = new Msa();
 		msa.run(Integer.parseInt(env.getProperty("msa.port", DEFAULT_MSA_PORT)));
 	}
-	
+
+	/**
+	 * Metodo chiamato per arrestare il servizio
+	 */
+	public static void stop(String[] args) {
+		logger.info("Msa.stop(): exit method now call System.exit(0)");
+		if (msa != null)
+			msa.shutdown();
+		System.exit(0);
+	}
+
+
 }

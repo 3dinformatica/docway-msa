@@ -29,7 +29,7 @@ public class NotificationService {
 
 	public void notifyError(String message) {
 		try {
-			boolean sucess = notificationSender.notifiyError(message);
+			boolean sucess = notificationSender.notifyError(message);
 			if (!sucess)
 				throw new Exception(NOTIFICATION_ERROR_MESSAGE);
 		}

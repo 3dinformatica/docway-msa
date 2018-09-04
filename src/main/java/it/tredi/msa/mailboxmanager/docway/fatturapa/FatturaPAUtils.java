@@ -9,7 +9,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoDocumentoBuilder;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
 import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -98,25 +102,121 @@ public class FatturaPAUtils {
 		}
 		return dcwAttachmentsL;
 	}
-	
-	public static String getOggettoFatturaPA(Document fatturaPADocument, boolean attiva) {
+
+	/**
+	 * Ritorna l'oggetto della fattura recuperandolo dal file XML.
+	 * Il campo oggetto del documento deve essere valorizzato con la causale della fattura. In caso di causale vuota
+	 * valorizzare il campo nel modo seguente:
+	 * [TIPO (Fattura, ec..)] di [PRESTATORE] n. [NUM_FATTURA] del [DATA_FATTURA]
+	 *
+	 * @param fatturaPADocument Documento XML della fattura.
+	 * @param attiva se true genera l'oggetto per la fattura attiva, altrimenti estrapola i dati per la fattura passiva
+	 * @param oggettoDocumentoBuilder modalita' di generazione dell'oggetto del documento
+	 * @return
+	 */
+	public static String getOggettoFatturaPA(Document fatturaPADocument, boolean attiva, OggettoDocumentoBuilder oggettoDocumentoBuilder) {
 		String oggetto = "";
-		List<?> fatturaBody = fatturaPADocument.selectNodes("//FatturaElettronicaBody");
-		if (fatturaBody.size() == 1) {
-			Document singolaFattura = DocumentHelper.createDocument();
-            singolaFattura.setRootElement(((Element) fatturaBody.get(0)).createCopy());
-			String causale = extractCausaliFromFattura(singolaFattura);
-			if (!causale.equals(""))
-				return causale;
+		if (fatturaPADocument != null) {
+			// Lettura della causale solo nel caso in cui si richieda il parseMode CAUSALE o CUSTOM
+			String causale = "";
+			if (oggettoDocumentoBuilder.getParseMode() == OggettoParseMode.CAUSALE || oggettoDocumentoBuilder.getParseMode() == OggettoParseMode.CUSTOM) {
+				List<?> fatturaBody = fatturaPADocument.selectNodes("//FatturaElettronicaBody");
+				if (fatturaBody.size() == 1) {
+					Document singolaFattura = DocumentHelper.createDocument();
+					if (fatturaBody.get(0) != null)
+						singolaFattura.setRootElement(((Element) fatturaBody.get(0)).createCopy());
+					causale = extractCausaliFromFattura(singolaFattura);
+				}
+				if (oggettoDocumentoBuilder.getParseMode() == OggettoParseMode.CAUSALE)
+					oggetto = causale;
+				else // CUSTOM
+					oggetto = produceOggettoByCustom(fatturaPADocument, attiva, oggettoDocumentoBuilder.getTemplate(), causale);
+			}
+			// L'oggetto viene generato in modalita' PREFEDINITA se richiesto o se risulta impossibile produrlo
+			// attraverso le altre
+			if (oggetto.isEmpty() || oggettoDocumentoBuilder.getParseMode() == OggettoParseMode.PREDEFINITO)
+				oggetto = produceOggettoFattura(fatturaPADocument, attiva);
 		}
-		// in caso di oggetto non valorizzato (impossibile il recupero della causale) si procede con la generazione
-		// di un oggetto custom
-		if (oggetto.length() == 0)
-			oggetto = produceOggettoFattura(fatturaPADocument, attiva);
 		return oggetto;
 	}
-	
-	public static String produceOggettoFattura(Document fatturaPADocument, boolean attiva) {
+
+	/**
+	 * Definizione dell'oggetto del documento che contiene la fattura in base all'applicazione di un formato custom
+	 * passato
+	 * @param fatturaPADocument documento XML della fattura.
+	 * @param attiva se true genera l'oggetto per la fattura attiva, altrimenti estrapola i dati per la fattura passiva.
+	 * @param formatoOggetto formato da utilizzare per la costruzione dell'oggetto in caso di parseMode = CUSTOM.
+	 * @param causale causale estratta dalla fattura.
+	 * @return
+	 */
+	private static String produceOggettoByCustom(Document fatturaPADocument, boolean attiva, String formatoOggetto, String causale) {
+		String oggetto = "", azienda = "";
+		// in base al tipo di fattura recupero la denominazione del mittente/destinatario
+		if (attiva) azienda = getCessionarioCommittente(fatturaPADocument);
+		else azienda = getCedentePrestatore(fatturaPADocument);
+		if (formatoOggetto != null && fatturaPADocument != null) {
+			List<?> fatturaBody = fatturaPADocument.selectNodes("//FatturaElettronicaBody");
+			if (fatturaBody.size() == 1) { // fattura singola
+				// estraggo i dati necessari dal template
+				oggetto = formatoOggetto;
+				// sostituzione delle parole in base al flag attiva passiva {attiva|passiva}
+				String regex = "\\{[^\\}]+\\}"; // matcha tutte le parti di una string da { a } (altrimenti va dal primo { all'ultimo }
+				Pattern pattern = Pattern.compile(regex);
+				Matcher matcher = pattern.matcher(oggetto);
+				List<String> toSubstitute = new ArrayList<String>();
+				while (matcher.find()) {
+					toSubstitute.add(matcher.group());
+				}
+				for (String s : toSubstitute) {
+					if (attiva) {
+						String sub = s.substring(1, s.indexOf("|"));
+						oggetto = oggetto.replace(s, sub);
+					} else {
+						String sub = s.substring(s.indexOf("|")+1, s.length()-1);
+						oggetto = oggetto.replace(s, sub);
+					}
+				}
+				if (oggetto.contains("[AZIENDA]")) {
+					oggetto = oggetto.replace("[AZIENDA]", azienda);
+				}
+				if (oggetto.contains("[TIPODOC]")) {
+					String tipoDocumento = getDescrizioneTipoDocumento(fatturaPADocument);
+					oggetto = oggetto.replace("[TIPODOC]", tipoDocumento);
+				}
+				if (oggetto.contains("[NUMFATTURA]")) {
+					String numFattura = "";
+					Element numFatturaElem = (Element) fatturaPADocument.selectSingleNode("//FatturaElettronicaBody/DatiGenerali/DatiGeneraliDocumento/Numero");
+					if (numFatturaElem != null && numFatturaElem.getTextTrim() != null)
+						numFattura = numFatturaElem.getTextTrim();
+					oggetto = oggetto.replace("[NUMFATTURA]", numFattura);
+				}
+				if (oggetto.contains("[DATAFATTURA]")) {
+					String dataFattura = "";
+					Element dataFatturaElem = (Element) fatturaPADocument.selectSingleNode("//FatturaElettronicaBody/DatiGenerali/DatiGeneraliDocumento/Data");
+					if (dataFatturaElem != null && dataFatturaElem.getTextTrim() != null)
+						dataFattura = dataFatturaElem.getTextTrim();
+					oggetto = oggetto.replace("[DATAFATTURA]", formatDataYYYYMMDD(dataFattura, "dd/MM/yyyy"));
+				}
+				if (oggetto.contains("[CAUSALE]")) {
+					oggetto = oggetto.replace("[CAUSALE]", (causale.isEmpty() || oggetto.startsWith("[CAUSALE]")) ? causale : " - " + causale);
+				}
+			}
+			else { // lotto di fatture (fatture multiple)
+				oggetto = "Lotto di fatture" + (attiva ? " per " : " di ") + azienda + " ricevuto il " + new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+			}
+		}
+		return oggetto;
+	}
+
+	/**
+	 * Definisce l'oggetto della fattura recuperando i dati dal file XML. L'oggetto generato ha il seguente formato:
+	 * [TIPO (Fattura, ec..)] di [PRESTATORE] n. [NUM_FATTURA] del [DATA_FATTURA]
+	 *
+	 * @param fatturaPADocument documento XML della fattura.
+	 * @param attiva se true genera l'oggetto per la fattura attiva, altrimenti estrapola i dati per la fattura passiva
+	 * @return
+	 */
+	private static String produceOggettoFattura(Document fatturaPADocument, boolean attiva) {
 		String oggetto = "";
 		
 		// in base al tipo di fattura recupero la denominazione del mittente/destinatario
@@ -145,12 +245,18 @@ public class FatturaPAUtils {
 			}
 		}
 		else { // lotto di fatture (fatture multiple)
-			oggetto = "Lotto di fatture" + (attiva ? " per " : " di ") + azienda + 	azienda + " ricevuto il " + new SimpleDateFormat("dd/MM/yyyy").format(new Date()); 
+			oggetto = "Lotto di fatture" + (attiva ? " per " : " di ") + azienda + " ricevuto il " + new SimpleDateFormat("dd/MM/yyyy").format(new Date());
 		}
 		
 		return oggetto;
 	}
-	
+
+	/**
+	 * Ritorna la descrizione in base al valore TipoDocumento estratto:
+	 * TD03 = Acconto/Anticipo su parcella
+	 * @param fatturaPADocument documento XML della fattura
+	 * @return
+	 */
 	private static String getDescrizioneTipoDocumento(Document fatturaPADocument) {
 		Node node = fatturaPADocument.selectSingleNode("//FatturaElettronicaBody/DatiGenerali/DatiGeneraliDocumento/TipoDocumento");
 		String value = (node == null)? "" : node.getText();
@@ -159,7 +265,12 @@ public class FatturaPAUtils {
 		}
 		return value;
 	}
-	
+
+	/**
+	 * ritorna il nome del cedente/prestatore della fattura
+	 * @param fatturaPADocument documento XML della fattura
+	 * @return
+	 */
 	private static String getCedentePrestatore(Document fatturaPADocument) {
 		Node node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/CedentePrestatore/DatiAnagrafici/Anagrafica/Denominazione");
 		String denominazione = (node == null)? "" : node.getText();
@@ -174,7 +285,11 @@ public class FatturaPAUtils {
 		}
 		return denominazione;
 	}
-	
+
+	/**
+	 * Ritorna il nome del cessionario/committente della fattura
+	 * @return
+	 */
 	private static String getCessionarioCommittente(Document fatturaPADocument) {
 		Node node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/CessionarioCommittente/DatiAnagrafici/Anagrafica/Denominazione");
 		String denominazione = (node == null)? "" : node.getText();
@@ -190,6 +305,13 @@ public class FatturaPAUtils {
 		return denominazione;		
 	}
 
+	/**
+	 * aggiunge i dati estratti dal file della fattura al documento da registrare su DocWay
+	 * all'interno della sezione extra
+	 *
+	 * @param fatturaPADocument documento XML della fattura
+	 * @param fatturaPAItem riferimento alla singola fattura all'interno del documento su DocWay
+	 */
 	public static void appendDatiFatturaToDocument(Document fatturaPADocument, FatturaPAItem fatturaPAItem) {
 		List<?> fatturaBody = fatturaPADocument.selectNodes("//FatturaElettronicaBody");
 	    for (int i=0; i<fatturaBody.size(); i++) {
@@ -212,7 +334,10 @@ public class FatturaPAUtils {
 		    datiFattura.setDatiRegistroFatture(addFtrDatiRegistroFatture(fattura)); // aggiunta della sezione ralativa al registro delle fatture
 	    }
 	}
-	
+
+	/**
+	 * Aggiunta dei dati generali relativi ad una fatturaPA
+	 */
 	private static void addFtrDatiGeneraliDocumento(DatiFatturaContainer datiFattura, Document xmlfattura) {
 		Node node = xmlfattura.selectSingleNode("FatturaElettronicaBody/DatiGenerali/DatiGeneraliDocumento/TipoDocumento");
 		datiFattura.setTipoDocumento_dg(node == null? "" : node.getText());
@@ -240,7 +365,14 @@ public class FatturaPAUtils {
 		if (!causale.isEmpty())
 			datiFattura.setCausale_dg(causale);
 	}
-	
+
+	/**
+	 * recupero della causale della fattura. Dalla versione 1.1 di fatturaPA puo' essere contenuta in un elemento ripetibile (per permettere
+	 * l'inserimento di causali con piu' di 200 caratteri)
+	 *
+	 * @param xmlfattura
+	 * @return
+	 */
 	private static String extractCausaliFromFattura(Document xmlfattura) {
 		String causale = "";
 		List<?> causali = xmlfattura.selectNodes("FatturaElettronicaBody/DatiGenerali/DatiGeneraliDocumento/Causale");
