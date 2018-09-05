@@ -42,7 +42,7 @@ set PR_CLASSPATH=%CLASSES%;%LIBS%/*
 
 echo Valore della variabile PR_CLASSPATH:%PR_CLASSPATH%
 
-commons-daemon\msa //IS//"msa" --DisplayName="msa" --Description="msa"^
+commons-daemon\msa //IS//"msa" --DisplayName="docway-msa" --Description="docway-msa"^
 	 --Jvm=%JVM%^
      --Install="%cd%\commons-daemon\msa.exe" --StartMode=jvm --StopMode=jvm^
      --Startup=auto --StartClass=it.tredi.msa.MsaLauncher --StopClass=it.tredi.msa.MsaLauncher^
