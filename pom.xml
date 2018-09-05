@@ -151,13 +151,4 @@
 			<url>http://ecatonchiro.bo.priv:8081/nexus/content/repositories/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
-
-	<issueManagement>
-		<system>Redmine</system>
-		<url>https://3dinformatica.easyproject.com</url>
-	</issueManagement>
-	<ciManagement>
-		<system>Jenkins</system>
-		<url>http://ecatonchiro.bo.priv:8080/jenkins/view/Componenti%20singoli/job/${project.artifactId}</url>
-	</ciManagement>
 </project>
