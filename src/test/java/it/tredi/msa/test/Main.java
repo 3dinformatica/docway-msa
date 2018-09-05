@@ -1,6 +1,5 @@
 package it.tredi.msa.test;
 
-import java.io.IOException;
 import java.io.StringWriter;
 
 import org.dom4j.Document;
@@ -8,8 +7,6 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
-
-import it.highwaytech.broker.XMLCommand;
 
 public class Main {
 	
@@ -31,7 +28,6 @@ public class Main {
 	}
 
 	private static String print1(Document xmlDocument) throws Exception {
-		Element rootEl = xmlDocument.getRootElement();
 		StringWriter sw = new StringWriter();
 		OutputFormat outformat = OutputFormat.createPrettyPrint();
 		outformat.setEncoding("UTF-8");

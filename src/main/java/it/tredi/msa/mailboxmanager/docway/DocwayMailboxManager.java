@@ -8,14 +8,12 @@ import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.Message;
-import javax.mail.Part;
 import javax.mail.Message.RecipientType;
+import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeUtility;
 
-import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoDocumentoBuilder;
-import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
@@ -26,7 +24,6 @@ import org.dom4j.Element;
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
 import it.tredi.mail.MessageUtils;
-import it.tredi.msa.Services;
 import it.tredi.msa.Utils;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.ContentProvider;
@@ -34,10 +31,11 @@ import it.tredi.msa.mailboxmanager.MailboxManager;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
-import it.tredi.msa.mailboxmanager.StoredMessagePolicy;
 import it.tredi.msa.mailboxmanager.StringContentProvider;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoDocumentoBuilder;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
 
 public abstract class DocwayMailboxManager extends MailboxManager {
 	
