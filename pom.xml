@@ -154,10 +154,10 @@
 
 	<issueManagement>
 		<system>Redmine</system>
-		<url>https://easyredmine.3di.it</url>
+		<url>https://3dinformatica.easyproject.com</url>
 	</issueManagement>
 	<ciManagement>
 		<system>Jenkins</system>
-		<url>http://ecatonchiro.bo.priv:8080/jenkins/view/MSA/job/${project.groupId}.${project.artifactId}</url>
+		<url>http://ecatonchiro.bo.priv:8080/jenkins/view/Componenti%20singoli/job/${project.artifactId}</url>
 	</ciManagement>
 </project>
