@@ -2,7 +2,7 @@
 <Configuration status="WARN" shutdownHook="disable">
     
     <Properties>
-    	<Property name="logdir">/3di.it/platform/msa/logs</Property>
+    	<Property name="logdir">/3di.it/docway_extra/msa/logs</Property>
     	<Property name="filename">msa</Property>
     </Properties>
     
