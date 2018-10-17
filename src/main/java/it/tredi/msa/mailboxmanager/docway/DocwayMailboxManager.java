@@ -71,7 +71,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	    UPDATE_PARTIAL_DOCUMENT_FATTURA_PA,
 	    ATTACH_FATTURA_PA_NOTIFICATION,
 	    ATTACH_FATTURA_PA_PEC_RECEIPT,
-	    IGNORE_MESSAGE
+	    IGNORE_MESSAGE,
+	    UPDATE_NEW_RECIPIENT_INTEROP_PA
 	}
 	
 	protected abstract Object saveNewDocument(DocwayDocument doc, ParsedMessage parsedMessage) throws Exception;
@@ -172,7 +173,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 				sendNotificationEmails(doc, retObj);
 			}							
 		}
-		else if (storeType == StoreType.SAVE_NEW_DOCUMENT_INTEROP_PA || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT_INTEROP_PA) { //save new interopPA document (Segnatura.xml) or update existing one
+		else if (storeType == StoreType.SAVE_NEW_DOCUMENT_INTEROP_PA || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT_INTEROP_PA || storeType == StoreType.UPDATE_NEW_RECIPIENT_INTEROP_PA) { //save new interopPA document (Segnatura.xml) or update existing one
 			//build new Docway document
 			DocwayDocument doc = createDocwayDocumentByInteropPAMessage(parsedMessage);
 			
@@ -182,7 +183,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 				retObj = saveNewDocument(doc, parsedMessage);
 			else if (storeType == StoreType.UPDATE_PARTIAL_DOCUMENT_INTEROP_PA) //2. doc found by messageId flagged as partial (attachments upload not completed) -> update document adding missing attachments
 				retObj = updatePartialDocument(doc);
-
+			else if (storeType == StoreType.UPDATE_NEW_RECIPIENT_INTEROP_PA) //3. doc found with different recipient email (same email sent to different mailboxes) -> update document adding new CCs
+				retObj = updateDocumentWithRecipient(doc);	
+			
 			//notify emails
 			if (conf.isNotificationEnabled() && (conf.isNotifyRPA() || conf.isNotifyCC())) { //if notification is activated
 				if (logger.isInfoEnabled())

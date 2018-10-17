@@ -281,6 +281,16 @@ public class DocwayParsedMessage extends ParsedMessage {
 			return true;
 		return false;
 	}
+
+	public String buildQueryForDocway4DocumentFromInteropPASegnatura(String codAmm, String codAoo) {
+		String query = "";
+		if (this.interopPaDocument != null) {
+			Element identificatoreEl = (Element)this.interopPaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore");
+			query = "[/doc/rif_esterni/rif/@n_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") +
+					identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";
+		}
+		return query;
+	}
 	
 	public String buildQueryForDocway4DocumentFromInteropPAPecReceipt(String codAmm, String codAoo) {
 		String query = "";
