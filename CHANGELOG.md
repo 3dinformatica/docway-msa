@@ -1,5 +1,15 @@
 # Change Log
 
+## [3.0.1] - 2018-10-17 
+
+### Added
+- Aggiunto store type UPDATE_NEW_RECIPIENT_INTEROP_PA per gestire le seguenti casistiche:
+    - messaggio di interoperabilità inviato più caselle di posta gestite dall'archiviatore
+    - differenti messaggi contenenti la medesima Segnatura.xml inviate a più caselle di posta gestite dall'archiviatore
+
+### Fixed
+- Corretto comportamento dello store type UPDATE_NEW_RECIPIENT: gli RPA delle caselle successive (alla prima) vengono riportati come CC con diritto di intervento
+
 ## [3.0.0] - 2018-09-06 
 
 ### Added

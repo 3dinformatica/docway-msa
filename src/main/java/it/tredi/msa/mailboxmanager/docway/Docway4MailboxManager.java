@@ -136,15 +136,27 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			else if (dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio di segnatura di interoperabilità PA
 				String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo]=\"" + conf.getCodAmmAoo() + "\"";
 				int count = xwClient.search(query);
+
+				if (count == 0) { //2nd try: potrebbe essere la stessa segnatura su messaggi diversi
+					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPASegnatura(conf.getCodAmm(), conf.getCodAoo());
+					count = xwClient.search(query);
+				}
+
 				if (count > 0) { //messageId found
 					Document xmlDocument = xwClient.loadDocByQueryResult(0);
 					Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
-					if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
-						this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
-						return StoreType.UPDATE_PARTIAL_DOCUMENT_INTEROP_PA;
+					if (archiviatoreEl != null) { //same mailbox
+						if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
+							this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+							return StoreType.UPDATE_PARTIAL_DOCUMENT_INTEROP_PA;
+						}
+						else
+							return StoreType.SKIP_DOCUMENT;						
 					}
-					else
-						return StoreType.SKIP_DOCUMENT;
+					else { //different mailbox
+						this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+						return StoreType.UPDATE_NEW_RECIPIENT_INTEROP_PA;
+					}
 				}
 				else //messageId not found
 					return StoreType.SAVE_NEW_DOCUMENT_INTEROP_PA;
@@ -845,6 +857,11 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			docEl.add(archiviatoreEl);
 			archiviatoreEl.addAttribute("recipientEmail", doc.getRecipientEmail());
 			for (RifInterno rifInterno:doc.getRifInterni()) {
+				//RPA deve essere trasformato in CC con diritto di intervento
+				if (rifInterno.getDiritto().equals("RPA")) {
+					rifInterno.setDiritto("CC");
+					rifInterno.setIntervento(true);
+				}
 				if (isNewRifInterno(rifInterno, rifIntEl)) {
 					rifIntEl.add(Docway4EntityToXmlUtils.rifInternoToXml(rifInterno));
 				}

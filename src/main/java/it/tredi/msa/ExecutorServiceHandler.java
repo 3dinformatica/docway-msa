@@ -127,8 +127,10 @@ public class ExecutorServiceHandler implements Runnable {
     private String keySetToString(Set<String> set) {
     	String s = "";
     	for (String key:set)
-    		s += ", " + key; 	
-    	return s.substring(2);
+    		s += ", " + key;
+    	if (s.length() > 0)
+    		s = s.substring(2);
+    	return s;
     }
  
 }
