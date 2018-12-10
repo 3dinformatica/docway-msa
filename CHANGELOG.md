@@ -1,5 +1,15 @@
 # Change Log
 
+## [3.0.3] - SNAPSHOT 
+
+### Fixed
+- Corretto errore in fase di elaborazione di un messaggio: Part NULL (Task #16775).
+
+## [3.0.2] - 2018-12-07 
+
+### Fixed
+- Aggiornata la versione della libreria mail
+
 ## [3.0.1] - 2018-10-17 
 
 ### Added

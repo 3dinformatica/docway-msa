@@ -4,7 +4,7 @@
 
 	<groupId>it.tredi</groupId>
 	<artifactId>msa</artifactId>
-	<version>3.0.2</version>
+	<version>3.0.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>msa</name>
 
@@ -50,7 +50,7 @@
 		<dependency>
   			<groupId>it.tredi</groupId>
   			<artifactId>mail</artifactId>
-  			<version>1.0.5</version>
+  			<version>1.0.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>it.tredi</groupId>
@@ -74,7 +74,6 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
 				<configuration>
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
@@ -83,7 +82,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.0.2</version>
 				<configuration>
 					<excludes>
 						<exclude>**/log4j2.properties</exclude>
@@ -100,7 +98,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId> <!-- unpack jars with dependency resources -->
-				<!--version>3.0.1</version-->
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -119,7 +116,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.0.0</version>
 				<configuration>
 					<descriptors>
 						<descriptor>assembly/linux.xml</descriptor>
