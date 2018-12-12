@@ -167,8 +167,9 @@ public class ParsedMessage {
 	private Document getDatiCertDocument() throws Exception {
 		if (!datiCertDocumentInCache) {
 			Part part = MessageUtils.extractDatiCertXmlFromPec(message);
-			byte []b = (new PartContentProvider(part)).getContent();
-			datiCertDocument = DocumentHelper.parseText(new String(b, "UTF-8"));			
+			byte[] b = (new PartContentProvider(part)).getContent();
+			String content = new String(b, "UTF-8");
+			datiCertDocument = DocumentHelper.parseText(content);			
 		}
 		return datiCertDocument;
 	}	

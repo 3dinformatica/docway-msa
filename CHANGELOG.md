@@ -4,6 +4,7 @@
 
 ### Fixed
 - Corretto errore in fase di elaborazione di un messaggio: Part NULL (Task #16775).
+- Corretto query su ricerca documento per aggancio notifiche. Ci sono casi nei quali vengono fatte ricerche su nrecord anziche' num_prot (Task #16797).
 
 ## [3.0.2] - 2018-12-07 
 

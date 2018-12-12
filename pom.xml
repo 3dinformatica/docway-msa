@@ -101,9 +101,9 @@
 				<executions>
 					<execution>
 						<phase>package</phase>
-						<goals>
+						<!--goals>
 							<goal>unpack-dependencies</goal>
-						</goals>
+						</goals-->
 						<configuration>
 							<outputDirectory>${project.build.directory}/dependency-resources</outputDirectory>
 							<includeGroupIds>it.tredi</includeGroupIds>

@@ -102,7 +102,8 @@ public class DocwayParsedMessage extends ParsedMessage {
 		String originalSubject = super.getSubjectFromDatiCertPec();
 		originalSubject = cleanInteropPASubject(originalSubject);	
 		String numero = originalSubject.substring(0, originalSubject.indexOf("("));
-		return (originalSubject.indexOf("-") != -1)? "[/doc/@num_prot]=\"" + numero + "\"" : "[/doc/@nrecord]=\"" + numero + "\"";
+		// mbernardini 12/12/2018 : query su num_protocollo anziche' nrecord (task #16797)
+		return (numero.indexOf("-") != -1) ? "[/doc/@num_prot]=\"" + numero + "\"" : "[/doc/@nrecord]=\"" + numero + "\"";
 	}
 	
 	private String cleanInteropPASubject(String subject) {
@@ -445,7 +446,8 @@ public class DocwayParsedMessage extends ParsedMessage {
 	public String buildQueryForDocway4DocumentFromFatturaPASubject() throws Exception {
 		String originalSubject = super.getSubjectFromDatiCertPec();
 		String numero = originalSubject.substring(0, originalSubject.indexOf("("));
-		return "[/doc/@num_prot]=\"" + numero + "\"";
+		// mbernardini 12/12/2018 : query su num_protocollo anziche' nrecord (task #16797)
+		return (numero.indexOf("-") != -1) ? "[/doc/@num_prot]=\"" + numero + "\"" : "[/doc/@nrecord]=\"" + numero + "\"";
 	}
 	
 }

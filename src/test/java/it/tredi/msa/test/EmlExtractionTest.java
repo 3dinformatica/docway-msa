@@ -5,9 +5,11 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.FileUtils;
@@ -17,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ResourceUtils;
 
+import it.tredi.mail.MessageUtils;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 
 /**
@@ -66,6 +69,43 @@ public class EmlExtractionTest {
 		
 		assertNotNull(fromDatiCert);
 		assertEquals("fabriziobarberini@ordineavvocatiroma.org", fromDatiCert);
+		
+		List<Part> attachments = parsed.getAttachments();
+		System.out.println("attachments count = " + attachments.size());
+		for (Part part : attachments)
+			System.out.println("\tattach name = " + MessageUtils.getAttachmentName(part));
+		
+		assertEquals(5, parsed.getAttachments().size());
+	}
+	
+	@Test
+	public void notWellFormedExtraction() throws Exception {
+		String fileName = "notWellFormed.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		ParsedMessage parsed = new ParsedMessage(_readEmlFile(file));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<Part> attachments = parsed.getAttachments();
+		System.out.println("attachments count = " + attachments.size());
+		for (Part part : attachments)
+			System.out.println("\tattach name = " + MessageUtils.getAttachmentName(part));
+		
+		assertEquals(13, parsed.getAttachments().size());
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("paolapenna@ordineavvocatiroma.org", fromDatiCert);
 	}
 	
 }
