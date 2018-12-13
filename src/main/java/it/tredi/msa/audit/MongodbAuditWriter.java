@@ -5,6 +5,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
 
+import it.tredi.msa.entity.AuditMailboxRun;
+import it.tredi.msa.entity.AuditMessage;
+import it.tredi.msa.entity.AuditMessageStatus;
+import it.tredi.msa.repository.AuditMailboxRunRepository;
+import it.tredi.msa.repository.AuditMessageRepository;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
