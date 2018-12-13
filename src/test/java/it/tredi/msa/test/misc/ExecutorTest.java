@@ -1,4 +1,4 @@
-package it.tredi.msa.test;
+package it.tredi.msa.test.misc;
 
 public class ExecutorTest implements Runnable {
 

@@ -1,4 +1,4 @@
-package it.tredi.msa.test;
+package it.tredi.msa.test.conf;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

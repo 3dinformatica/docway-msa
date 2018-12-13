@@ -19,12 +19,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ResourceUtils;
 
 import it.tredi.msa.mailboxmanager.ParsedMessage;
+import it.tredi.msa.test.conf.MsaTesterApplication;
 
 /**
  * UnitTest su estrazione contenuto di eml
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = EmlExtractionTest.class)
+@SpringBootTest(classes = MsaTesterApplication.class)
 public class EmlExtractionTest {
 	
 	private static final String EML_LOCATION = "eml";
@@ -76,6 +77,11 @@ public class EmlExtractionTest {
 		assertEquals(5, parsed.getAttachments().size());
 	}
 	
+	/**
+	 * Test di estrazione di un messaggio contenente piu' istanze di daticert.xml (email contenente inoltro di altre email). Deve
+	 * essere recuperato e letto il daticert.xml della mail ricevuta
+	 * @throws Exception
+	 */
 	@Test
 	public void notWellFormedExtraction() throws Exception {
 		String fileName = "notWellFormed.eml";

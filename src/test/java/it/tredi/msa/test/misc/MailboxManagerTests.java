@@ -1,4 +1,4 @@
-package it.tredi.msa.test;
+package it.tredi.msa.test.misc;
 
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
