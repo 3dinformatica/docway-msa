@@ -1,5 +1,6 @@
 package it.tredi.msa.audit;
 
+import it.tredi.msa.entity.AuditMailboxRun;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

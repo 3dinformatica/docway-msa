@@ -1,19 +1,17 @@
 package it.tredi.msa.mailboxmanager;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Date;
-
-import javax.mail.Message;
-
+import it.tredi.mail.MailReader;
+import it.tredi.msa.Services;
+import it.tredi.msa.configuration.MailboxConfiguration;
+import it.tredi.msa.entity.AuditMailboxRun;
+import it.tredi.msa.entity.AuditMailboxRunStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import it.tredi.mail.MailReader;
-import it.tredi.msa.Services;
-import it.tredi.msa.audit.AuditMailboxRun;
-import it.tredi.msa.audit.AuditMailboxRunStatus;
-import it.tredi.msa.configuration.MailboxConfiguration;
+import javax.mail.Message;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Date;
 
 public abstract class MailboxManager implements Runnable {
 	
