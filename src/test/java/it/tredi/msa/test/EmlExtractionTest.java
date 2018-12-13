@@ -9,7 +9,6 @@ import java.util.List;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.FileUtils;
@@ -19,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ResourceUtils;
 
-import it.tredi.mail.MessageUtils;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 
 /**
@@ -70,10 +68,10 @@ public class EmlExtractionTest {
 		assertNotNull(fromDatiCert);
 		assertEquals("fabriziobarberini@ordineavvocatiroma.org", fromDatiCert);
 		
-		List<Part> attachments = parsed.getAttachments();
+		List<String> attachments = parsed.getAttachmentsName();
 		System.out.println("attachments count = " + attachments.size());
-		for (Part part : attachments)
-			System.out.println("\tattach name = " + MessageUtils.getAttachmentName(part));
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
 		
 		assertEquals(5, parsed.getAttachments().size());
 	}
@@ -94,10 +92,10 @@ public class EmlExtractionTest {
 		System.out.println("subject = " + parsed.getSubject());
 		System.out.println("from address = " + parsed.getFromAddress());
 		
-		List<Part> attachments = parsed.getAttachments();
+		List<String> attachments = parsed.getAttachmentsName();
 		System.out.println("attachments count = " + attachments.size());
-		for (Part part : attachments)
-			System.out.println("\tattach name = " + MessageUtils.getAttachmentName(part));
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
 		
 		assertEquals(13, parsed.getAttachments().size());
 		

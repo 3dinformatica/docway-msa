@@ -1,12 +1,12 @@
 package it.tredi.msa.mailboxmanager;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Enumeration;
 
 import javax.mail.Header;
 import javax.mail.Message;
-
-import it.tredi.mail.MessageUtils;
+import javax.mail.MessagingException;
 
 public class MessageContentProvider implements ContentProvider {
 	
@@ -32,7 +32,20 @@ public class MessageContentProvider implements ContentProvider {
         	return outputStream.toByteArray();
 		}
 		else
-			return MessageUtils.getEML(message);
+			return this.getEML();
+	}
+	
+	/**
+	 * Ritorna il messaggio email in formato EML (byte[] del messaggio)
+	 * @return
+	 * @throws IOException
+	 * @throws MessagingException
+	 */
+	private byte[] getEML() throws IOException, MessagingException {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+	    this.message.writeTo(bos);
+	    bos.close();		
+		return bos.toByteArray();
 	}
 
 }

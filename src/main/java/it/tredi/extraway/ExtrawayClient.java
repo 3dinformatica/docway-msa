@@ -12,6 +12,9 @@ import it.highwaytech.db.Doc;
 import it.highwaytech.db.QueryResult;
 import it.tredi.msa.Utils;
 
+/**
+ * Client utilizzato per la conessione ad eXtraWay. Utilizzato sull'implementazione di MSA per DocWay4
+ */
 public class ExtrawayClient {
 
 	private Broker broker;
@@ -26,6 +29,14 @@ public class ExtrawayClient {
 	private static final String XW_NAMESPACE = "http://www.3di.it/ns/xw-200303121136";
 	private String theLock;
 	
+	/**
+	 * Costruttore. Init del Broker
+	 * @param host Host del server eXtraWay
+	 * @param port Porta del server eXtraWay
+	 * @param db Nome dell'archivio eXtraWay sul quale operare
+	 * @param user Eventuale username da utilizzare per l'accesso ad eXtraWay
+	 * @param password Eventuale password da utilizzare per l'accesso ad eXtraWay
+	 */
 	public ExtrawayClient(String host, int port, String db, String user, String password) {
 		this.broker = new Broker();
 		this.host = host;
@@ -36,6 +47,10 @@ public class ExtrawayClient {
 		this.connId = -1;
 	}
 
+	/**
+	 * Connessione con il server eXtraWay
+	 * @throws SQLException
+	 */
 	public void connect() throws SQLException  {
 		disconnect();
 		connId = broker.acquireConnection(host, port, db, user, password, -1);
@@ -48,6 +63,10 @@ public class ExtrawayClient {
         }			
 	}
 	
+	/**
+	 * Disconnessione dal server eXtraWay
+	 * @throws SQLException
+	 */
 	public void disconnect() throws SQLException {
 		if (connId != -1) {
 			broker.releaseConnection(connId);
@@ -55,10 +74,26 @@ public class ExtrawayClient {
 		}
 	}
 	
+	/**
+	 * Ricerca di documenti XML in base alla query specificata. Viene restituito il numero di risultati ottenuto dalla ricerca
+	 * @param query Query in formato eXtraWay da eseguire 
+	 * @return Numero di risultati ottenuto in base ai filtri specificati
+	 * @throws SQLException
+	 */
 	public int search(String query) throws SQLException {
 		return this.search(query, null, "", 0, -1);
 	}
 	
+	/**
+	 * Ricerca di documenti XML in base alla query specificata. Viene restituito il numero di risultati ottenuto dalla ricerca
+	 * @param query Query in formato eXtraWay da eseguire
+	 * @param selToRefine Eventuale identificativo di selezione da raffinare
+	 * @param sort Eventuale criterio di ordinamento
+	 * @param hwQOpts
+	 * @param adj
+	 * @return Numero di risultati ottenuto in base ai filtri specificati
+	 * @throws SQLException
+	 */
     public int search(String query, String selToRefine, String sort, int hwQOpts, int adj) throws SQLException {
         hwQOpts |= (sort != null && sort.length() > 0 ? it.highwaytech.broker.ServerCommand.find_SORT : 0);
         if (selToRefine != null && !selToRefine.isEmpty()) {
@@ -68,14 +103,33 @@ public class ExtrawayClient {
         return queryResult.elements;
     }	
 	
+    /**
+     * Caricamento di un documento XML in base alla posizione su una selezione
+     * @param position Posizione all'interno della selezione della ricerca
+     * @return
+     * @throws Exception
+     */
     public Document loadDocByQueryResult(int position) throws Exception {
     	return loadDoc(position, true);
     }
     
+    /**
+     * Caricamento di un documento XML in base al numero fisico
+     * @param physdoc Numero fisico del documento da caricare
+     * @return
+     * @throws Exception
+     */
     public Document loadDocByPhysdoc(int physdoc) throws Exception {
     	return loadDoc(physdoc, false);
     }
     
+    /**
+     * Caricamento di un documento XML in base alla posizione su una selezione o al proprio numero fisico
+     * @param docNum Posizione nella selezione o numero fisico del documento
+     * @param fromQueryResult true se occorre caricare il doc in base alla posizione nella selezione, false in caso di caricamento tramite numero fisico
+     * @return
+     * @throws Exception
+     */
     private Document loadDoc(int docNum, boolean fromQueryResult) throws Exception {
     	Doc doc = null;
         if (fromQueryResult)
@@ -86,18 +140,39 @@ public class ExtrawayClient {
         return document;
     }
 
+    /**
+     * Ritorna le informazioni sulla selezione di una ricerca
+     * @return
+     */
 	public QueryResult getQueryResult() {
 		return queryResult;
 	}
 
+	/**
+	 * Imposta le informazioni sulla selezione di una ricerca
+	 * @param queryResult
+	 */
 	public void setQueryResult(QueryResult queryResult) {
 		this.queryResult = queryResult;
 	}
 	
+	/**
+	 * Salvataggio di un nuovo documento XML
+	 * @param xmlDocument
+	 * @return
+	 * @throws Exception
+	 */
 	public int saveNewDocument(Document xmlDocument) throws Exception {
 		return saveDocument(xmlDocument, 0);
 	}
 	
+	/**
+	 * Salvataggio di un documento XML
+	 * @param xmlDocument
+	 * @param docNum
+	 * @return
+	 * @throws Exception
+	 */
 	public int saveDocument(Document xmlDocument, int docNum) throws Exception {
 		Element rootEl = xmlDocument.getRootElement();
 		if (rootEl.getNamespaceForPrefix("xw") == null) //add xmlns:xw to root element
@@ -113,14 +188,34 @@ public class ExtrawayClient {
 		return broker.getUniqueRuleDb(connId, db, udName);	
 	}
 
+	/**
+	 * Ritorna il numero fisico di un documento identificato tramite la propria posizione su una selezione risultante da una ricerca
+	 * @param position
+	 * @return
+	 * @throws SQLException
+	 */
 	public int getPhysdocByQueryResult(int position) throws SQLException {
 		return broker.getNumDoc(connId, db, queryResult, position);
 	}
 	
+	/**
+	 * Caricamento con LOCK di un documento in base al numero fisico
+	 * @param physdoc
+	 * @return
+	 * @throws Exception
+	 */
 	public Document loadAndLockDocument(int physdoc) throws Exception {
 		return loadAndLockDocument(physdoc, 1, 0);
 	}
 	
+	/**
+	 * Caricamento con LOCK di un documento in base al numero fisico
+	 * @param physdoc
+	 * @param attempts
+	 * @param delay
+	 * @return
+	 * @throws Exception
+	 */
 	public Document loadAndLockDocument(int physdoc, int attempts, long delay) throws Exception {
         XMLCommand theCommand = new XMLCommand(it.highwaytech.broker.XMLCommand.LoadDocument, XMLCommand.LoadDocument_Lock, physdoc);
         theCommand.encoding = ENCODING;
@@ -143,15 +238,36 @@ public class ExtrawayClient {
         return document;
 	}
 	
+	/**
+	 * Unlock di un documento precedentemente bloccato
+	 * @param physdoc
+	 * @throws Exception
+	 */
 	public void unlockDocument(int physdoc) throws Exception {
         XMLCommand theCommand = new XMLCommand(physdoc, theLock);
         broker.XMLCommand(connId, db, theCommand.toString());
 	}
 	
+	/**
+	 * Caricamento di un file
+	 * @param fileName
+	 * @param fileContent
+	 * @return
+	 * @throws Exception
+	 */
 	public String addAttach(String fileName, byte[] fileContent) throws Exception {
 		return addAttach(fileName, fileContent, 1, 0);
 	}
 	
+	/**
+	 * Caricamento di un file
+	 * @param fileName
+	 * @param fileContent
+	 * @param attempts
+	 * @param delay
+	 * @return
+	 * @throws Exception
+	 */
 	public String addAttach(String fileName, byte[] fileContent, int attempts, long delay) throws Exception {
         for (int i = 0; (i < attempts); i++) {
             try {

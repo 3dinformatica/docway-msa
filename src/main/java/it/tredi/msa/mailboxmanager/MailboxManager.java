@@ -111,7 +111,7 @@ public abstract class MailboxManager implements Runnable {
         		logger.debug("[" + configuration.getName() + "] processMailbox() called");	
     		
         	//connection attempts
-        	Message []messages = null;
+        	Message[] messages = null;
         	for (int attemptIndex = 1; attemptIndex <= MAILREADER_CONNECTION_ATTEMPTS; attemptIndex++) {
             	try {
             		//TEMPLATE STEP - openSession

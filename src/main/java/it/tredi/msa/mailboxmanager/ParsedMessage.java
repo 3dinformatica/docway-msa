@@ -8,21 +8,21 @@ import java.util.List;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Part;
+import javax.mail.internet.InternetAddress;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import it.tredi.mail.MessageUtils;
+import it.tredi.mail.MessageParser;
 
 public class ParsedMessage {
 	
-	protected Message message;
-	private String messageId;
-	private List<Part> leafPartsL;
-	private List<Part> attachmentsL;
-	private String textParts;
-	private String htmlParts;
+	private static final Logger logger = LoggerFactory.getLogger(ParsedMessage.class);
+	
+	private MessageParser parser;
 	
 	private boolean pecMessage = false;
 	private boolean isPecMessageInCache = false;
@@ -36,36 +36,32 @@ public class ParsedMessage {
 	private List<String> relevantMssages = new ArrayList<String>();
 	
 	public ParsedMessage(Message message) throws Exception {
-		this.message = message;
+		this.parser = new MessageParser(message);
 		relevantMssages = new ArrayList<>();
 		getMessageId(); //force setting messageId
 	}
 
 	public Message getMessage() {
-		return message;
-	}
-
-	public void setMessage(Message message) {
-		this.message = message;
+		return parser.getMessage();
 	}
 	
 	public String getSubject() throws MessagingException {
-		String subject = message.getSubject();
+		String subject = this.parser.getMessage().getSubject();
 		if (subject == null || subject.isEmpty())
 			subject = "[NESSUN OGGETTO]";
 		return subject;
 	}
 	
 	public String getFromAddress() throws MessagingException {
-		return MessageUtils.getFromAddress(message);
+		return this.parser.getFromAddress();
 	}
 
 	public String getFromPersonal() throws MessagingException {
-		return MessageUtils.getFromPersonal(message);
+		return this.parser.getFromPersonal();
 	}
 
 	public Date getSentDate() throws MessagingException {
-		return message.getSentDate();
+		return this.parser.getMessage().getSentDate();
 	}
 	
 	private String cleanMessageId(String messageId) {
@@ -75,66 +71,52 @@ public class ParsedMessage {
 	}
 	
 	public String getMessageId() throws Exception {
-		if (messageId == null) {
-			messageId = cleanMessageId(MessageUtils.getMessageId(message));
-		}
-		return messageId;
+		return cleanMessageId(this.parser.getMessageId());
 	}
 	
 	public String getToAddressesAsString() throws MessagingException {
-		return stringArrayToString(MessageUtils.getToAddresses(message));
+		return internetAddressesToString(this.parser.getTo());
 	}
 	
 	public String getCcAddressesAsString() throws MessagingException {
-		return stringArrayToString(MessageUtils.getCcAddresses(message));
+		return internetAddressesToString(this.parser.getCc());
 	}
 	
-	private String stringArrayToString(String []array) {
-		String ret = "";
-		for (String entry:array)
-			ret += ", " + entry;
-		if (ret.length() >= 2)
-			return ret.substring(2);
+	/**
+	 * Dato un array di iternetAddress restituisce una stringa con indicato l'elenco di indirizzi 
+	 * @param addresses
+	 * @return
+	 */
+	private String internetAddressesToString(InternetAddress[] addresses) {
+		String out = "";
+		if (addresses != null && addresses.length > 0) {
+			for (InternetAddress addr : addresses) {
+				if (addr != null && addr.getAddress() != null && !addr.getAddress().isEmpty()) {
+					out += ", " + addr.getAddress();
+				}
+			}
+		}
+		if (out.length() >= 2)
+			return out.substring(2);
 		else
 			return "";
-	}	
-	
-	public List<Part> getLeafPartsL() throws MessagingException, IOException {
-		if (leafPartsL == null)	
-			leafPartsL = MessageUtils.getLeafParts(message);
-		return leafPartsL;
 	}
 	
-	public List<Part> getAttachments() throws MessagingException, IOException {
-		if (attachmentsL == null) {
-			attachmentsL = new ArrayList<Part>();
-			for (Part part:getLeafPartsL())
-				if (MessageUtils.isAttachmentPart(part))
-					attachmentsL.add(part);
-		}
-		return attachmentsL;
+	
+	public List<Part> getLeafPartsL() {
+		return this.parser.getMessageParts();
+	}
+	
+	public List<Part> getAttachments() {
+		return this.parser.getAttachments();
 	}
 	
 	public String getTextParts() throws MessagingException, IOException {
-		if (textParts == null) {
-			textParts = "";
-			for (Part part:getLeafPartsL()) 
-				if (MessageUtils.isTextPart(part))			
-					textParts += part.getContent();
-			textParts = textParts.trim();
-		}
-		return textParts;
+		return this.parser.getText();
 	}
 
 	public String getHtmlParts() throws MessagingException, IOException {
-		if (htmlParts == null) {
-			htmlParts = "";
-			for (Part part:getLeafPartsL()) 
-				if (MessageUtils.isHtmlPart(part))
-					htmlParts += part.getContent();
-			htmlParts = htmlParts.trim();
-		}
-		return htmlParts;
+		return this.parser.getHtml();
 	}
 	
 	public String getTextPartsWithHeaders() throws MessagingException, IOException {
@@ -150,7 +132,7 @@ public class ParsedMessage {
 
 	public boolean isPecMessage() {
 		if (!isPecMessageInCache) {
-			pecMessage = MessageUtils.isPecMessage(message);
+			pecMessage = this.parser.isPecMessage();
 			isPecMessageInCache = true;
 		}
 		return pecMessage;
@@ -158,24 +140,70 @@ public class ParsedMessage {
 	
 	public boolean isPecReceipt() {
 		if (!isPecNotificationInCache) {
-			pecNotification = MessageUtils.isPecReceipt(message);
+			pecNotification = this.parser.isPecReceipt();
 			isPecNotificationInCache = true;
 		}
 		return pecNotification;
 	}
 	
+	/**
+	 * Recupero del contenuto XML relativo al file daticert.xml del messaggio (se PEC)
+	 * @return
+	 * @throws Exception
+	 */
 	private Document getDatiCertDocument() throws Exception {
 		if (!datiCertDocumentInCache) {
-			Part part = MessageUtils.extractDatiCertXmlFromPec(message);
-			byte[] b = (new PartContentProvider(part)).getContent();
-			String content = new String(b, "UTF-8");
-			datiCertDocument = DocumentHelper.parseText(content);			
+			if (isPecMessage() || isPecReceipt()) {
+				List<Part> list = getAttachmentPartsByName("daticert.xml");
+				if (list != null && !list.isEmpty()) {
+					if (list.size() == 1) {
+						// Solo 1 daticert trovato, lo restituisco
+						datiCertDocument = partToDocument(list.get(0)); 
+						datiCertDocumentInCache = true;
+					}
+					else {
+						// Trovati piu' daticert, ritorno quello relativo al documento corrente
+						for (Part part : list) {
+							if (part != null) {
+								try {
+									Document tmp = partToDocument(part);
+									if (tmp != null) {
+										
+										// Verifico che effettivamente il daticert.xml sia quello del messaggio ricervuto (e non di un eventuale
+										// messaggio inoltrato incluso)
+										String identificativo = cleanMessageId(tmp.selectSingleNode("/postacert/dati/identificativo").getText());
+										if (identificativo.equals(this.getMessageId())) {
+											datiCertDocument = tmp;
+											datiCertDocumentInCache = true;
+										}
+									}
+								}
+								catch(Exception e) {
+									logger.error("ParsedMessage: Unable to extract daticert.xml from current part... " + e.getMessage(), e);
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 		return datiCertDocument;
 	}	
 	
+	private Document partToDocument(Part part) throws Exception {
+		Document doc = null;
+		if (part != null) {
+			byte[] b = (new PartContentProvider(part)).getContent();
+			String content = new String(b, "UTF-8");
+			doc = DocumentHelper.parseText(content);
+		}
+		return doc;
+	}
+	
+	@Deprecated
 	public String getMessageIdFromDatiCertPec() throws Exception {
-		return cleanMessageId(getDatiCertDocument().selectSingleNode("/postacert/dati/msgid").getText());
+		// FIXME il messageId dovrebbe corrispondere all'elemento 'identificativo'
+		return cleanMessageId(getDatiCertDocument().selectSingleNode("/postacert/dati/msgid").getText()); 
 	}
 
 	public String getSubjectFromDatiCertPec() throws Exception {
@@ -214,6 +242,51 @@ public class ParsedMessage {
 	
 	public void clearRelevantMessages() {
 		this.relevantMssages.clear();
+	}
+	
+	public boolean isReplyOrForward() {
+		return this.parser.isReplyOrForward();
+	}
+	
+	/**
+	 * Ritorna il primo allegato trovato nel messaggio in base al nome indicato. Se non viene trovato l'allegato richiesto viene restituito NULL.
+	 * @param fileName Nome dell'allegato da caricare
+	 * @return
+	 */
+	public Part getFirstAttachmentByName(String fileName) {
+		List<Part> list = this.parser.getAttachmentPartsByName(fileName);
+		if (list != null && list.size() > 0)
+			// TODO metodo sbagliato, non si ha controllo se l'allegato viene estratto dalla mail principale o da una eventuale inoltrata (parte interna all'originale)
+			return list.get(0);
+		else
+			return null;
+	}
+	
+	/**
+	 * Ritorna tutti gli allegati trovati nel messaggio in base al nome indicato.
+	 * @param fileName
+	 * @return
+	 */
+	public List<Part> getAttachmentPartsByName(String fileName) {
+		return this.parser.getAttachmentPartsByName(fileName);
+	}
+	
+	/**
+	 * Ritorna i nomi di tutti gli allegati inclusi al messaggio
+	 * @return
+	 */
+	public List<String> getAttachmentsName() {
+		List<String> names = new ArrayList<>();
+		if (this.getAttachments() != null && !this.getAttachments().isEmpty()) {
+			for (Part part : this.getAttachments()) {
+				if (part != null) {
+					String filename = this.parser.loadAttachmentNameFromPart(part);
+					if (filename != null && !filename.isEmpty())
+						names.add(filename);
+				}
+			}
+		}
+		return names;
 	}
 	
 }

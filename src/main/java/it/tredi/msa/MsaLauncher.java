@@ -8,6 +8,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 
+/**
+ * Classe di avvio del servizio MSA
+ */
 @SpringBootApplication
 public class MsaLauncher implements CommandLineRunner {
 	

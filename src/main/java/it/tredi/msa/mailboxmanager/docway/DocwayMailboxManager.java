@@ -23,7 +23,6 @@ import org.dom4j.Element;
 
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
-import it.tredi.mail.MessageUtils;
 import it.tredi.msa.Utils;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.ContentProvider;
@@ -679,7 +678,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		RifEsterno rifEsterno = doc.getRifEsterni().get(0);
 		
 		//Segnatura.xml
-		Part attachment = MessageUtils.getAttachmentPartByName(parsedMessage.getMessage(), "Segnatura.xml");
+		Part attachment = parsedMessage.getFirstAttachmentByName("Segnatura.xml");
 		InteroperabilitaItem interopItem = new InteroperabilitaItem();
 		interopItem.setName("Segnatura.xml");
 		interopItem.setData(currentDate);
@@ -719,7 +718,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	private String addFileFromSegnatura(Element documentoEl, DocwayDocument doc, ParsedMessage parsedMessage, boolean addAllegato) throws Exception {
 		if (documentoEl != null && !documentoEl.attributeValue("nome", "").isEmpty()) {
-			Part attachment = MessageUtils.getAttachmentPartByName(parsedMessage.getMessage(), documentoEl.attributeValue("nome"));
+			Part attachment = parsedMessage.getFirstAttachmentByName(documentoEl.attributeValue("nome"));
 			if (attachment != null) {
 				DocwayFile file = createDocwayFile();
 				file.setContentProvider(new PartContentProvider(attachment));

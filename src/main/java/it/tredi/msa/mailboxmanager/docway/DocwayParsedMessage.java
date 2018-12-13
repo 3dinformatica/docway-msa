@@ -15,7 +15,6 @@ import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import it.tredi.mail.MessageUtils;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
 
@@ -159,7 +158,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 	private Document getInteropPAMessageDocument(String fileName, String rootElName) {
 		Document document = null;
 		try {
-			List<Part> partsL = MessageUtils.getAttachmentPartsByName(getAttachments(), fileName);
+			List<Part> partsL = this.getAttachmentPartsByName(fileName);
 			if (partsL.size() == 1) {
 				byte []b = (new PartContentProvider(partsL.get(0))).getContent();
 				try {
@@ -223,7 +222,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 	}
 	
 	public boolean isSegnaturaInteropPAMessage(String codAmmInteropPA, String codAooInteropPA) {
-		if (isPecMessage() && !MessageUtils.isReplyOrForward(message)) {
+		if (isPecMessage() && !isReplyOrForward()) {
 			Document document = getSegnaturaInteropPADocument();
 			if (document != null) {
 				try {
@@ -258,27 +257,27 @@ public class DocwayParsedMessage extends ParsedMessage {
 
 	public boolean isConfermaRicezioneInteropPAMessage(String codAmmInteropPA, String codAooInteropPA) {
 		Document document;
-		if (isPecMessage() && !MessageUtils.isReplyOrForward(message) && (document = getConfermaRicezioneInteropPADocument()) != null)
+		if (isPecMessage() && !isReplyOrForward() && (document = getConfermaRicezioneInteropPADocument()) != null)
 			return checkInteropPADocument(document, "Conferma.xml", codAmmInteropPA, codAooInteropPA, "/ConfermaRicezione/MessaggioRicevuto/Identificatore", false);
 		return false;
 	}
 	
 	public boolean isNotificaEccezioneInteropPAMessage(String codAmmInteropPA, String codAooInteropPA) {
 		Document document;
-		if (isPecMessage() && !MessageUtils.isReplyOrForward(message) && (document = getNotificaEccezioneInteropPADocument()) != null)
+		if (isPecMessage() && !isReplyOrForward() && (document = getNotificaEccezioneInteropPADocument()) != null)
 			return checkInteropPADocument(document, "Eccezione.xml", codAmmInteropPA, codAooInteropPA, "/NotificaEccezione/MessaggioRicevuto/Identificatore", false);
 		return false;
 	}
 	
 	public boolean isAggiornamentoConfermaInteropPAMessage(String codAmmInteropPA, String codAooInteropPA) {
 		Document document;
-		if (isPecMessage() && !MessageUtils.isReplyOrForward(message) && (document = getAggiornamentoConfermaInteropPADocument()) != null)
+		if (isPecMessage() && !isReplyOrForward() && (document = getAggiornamentoConfermaInteropPADocument()) != null)
 			return checkInteropPADocument(document, "Aggiornamento.xml", codAmmInteropPA, codAooInteropPA, "/AggiornamentoConferma/MessaggioRicevuto/Identificatore", false);
 		return false;
 	}
 	
 	public boolean isAnnullamentoProtocollazioneInteropPAMessage(String codAmmInteropPA, String codAooInteropPA) {
-		if (isPecMessage() && !MessageUtils.isReplyOrForward(message) && getAnnullamentoProtocollazioneInteropPADocument() != null)
+		if (isPecMessage() && !isReplyOrForward() && getAnnullamentoProtocollazioneInteropPADocument() != null)
 			return true;
 		return false;
 	}
