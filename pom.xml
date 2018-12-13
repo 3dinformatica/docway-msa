@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.0.0.RELEASE</version>
+		<version>2.1.0.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -20,6 +20,7 @@
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
 		<jdk.version>1.8</jdk.version>
+		<git.group>docway5</git.group>
 	</properties>
 
 	<dependencies>
@@ -36,12 +37,8 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-log4j2</artifactId>
-		</dependency>				
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>	
+		</dependency>
+					
 		<dependency>
 			<groupId>it.tredi</groupId>
 			<artifactId>utils</artifactId>
@@ -68,6 +65,11 @@
 		    <version>1.46</version>
 		</dependency>		
 		
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	
 	<build>
@@ -147,4 +149,10 @@
 			<url>http://ecatonchiro.bo.priv:8081/nexus/content/repositories/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
+	
+	<scm>
+		<url>http://gitlab.bo.priv/${git.group}/${project.groupId}.${project.artifactId}</url>
+		<developerConnection>scm:git:ssh://${git.username}@gitlab.bo.priv:${git.group}/${project.groupId}.${project.artifactId}</developerConnection>
+		<connection>scm:git:ssh://${git.username}@gitlab.bo.priv:${git.group}/${project.groupId}.${project.artifactId}</connection>
+	</scm>
 </project>
