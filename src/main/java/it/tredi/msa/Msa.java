@@ -1,7 +1,5 @@
 package it.tredi.msa;
 
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.security.AccessControlException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,12 +21,16 @@ public class Msa {
 	private ExecutorServiceHandler executorServiceHandler;
 	
 	protected void run(int port) throws Exception {
-		if (isAlreadyStarted(port)) { //check id MSA is already running on the same port
+		// mbernardini 17/12/2018 : corretto controllo su porta socket occupata
+		try {
+			MsaSocket.getInstance(port);
+		}
+		catch (Exception e) {
 			if (logger.isInfoEnabled()) {
 				logger.info("Another instance of MSA already running on port [" + port + "]");
 				logger.info("MSA Service NOT Started!");
 			}
-			return;
+			throw e;
 		}
 		
 		registerShutdownHook();
@@ -99,19 +101,5 @@ public class Msa {
 		LoggerContext context = (LoggerContext)LogManager.getContext(false);
 		context.stop();
 	}
-	
-	private boolean isAlreadyStarted(int port) {
-		boolean started = false;
-		ServerSocket testSocket = null;
-		try {
-			InetSocketAddress testSocketAddress = new InetSocketAddress("127.0.0.1", port);
-			testSocket = new ServerSocket();
-			testSocket.bind(testSocketAddress);
-		}
-		catch (Exception e) {
-			started = true;
-		}
-		return started;
-	}	
 
 }
