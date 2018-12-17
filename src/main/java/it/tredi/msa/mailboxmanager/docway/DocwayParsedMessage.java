@@ -6,7 +6,6 @@ import java.util.regex.Pattern;
 
 import javax.mail.Message;
 import javax.mail.Part;
-import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.cms.CMSProcessableByteArray;
@@ -15,6 +14,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
+import it.tredi.mail.MessageUtils;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
 
@@ -330,7 +330,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 	
 	private Document getFileInterscambioFatturaPADocument(boolean isNotifica) throws Exception {
 		for (Part attachment:super.getAttachments()) {
-			String fileName = MimeUtility.decodeText(attachment.getFileName());
+			String fileName = MessageUtils.decodeAttachmentFileName(attachment.getFileName());
 			if (fileName.toUpperCase().endsWith(".XML") || fileName.toUpperCase().endsWith(".XML.P7M")) {
 				int underscoreOccurrences = fileName.replaceAll("[^_]", "").length();
 				if (isNotifica && underscoreOccurrences > 1 || !isNotifica && underscoreOccurrences == 1) {

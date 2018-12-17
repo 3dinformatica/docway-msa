@@ -12,7 +12,6 @@ import javax.mail.Message.RecipientType;
 import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeUtility;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +22,7 @@ import org.dom4j.Element;
 
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
+import it.tredi.mail.MessageUtils;
 import it.tredi.msa.Utils;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.ContentProvider;
@@ -360,14 +360,14 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		for (Part attachment:attachments) {
 			file = createDocwayFile();
 			file.setContentProvider(new PartContentProvider(attachment));
-			file.setName(MimeUtility.decodeText(attachment.getFileName()));
+			file.setName(MessageUtils.decodeAttachmentFileName(attachment.getFileName()));
 			if (isImage(file.getName())) //immagine
 					doc.addImmagine(file);
 			else //file
 				doc.addFile(file);
 			
 			//allegato
-			doc.addAllegato(file.getName());
+			doc.addAllegato(MessageUtils.decodeAttachmentFileName(file.getName()));
 		}
 
 		//allegato - default
@@ -722,7 +722,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			if (attachment != null) {
 				DocwayFile file = createDocwayFile();
 				file.setContentProvider(new PartContentProvider(attachment));
-				file.setName(MimeUtility.decodeText(attachment.getFileName()));
+				file.setName(MessageUtils.decodeAttachmentFileName(attachment.getFileName()));
 				if (isImage(file.getName())) //immagine
 						doc.addImmagine(file);
 				else //file

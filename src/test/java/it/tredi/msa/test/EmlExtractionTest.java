@@ -4,14 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,24 +20,8 @@ import it.tredi.msa.test.conf.MsaTesterApplication;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = MsaTesterApplication.class)
-public class EmlExtractionTest {
+public class EmlExtractionTest extends EmlReader {
 	
-	private static final String EML_LOCATION = "eml";
-	
-	/**
-	 * Creazione dell'oggetto message a partire da un file salvato su disco
-	 * @param file
-	 * @return
-	 * @throws IOException 
-	 * @throws MessagingException 
-	 */
-	private Message _readEmlFile(File file) throws MessagingException, IOException {
-		Message message = null;
-		if (file != null && file.exists())
-	        message = new MimeMessage(null, FileUtils.openInputStream(file));
-		return message;
-	}
-
 	/**
 	 * Test di estrazione di un messaggio contenente una parte NULL
 	 */
@@ -54,7 +32,7 @@ public class EmlExtractionTest {
 		
 		System.out.println("input file = " + fileName);
 		
-		ParsedMessage parsed = new ParsedMessage(_readEmlFile(file));
+		ParsedMessage parsed = new ParsedMessage(readEmlFile(file));
 		
 		assertNotNull(parsed);
 		assertNotNull(parsed.getMessageId());
@@ -89,7 +67,7 @@ public class EmlExtractionTest {
 		
 		System.out.println("input file = " + fileName);
 		
-		ParsedMessage parsed = new ParsedMessage(_readEmlFile(file));
+		ParsedMessage parsed = new ParsedMessage(readEmlFile(file));
 		
 		assertNotNull(parsed);
 		assertNotNull(parsed.getMessageId());
@@ -123,7 +101,7 @@ public class EmlExtractionTest {
 		
 		System.out.println("input file = " + fileName);
 		
-		ParsedMessage parsed = new ParsedMessage(_readEmlFile(file));
+		ParsedMessage parsed = new ParsedMessage(readEmlFile(file));
 		
 		assertNotNull(parsed);
 		assertNotNull(parsed.getMessageId());
@@ -138,46 +116,6 @@ public class EmlExtractionTest {
 			System.out.println("\tattach name = " + name);
 		
 		assertEquals(5, parsed.getAttachments().size());
-		
-		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
-		System.out.println("from dati cert = " + fromDatiCert);
-		
-		assertNotNull(fromDatiCert);
-		assertEquals("dcsii.dag@pec.mef.gov.it", fromDatiCert);
-	}
-	
-	/**
-	 * Errore su encoded stream su BASE64Decoder (it.tredi.msa.mailboxmanager.PartContentProvider.getContent(), riga 22)
-	 * @throws Exception
-	 */
-	@Test
-	public void base64DecoderErrorExtraction() throws Exception {
-		String fileName = "base64decoderError.eml";
-		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
-		
-		System.out.println("input file = " + fileName);
-		
-		ParsedMessage parsed = new ParsedMessage(_readEmlFile(file));
-		
-		assertNotNull(parsed);
-		assertNotNull(parsed.getMessageId());
-		
-		System.out.println("messageId = " + parsed.getMessageId());
-		System.out.println("subject = " + parsed.getSubject());
-		System.out.println("from address = " + parsed.getFromAddress());
-		
-		List<String> attachments = parsed.getAttachmentsName();
-		System.out.println("attachments count = " + attachments.size());
-		for (String name : attachments)
-			System.out.println("\tattach name = " + name);
-		
-		assertEquals(7, parsed.getAttachments().size());
-		
-		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
-		System.out.println("from dati cert = " + fromDatiCert);
-		
-		assertNotNull(fromDatiCert);
-		assertEquals("sergio.urbano@avvocatismcv.it", fromDatiCert);
 	}
 	
 }
