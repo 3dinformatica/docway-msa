@@ -46,7 +46,25 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	@Override
     public void openSession() throws Exception {
 		super.openSession();
+		
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+		
+		// mbernardini 17/12/2018 : aggiunta del riferimento al thread corrente allo username dell'utente per xw
+		// Eliminazione di possibili errori di "Protezione file non riuscita" dovuta alla gestione multithread delle caselle di posta
+		String xwUser = conf.getXwUser();
+		try {
+			String threadName = Thread.currentThread().getName();
+			int index = threadName.indexOf("thread-");
+			if (index != -1)
+				threadName = threadName.substring(index);
+			xwUser = xwUser + "." + threadName;
+			if (logger.isInfoEnabled())
+				logger.info("Add current thread name to xway user... xwUser = " + xwUser);
+		}
+		catch(Exception e) {
+			logger.error("Unable to append thread name to xway user [xwUser = " + xwUser + "]... " + e.getMessage(), e);
+		}
+		
 		xwClient = new ExtrawayClient(conf.getXwHost(), conf.getXwPort(), conf.getXwDb(), conf.getXwUser(), conf.getXwPassword());
 		xwClient.connect();
 		aclClient = new ExtrawayClient(conf.getXwHost(), conf.getXwPort(), conf.getAclDb(), conf.getXwUser(), conf.getXwPassword());
