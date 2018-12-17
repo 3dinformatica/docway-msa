@@ -5,21 +5,26 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
 
-import it.tredi.msa.entity.AuditMailboxRun;
-import it.tredi.msa.entity.AuditMessage;
-import it.tredi.msa.entity.AuditMessageStatus;
-import it.tredi.msa.repository.AuditMailboxRunRepository;
-import it.tredi.msa.repository.AuditMessageRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
+
 import it.tredi.msa.ContextProvider;
 import it.tredi.msa.configuration.MailboxConfiguration;
+import it.tredi.msa.entity.AuditMailboxRun;
+import it.tredi.msa.entity.AuditMessage;
+import it.tredi.msa.entity.AuditMessageStatus;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
+import it.tredi.msa.repository.AuditMailboxRunRepository;
+import it.tredi.msa.repository.AuditMessageRepository;
 
 public class MongodbAuditWriter extends AuditWriter {
+	
+	private static final Logger logger = LogManager.getLogger(MongodbAuditWriter.class.getName());
 	
 	private AuditMessageRepository auditMessageRepository;
 	private AuditMailboxRunRepository auditMailboxRunRepository;
@@ -94,20 +99,27 @@ public class MongodbAuditWriter extends AuditWriter {
 		auditMessage.setSentDate(parsedMessage.getSentDate());
 		auditMessage.setStatus(AuditMessageStatus.ERROR);
 		auditMessage.setSubject(parsedMessage.getSubject());
+		try {
+			auditMessage.setFromAddress(parsedMessage.getFromAddress());
+		}
+		catch(Exception e) {
+			logger.error("MongodbAuditWriter: Unable to retrieve 'from-address' from message... " + e.getMessage());
+		}
+		
 		auditMessageRepository.save(auditMessage);
 	}
 
 	@Override
-	public boolean auditMessageInErrorFound(MailboxConfiguration mailboxConfiguration, ParsedMessage parsedMessage) throws Exception {
+	public boolean isErrorMessageFoundInAudit(MailboxConfiguration mailboxConfiguration, ParsedMessage parsedMessage) throws Exception {
 		return auditMessageRepository.findByMessageIdAndMailboxNameAndStatus(parsedMessage.getMessageId(), mailboxConfiguration.getName(), AuditMessageStatus.ERROR) != null;
 	}
 
 	@Override
-	public void writeAuditMailboxRun(AuditMailboxRun auditMailboxRun) throws Exception {
-		AuditMailboxRun lastAuditMailboxRun = auditMailboxRunRepository.findByMailboxName(auditMailboxRun.getMailboxName());
-		if (lastAuditMailboxRun != null) //keep only one execution
-			auditMailboxRunRepository.delete(lastAuditMailboxRun);
-		auditMailboxRunRepository.save(auditMailboxRun);
+	public AuditMailboxRun writeAuditMailboxRun(AuditMailboxRun auditMailboxRun) throws Exception {
+		//AuditMailboxRun lastAuditMailboxRun = auditMailboxRunRepository.findByMailboxName(auditMailboxRun.getMailboxName());
+		//if (lastAuditMailboxRun != null) //keep only one execution
+		//	auditMailboxRunRepository.delete(lastAuditMailboxRun);
+		return auditMailboxRunRepository.save(auditMailboxRun);
 	}
 
 }

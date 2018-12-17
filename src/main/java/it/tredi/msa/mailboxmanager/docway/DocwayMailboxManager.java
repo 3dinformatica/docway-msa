@@ -90,7 +90,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract void attachFatturaPAPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception;
 	
 	@Override
-	public void init() {
+	public void customInit() {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		if (conf.getSmtpHost() != null && !conf.getSmtpHost().isEmpty()) {
 			mailSender = MailClientHelper.createMailSender(conf.getSmtpHost(), conf.getSmtpPort(), conf.getSmtpUser(), conf.getSmtpPassword(), conf.getSmtpProtocol());
