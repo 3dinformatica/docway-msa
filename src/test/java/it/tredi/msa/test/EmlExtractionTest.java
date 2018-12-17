@@ -112,4 +112,72 @@ public class EmlExtractionTest {
 		assertEquals("paolapenna@ordineavvocatiroma.org", fromDatiCert);
 	}
 	
+	/**
+	 * Errore NotWellFormed su ServerCommand.send su eXtraWay server
+	 * @throws Exception
+	 */
+	@Test
+	public void notWellFormed2Extraction() throws Exception {
+		String fileName = "notWellFormed_2.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		ParsedMessage parsed = new ParsedMessage(_readEmlFile(file));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(5, parsed.getAttachments().size());
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("dcsii.dag@pec.mef.gov.it", fromDatiCert);
+	}
+	
+	/**
+	 * Errore su encoded stream su BASE64Decoder (it.tredi.msa.mailboxmanager.PartContentProvider.getContent(), riga 22)
+	 * @throws Exception
+	 */
+	@Test
+	public void base64DecoderErrorExtraction() throws Exception {
+		String fileName = "base64decoderError.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		ParsedMessage parsed = new ParsedMessage(_readEmlFile(file));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(7, parsed.getAttachments().size());
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("sergio.urbano@avvocatismcv.it", fromDatiCert);
+	}
+	
 }
