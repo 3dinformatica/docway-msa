@@ -2,6 +2,9 @@
 
 ## [3.0.3] - SNAPSHOT 
 
+### Changed
+- Aumentato il livello di log a DEBUG
+
 ### Fixed
 - Corretto errore in fase di elaborazione di un messaggio: Part NULL (Task #16775).
 - Corretto query su ricerca documento per aggancio notifiche. Ci sono casi nei quali vengono fatte ricerche su nrecord anziche' num_prot (Task #16797).
