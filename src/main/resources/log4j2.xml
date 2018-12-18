@@ -13,12 +13,15 @@
     </Appenders>
     
     <Loggers>
-		<Logger name="it.tredi.msa" level="info" additivity="false"> <!-- MSA Logger -->
+		<Logger name="it.tredi.msa" level="debug" additivity="false"> <!-- MSA Logger -->
 			<AppenderRef ref="CONSOLE"/>
 		</Logger>
-		<Logger name="it.tredi.mail" level="info" additivity="false"> <!-- MAIL API Logger -->
+		<Logger name="it.tredi.mail" level="debug" additivity="false"> <!-- MAIL API Logger -->
 			<AppenderRef ref="CONSOLE"/>
-		</Logger>	
+		</Logger>
+		<Logger name="it.tredi.extraway" level="info" additivity="false"> <!-- EXTRAWAY API Logger -->
+			<AppenderRef ref="CONSOLE"/>
+		</Logger>
         <Root level="warn" additivity="false"> <!-- In a eXtraWay scenario don't set to [info] level if you don't want broker excessive logging -->
             <AppenderRef ref="CONSOLE"/>
         </Root>
