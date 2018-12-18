@@ -188,7 +188,7 @@ public abstract class MailboxManager implements Runnable {
         		try {
             		//TEMPLATE STEP - parsedMessage
         			if (logger.isInfoEnabled())
-        				logger.info("[" + configuration.getName() + "] parsing message (\" + (i++) + \"/\" + messages.length + \")...");
+        				logger.info("[" + configuration.getName() + "] parsing message (" + (i++) + "/" + messages.length + ")...");
             		parsedMessage = parseMessage(message);
         			
             		if (logger.isInfoEnabled())
