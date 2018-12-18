@@ -7,6 +7,7 @@
 - Corretto query su ricerca documento per aggancio notifiche. Ci sono casi nei quali vengono fatte ricerche su nrecord anziche' num_prot (Task #16797).
 - Corretto controllo su porta socket occupata. Su versione precedente possibilità di avviare istanze multiple di MSA.
 - Aggiunta del riferimento al thread corrente allo username dell'utente per xw per eliminazione di eventuali problemi di "Protezione file non riuscita" dovuti a gestione multithread.
+- Riconoscimento di file danneggiati all'interno della mail: Viene forzato il caricamento dell'EML come allegato al documento e viene aggiunta al campo note l'indicazione dei file danneggiati rilevati (Task #16824)
 
 ## [3.0.2] - 2018-12-07 
 

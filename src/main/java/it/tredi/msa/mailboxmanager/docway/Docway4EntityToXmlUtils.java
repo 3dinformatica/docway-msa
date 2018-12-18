@@ -17,6 +17,9 @@ import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
 
+/**
+ * Conversione dell'oggetto di model del documento in doc XML per DocWay4
+ */
 public class Docway4EntityToXmlUtils {
 
 	public static Document docwayDocumentToXml(DocwayDocument doc, Date currentDate) {

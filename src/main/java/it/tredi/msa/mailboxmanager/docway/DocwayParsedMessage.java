@@ -18,6 +18,10 @@ import it.tredi.mail.MessageUtils;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
 
+/**
+ * Parsing aggiuntivo del messaggio in base alle finalita' di DocWay. Estrazioni di ulteriori informazioni (rispetto a quelle di base) necessarie all'elaborazione
+ * del messaggio email come documento di DocWay
+ */
 public class DocwayParsedMessage extends ParsedMessage {
 	
 	//interopPA

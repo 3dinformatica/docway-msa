@@ -28,6 +28,9 @@ import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
 import it.tredi.msa.notification.MailNotificationSender;
 
+/**
+ * Estensione della gestione delle mailbox (lettura, elaborazione messaggi, ecc.) specifica per DocWay4 (es. chiamate eXtraWay)
+ */
 public class Docway4MailboxManager extends DocwayMailboxManager {
 
 	protected ExtrawayClient xwClient;

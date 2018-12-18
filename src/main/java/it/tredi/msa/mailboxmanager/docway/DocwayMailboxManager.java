@@ -1,6 +1,7 @@
 package it.tredi.msa.mailboxmanager.docway;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -36,6 +37,9 @@ import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoDocumentoBuilder;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
 
+/**
+ * Estensione della gestione delle mailbox (lettura, elaborazione messaggi, ecc.) per finalita' di gestione documentale
+ */
 public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	protected Date currentDate;
@@ -112,8 +116,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
             		break;
             	}
             	catch (Exception e) {
-            		if (logger.isDebugEnabled())
-            			logger.debug("[" + conf.getName() + "] connection failed: (" + attemptIndex + "/" +MAILSENDER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
+            		logger.warn("[" + conf.getName() + "] connection failed: (" + attemptIndex + "/" +MAILSENDER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
             		if (attemptIndex == MAILSENDER_CONNECTION_ATTEMPTS)
             			throw e;
             		Thread.sleep(1000); //1 sec delay
@@ -234,6 +237,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		DocwayDocument doc = new DocwayDocument();
 		
+		if (logger.isDebugEnabled())
+			logger.debug("[" + conf.getName() + "] creazione del documento da messaggio parsato. messageId = " + parsedMessage.getMessageId());
+		
 		//tipo doc
 		doc.setTipo(conf.getTipoDoc());
 		
@@ -327,6 +333,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		}
 		
 		//files + immagini + allegato
+		if (logger.isDebugEnabled())
+			logger.debug("[" + conf.getName() + "] gestione files e immagini...");
 		createDocwayFiles(parsedMessage, doc);
 		
 		//parsedMessage.relevantMessages -> postit
@@ -352,36 +360,69 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			file.setName(TESTO_EMAIL_FILENAME);
 			text = parsedMessage.getTextPartsWithHeaders();
 		}
-		file.setContentProvider(new StringContentProvider(text));
-		doc.addFile(file);			
-
+		file.setContentByProvider(new StringContentProvider(text));
+		doc.addFile(file);
+		
+		// mbernardini 17/12/2018 : gestione di messaggi email contenenti allegati danneggiati
+		boolean damagedFound = false;
+		List<String> damagedFiles = new ArrayList<>();
+		
 		//email attachments (files + immagini)
 		List<Part> attachments = parsedMessage.getAttachments();
 		for (Part attachment:attachments) {
 			file = createDocwayFile();
-			file.setContentProvider(new PartContentProvider(attachment));
-			file.setName(MessageUtils.decodeAttachmentFileName(attachment.getFileName()));
-			if (isImage(file.getName())) //immagine
-					doc.addImmagine(file);
-			else //file
-				doc.addFile(file);
+			
+			String currentFileName = MessageUtils.decodeAttachmentFileName(attachment.getFileName());
+			if (logger.isDebugEnabled())
+				logger.debug("Read content from attachment " + currentFileName + "...");
+			
+			// Se non si riesce a caricare il contenuto del file diamo per scontato che si tratti di un file danneggiato
+			boolean fileLoaded = false;
+			try {
+				file.setContentByProvider(new PartContentProvider(attachment));
+				fileLoaded = true;
+			}
+			catch(Exception e) {
+				logger.warn("[" + attachment.getFileName() + "] Unable to read file content, damaged file... " + e.getMessage(), e);
+				logger.info("Mark file " + currentFileName + " as DAMAGED file!");
+				damagedFound = true;
+				damagedFiles.add(currentFileName);
+			}
+			if (fileLoaded) {
+				file.setName(currentFileName);
+				if (isImage(file.getName())) //immagine
+						doc.addImmagine(file);
+				else //file
+					doc.addFile(file);
+			}
 			
 			//allegato
-			doc.addAllegato(MessageUtils.decodeAttachmentFileName(file.getName()));
+			doc.addAllegato(currentFileName);
 		}
-
+		
 		//allegato - default
 		if (doc.getAllegato().isEmpty())
 			doc.addAllegato(DEFAULT_ALLEGATO);
 		
+		// In caso di file danneggiati viene forzata l'aggiunta al documento dell'EML del messaggio email
 		//EML
-		if (((DocwayMailboxConfiguration)getConfiguration()).isStoreEml()) {
+		if (((DocwayMailboxConfiguration)getConfiguration()).isStoreEml() || damagedFound) {
 			file = createDocwayFile();
-			file.setContentProvider(new MessageContentProvider(parsedMessage.getMessage(), true));
+			file.setContentByProvider(new MessageContentProvider(parsedMessage.getMessage(), true));
 			file.setName(MESSAGGIO_ORIGINALE_EMAIL_FILENAME);
 			doc.addFile(file);			
 		}
-
+		
+		// mbernardini 17/12/2018 : indicazione di eventuali file danneggiati all'interno delle note del documento
+		if (damagedFound && !damagedFiles.isEmpty()) {
+			// aggiunta di un'annotazione specifica sul documento XML
+			parsedMessage.addRelevantMessage("Rilevati possibili file danneggiati allegati alla mail: " + String.join(", ", damagedFiles));
+			//String note = doc.getNote();
+			//if (note == null)
+			//	note = "";
+			//note = "Rilevati possibili file danneggiati allegati alla mail: " + String.join(", ", damagedFiles) + "\n-----\n" + note;
+			//doc.setNote(note);
+		}
 	}
 	
 	protected boolean isImage(String fileName) {
@@ -405,6 +446,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	private DocwayDocument createDocwayDocumentByInteropPAMessage(ParsedMessage  parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		if (logger.isDebugEnabled())
+			logger.debug("[" + conf.getName() + "] creazione del documento da messaggio Interoperabilita'. messageId = " + parsedMessage.getMessageId());
+		
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();
 
@@ -721,7 +765,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			Part attachment = parsedMessage.getFirstAttachmentByName(documentoEl.attributeValue("nome"));
 			if (attachment != null) {
 				DocwayFile file = createDocwayFile();
-				file.setContentProvider(new PartContentProvider(attachment));
+				file.setContentByProvider(new PartContentProvider(attachment));
 				file.setName(MessageUtils.decodeAttachmentFileName(attachment.getFileName()));
 				if (isImage(file.getName())) //immagine
 						doc.addImmagine(file);
@@ -740,6 +784,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	protected void sendConfermaRicezioneInteropPAMessage(ParsedMessage parsedMessage, DocwayDocument doc, String codRegistro, String numProt, String dataProt, String subject) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		
+		if (logger.isDebugEnabled())
+			logger.debug("[" + conf.getName() + "] invio della conferma di ricezione per il messaggio di Interoperabilita'. messageId = " + parsedMessage.getMessageId());
+		
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();
 		
@@ -807,6 +855,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	protected void sendNotificaEccezioneInteropPAMessage(ParsedMessage parsedMessage, DocwayDocument doc, String codRegistro, String numProt, String dataProt, String subject, String motivazioneNotificaEccezione) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		
+		if (logger.isDebugEnabled())
+			logger.debug("[" + conf.getName() + "] invio della notifica di eccezione per il messaggio di Interoperabilita'. messageId = " + parsedMessage.getMessageId());
+		
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();		
 		
@@ -847,6 +899,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 
 	private DocwayDocument createDocwayDocumentByFatturaPAMessage(ParsedMessage  parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		
+		if (logger.isDebugEnabled())
+			logger.debug("[" + conf.getName() + "] creazione del documento da messaggio FatturaPA. messageId = " + parsedMessage.getMessageId());
+		
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document fatturaPADocument = dcwParsedMessage.getFatturaPADocument();
 		Document fileMetadatiDocument = dcwParsedMessage.getFileMetadatiDocument();
@@ -918,7 +974,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			DocwayFile file = createDocwayFile();
 			file.setName((String)fileAttrsL.get(0));
 			file.setFromFatturaPA(true);
-			file.setContentProvider((ContentProvider)fileAttrsL.get(1));					
+			file.setContentByProvider((ContentProvider)fileAttrsL.get(1));					
 			doc.addFile(index++, file);			
 		}
 		

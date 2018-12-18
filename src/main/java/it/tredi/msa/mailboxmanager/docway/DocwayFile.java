@@ -5,6 +5,9 @@ import java.util.Date;
 
 import it.tredi.msa.mailboxmanager.ContentProvider;
 
+/**
+ * Classe di model utilizzata per identificare un file allegato al documento (es. allegato della mail estratto e caricato sul documento)
+ */
 public class DocwayFile {
 	
 	private String id;
@@ -17,7 +20,7 @@ public class DocwayFile {
 	private String ora;
 	
 	//content
-	private ContentProvider contentProvider;
+	private byte[] content;
 	
 	private boolean fromFatturaPA = false;
 
@@ -77,16 +80,16 @@ public class DocwayFile {
 		this.ora = new SimpleDateFormat("HH:mm:ss").format(date);
 	}	
 
-	public ContentProvider getContentProvider() {
-		return contentProvider;
+	public byte[] getContent() {
+		return content;
+	}
+	
+	public void setContent(byte[] content) {
+		this.content = content;
 	}
 
-	public void setContentProvider(ContentProvider contentProvider) {
-		this.contentProvider = contentProvider;
-	}
-
-	public byte []getContent() throws Exception {
-		return contentProvider.getContent();
+	public void setContentByProvider(ContentProvider contentProvider) throws Exception {
+		this.content = contentProvider.getContent();
 	}
 
 	public boolean isFromFatturaPA() {
