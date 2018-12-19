@@ -5,6 +5,10 @@ import java.util.List;
 
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 
+/**
+ * Classe di model che identifica tutte le informazioni relative ad un documento (le cui parti vengono compilate con dati estratti dai 
+ * messaggi email)
+ */
 public class DocwayDocument {
 	
 	private String tipo;

@@ -1,26 +1,53 @@
 package it.tredi.msa.mailboxmanager;
 
-import it.tredi.mail.MailReader;
-import it.tredi.msa.Services;
-import it.tredi.msa.configuration.MailboxConfiguration;
-import it.tredi.msa.entity.AuditMailboxRun;
-import it.tredi.msa.entity.AuditMailboxRunStatus;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.mail.Message;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
 
+import javax.mail.Message;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import it.tredi.mail.MailReader;
+import it.tredi.msa.ContextProvider;
+import it.tredi.msa.Services;
+import it.tredi.msa.configuration.MailboxConfiguration;
+import it.tredi.msa.entity.AuditMailboxRun;
+import it.tredi.msa.entity.AuditMailboxRunStatus;
+import it.tredi.msa.repository.AuditMailboxRunRepository;
+
+/**
+ * Thread di gestione di una casella di posta elettronica. Classe astratta che si occupa di leggere il contenuto delle
+ * mailbox e processare i singoli messaggi individuati al loro interno
+ */
 public abstract class MailboxManager implements Runnable {
 	
-	private MailboxConfiguration configuration;
-	private MailReader mailReader;
-	private boolean shutdown = false;
 	private static final Logger logger = LogManager.getLogger(MailboxManager.class.getName());
+	
+	/**
+	 * Configurazione della mailbox
+	 */
+	private MailboxConfiguration configuration;
+	
+	private MailReader mailReader;
+	
+	/**
+	 * Identifica se e' stato richiesto lo spegnimento del servizio
+	 */
+	private boolean shutdown = false;
+	
 	private AuditMailboxRun auditMailboxRun;
+	
+	/**
+	 * Identifica se l'attivita' di elaborazione di una mailbox e' al momento in corso
+	 */
 	private boolean running;
+	
+	/**
+	 * Repository di audit delle mailbox
+	 */
+	private AuditMailboxRunRepository auditMailboxRunRepository;
 	
 	private final static int MAILREADER_CONNECTION_ATTEMPTS = 3;
 	private final static String PROCESS_MAILBOX_ERROR_MESSAGE = "Errore imprevisto durante le gestione della casella di posta [%s].\nControllare la configurazione [%s://%s:%s][User:%s]\nConsultare il log per maggiori dettagli.\n\n%s";
@@ -51,10 +78,22 @@ public abstract class MailboxManager implements Runnable {
 		this.running = running;
 	}
 
+	/**
+	 * Inizializzazione del manager
+	 */
 	public void init() {
-		//do nothing - override this one for mailbox manager inizialization after creation
+		this.auditMailboxRunRepository = ContextProvider.getBean(AuditMailboxRunRepository.class);
+		this.customInit();
 	}
-		
+	
+	/**
+	 * Eventuale inizializzazione custom dell'oggetto manager
+	 */
+	public abstract void customInit(); 
+	
+	/**
+	 * Esecuzione dell'elaborazione della mailbox
+	 */
 	@Override
     public void run() {
 		running = true;
@@ -83,6 +122,9 @@ public abstract class MailboxManager implements Runnable {
     	}
     }
     
+	/**
+	 * Chiusura del processo di elaborazione della mailbox
+	 */
     public void shutdown() {
     	try {
         	shutdown = true;
@@ -103,6 +145,9 @@ public abstract class MailboxManager implements Runnable {
     	}
     }	
     
+    /**
+     * Elaborazione della mailbox (lettura messaggi e conversione in documenti)
+     */
     public void processMailbox() {
     	try {
         	if (logger.isDebugEnabled())
@@ -131,7 +176,7 @@ public abstract class MailboxManager implements Runnable {
         	}        	
         	
         	if (logger.isInfoEnabled())
-        		logger.info("[" + configuration.getName() + "] found (" + messages.length + ") messages");
+        		logger.info("[" + configuration.getName() + "] FOUND " + messages.length + " MESSAGES");
         	auditMailboxRun.setMessageCount(messages.length);
         	
         	int i=1;
@@ -142,6 +187,8 @@ public abstract class MailboxManager implements Runnable {
         		ParsedMessage parsedMessage = null;
         		try {
             		//TEMPLATE STEP - parsedMessage
+        			if (logger.isInfoEnabled())
+        				logger.info("[" + configuration.getName() + "] parsing message (" + (i++) + "/" + messages.length + ")...");
             		parsedMessage = parseMessage(message);
         			
             		if (logger.isInfoEnabled())
@@ -177,14 +224,23 @@ public abstract class MailboxManager implements Runnable {
     	}
     }
     
+    /**
+     * Apertura della sessione di lavoro
+     * @throws Exception
+     */
     public void openSession() throws Exception {
     	if (logger.isDebugEnabled())
     		logger.debug("[" + configuration.getName() + "] opening mailReader connection");
     	
-    	//auditi - init mailbox run obj
-    	auditMailboxRun = new AuditMailboxRun();
+    	// audit - init mailbox run obj
+    	auditMailboxRun = auditMailboxRunRepository.findByMailboxName(configuration.getName());
+    	if (auditMailboxRun == null) // casella di posta mai registrata sull'audit
+    		auditMailboxRun = new AuditMailboxRun();
+    	
     	auditMailboxRun.setMailboxName(configuration.getName());
     	auditMailboxRun.setMailboxAddress(configuration.getUser());
+    	
+    	// TODO metodo reset dell'audit (azzero la data di fine, eventuali count da azzerare, ecc.)
     	auditMailboxRun.setStartDate(new Date());
     	auditMailboxRun.setStatus(AuditMailboxRunStatus.SUCCESS);
     	
@@ -198,12 +254,16 @@ public abstract class MailboxManager implements Runnable {
     		logger.debug("[" + configuration.getName() + "] mailReader connection opened");		
     }
 
+    /**
+     * Chiusura della sessione di lavoro
+     */
     public void closeSession() {
     	//audit - mailbox run
     	if (auditMailboxRun != null) { //call it just one time
         	auditMailboxRun.setEndDate(new Date());
-    		Services.getAuditService().writeAuditMailboxRun(auditMailboxRun, !shutdown);
-    		auditMailboxRun = null;    		
+        	Services.getAuditService().writeAuditMailboxRun(auditMailboxRun, !shutdown);
+    		
+        	auditMailboxRun = null;    		
     	}
     	
 		try {
@@ -223,10 +283,22 @@ public abstract class MailboxManager implements Runnable {
 		}
     }    
     
+    /**
+     * Processa il messaggio email letto dalla casella e produce un oggetto ParsedMessage (analisi di tutte le 
+     * parti del messaggio)
+     * @param message
+     * @return
+     * @throws Exception
+     */
     public ParsedMessage parseMessage(Message message) throws Exception {
     	return new ParsedMessage(message);
     }
     
+    /**
+     * Elaborazione del messaggio parsato (conversione in documento e salvataggio)
+     * @param parsedMessage
+     * @throws Exception
+     */
     public void processMessage(ParsedMessage parsedMessage) throws Exception {
     	if (logger.isDebugEnabled())
     		logger.debug("[" + configuration.getName() + "] processMessage() called");
@@ -255,6 +327,11 @@ public abstract class MailboxManager implements Runnable {
     		logger.debug("[" + configuration.getName() + "] processMessage() done");
     }
 
+    /**
+     * Gestione di un errore riscontrato sull'elaborazione di un messaggio (scrittura dell'errore su audit, notifica, ecc.)
+     * @param t
+     * @param obj
+     */
     public void handleError(Throwable t, Object obj) {
     	if (shutdown)
     		logger.warn("[" + configuration.getName() + "] exception during shutdown... ignoring error", t);

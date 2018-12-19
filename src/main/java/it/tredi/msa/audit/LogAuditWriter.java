@@ -17,12 +17,12 @@ public class LogAuditWriter extends AuditWriter {
 	}
 
 	@Override
-	public boolean auditMessageInErrorFound(MailboxConfiguration mailboxConfiguration, ParsedMessage parsedMessage) throws Exception {
-		throw new Exception("Log Audit Writer - not yet implemented [auditMessageInErrorFound()]");		
+	public boolean isErrorMessageFoundInAudit(MailboxConfiguration mailboxConfiguration, ParsedMessage parsedMessage) throws Exception {
+		throw new Exception("Log Audit Writer - not yet implemented [isErrorMessageFoundInAudit()]");		
 	}
 
 	@Override
-	public void writeAuditMailboxRun(AuditMailboxRun auditMailboxRun) throws Exception {
+	public AuditMailboxRun writeAuditMailboxRun(AuditMailboxRun auditMailboxRun) throws Exception {
 		throw new Exception("Log Audit Writer - not yet implemented [writeAuditMailboxRun()]");		
 	}
 

@@ -2,6 +2,8 @@ package it.tredi.extraway;
 
 import java.sql.SQLException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -16,6 +18,8 @@ import it.tredi.msa.Utils;
  * Client utilizzato per la conessione ad eXtraWay. Utilizzato sull'implementazione di MSA per DocWay4
  */
 public class ExtrawayClient {
+	
+	private static final Logger logger = LogManager.getLogger(ExtrawayClient.class.getName());
 
 	private Broker broker;
 	private String host;
@@ -55,6 +59,9 @@ public class ExtrawayClient {
 		disconnect();
 		connId = broker.acquireConnection(host, port, db, user, password, -1);
         try {
+        	if (logger.isDebugEnabled())
+	    		logger.debug("ExtrawayClient: Connect by connId " + connId);
+        	
             broker.Connect(connId, host, port, db, -1, user, password, "", "");
         }
         catch (SQLException e) {
@@ -69,6 +76,9 @@ public class ExtrawayClient {
 	 */
 	public void disconnect() throws SQLException {
 		if (connId != -1) {
+			if (logger.isDebugEnabled())
+	    		logger.debug("ExtrawayClient: Release connection " + connId);
+			
 			broker.releaseConnection(connId);
 			connId = -1;			
 		}
@@ -99,6 +109,10 @@ public class ExtrawayClient {
         if (selToRefine != null && !selToRefine.isEmpty()) {
             query += " AND [?SEL]=\"" + selToRefine + "\"";
         }
+        
+        if (logger.isInfoEnabled())
+    		logger.info("ExtrawayClient: Execute Query = " + query);
+        
         this.queryResult = broker.find(connId, db, query, sort, hwQOpts, adj ,0, null);
         return queryResult.elements;
     }	
@@ -132,10 +146,18 @@ public class ExtrawayClient {
      */
     private Document loadDoc(int docNum, boolean fromQueryResult) throws Exception {
     	Doc doc = null;
-        if (fromQueryResult)
+        if (fromQueryResult) {
+        	if (logger.isInfoEnabled())
+        		logger.info("ExtrawayClient: Load document by physDoc = " + docNum);
+        	
             doc = broker.getDoc(connId, db, queryResult, docNum, it.highwaytech.broker.ServerCommand.subcmd_NONE, "");
-        else
+        }
+        else {
+        	if (logger.isInfoEnabled())
+        		logger.info("ExtrawayClient: Load document from QueryResult. Position = " + docNum);
+        	
             doc = broker.getDoc(connId, db, docNum, 0);
+        }
         Document document = DocumentHelper.parseText(doc.XML());
         return document;
     }
@@ -174,6 +196,15 @@ public class ExtrawayClient {
 	 * @throws Exception
 	 */
 	public int saveDocument(Document xmlDocument, int docNum) throws Exception {
+		if (logger.isInfoEnabled()) {
+			if (docNum == 0)
+				logger.info("ExtrawayClient: Save new document...");
+			else
+				logger.info("ExtrawayClient: Save document with docNum = " + docNum + "...");
+		}
+		if (logger.isDebugEnabled())
+			logger.debug("ExtrawayClient: doc content = " + xmlDocument);
+		
 		Element rootEl = xmlDocument.getRootElement();
 		if (rootEl.getNamespaceForPrefix("xw") == null) //add xmlns:xw to root element
 			rootEl.addNamespace("xw", XW_NAMESPACE);
@@ -222,10 +253,15 @@ public class ExtrawayClient {
         String xresponse = null;
         for (int i = 0; (i < attempts); i++) {
             try {
+            	if (logger.isInfoEnabled())
+            		logger.info("ExtrawayClient: Try to load document " + physdoc + " with LOCK [attempt " + (i+1) + "]...");
+            	
                 xresponse = broker.XMLCommand(connId, db, theCommand.toString());
                 break;
             }
             catch (Exception e) {
+            	logger.warn("ExtrawayClient: Unable to load and LOCK document " + physdoc + " [attempt " + (i+1) + "]... " + e.getMessage());
+            	
                 Thread.sleep(delay);
                 if (i+1 == attempts)
                     throw e;
@@ -244,6 +280,9 @@ public class ExtrawayClient {
 	 * @throws Exception
 	 */
 	public void unlockDocument(int physdoc) throws Exception {
+		if (logger.isInfoEnabled())
+    		logger.info("ExtrawayClient: Unlock document " + physdoc + "...");
+		
         XMLCommand theCommand = new XMLCommand(physdoc, theLock);
         broker.XMLCommand(connId, db, theCommand.toString());
 	}
@@ -271,9 +310,14 @@ public class ExtrawayClient {
 	public String addAttach(String fileName, byte[] fileContent, int attempts, long delay) throws Exception {
         for (int i = 0; (i < attempts); i++) {
             try {
+            	if (logger.isInfoEnabled())
+            		logger.info("ExtrawayClient: Try to attach file " + fileName + " [attempt " + (i+1) + "]...");
+            	
                 return broker.addAttach(connId, db, fileContent, fileName);
             }
             catch (Exception e) {
+            	logger.warn("ExtrawayClient: Unable to attach file " + fileName + " [attempt " + (i+1) + "]... " + e.getMessage());
+            	
                 Thread.sleep(delay);
                 if (i+1 == attempts)
                     throw e;
