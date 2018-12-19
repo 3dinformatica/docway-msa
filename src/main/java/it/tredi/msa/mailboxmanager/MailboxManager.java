@@ -299,7 +299,7 @@ public abstract class MailboxManager implements Runnable {
     			
     			auditMailboxRun.setErrorStackTrace(sStackTrace);
     			auditMailboxRun.setStatus(AuditMailboxRunStatus.ERROR);
-    			auditMailboxRun.setErrorMessge(t.getMessage());
+    			auditMailboxRun.setErrorMessage(t.getMessage());
     		}
     	}
     }

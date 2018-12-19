@@ -45,7 +45,7 @@ public class MongodbAuditWriter extends AuditWriter {
 				gridFsOperations.delete(new Query(Criteria.where("_id").is(new ObjectId(auditMessage.getEmlId()))));
 			}			
 			auditMessage.setEmlId(null);
-			auditMessage.setErrorMessge(null);
+			auditMessage.setErrorMessage(null);
 			auditMessage.setErrorStackTrace(null);
 			auditMessage.setMailboxAddress(mailboxConfiguration.getUser());
 			auditMessage.setMailboxName(mailboxConfiguration.getName());
@@ -79,7 +79,7 @@ public class MongodbAuditWriter extends AuditWriter {
 			gridFsOperations.delete(new Query(Criteria.where("_id").is(new ObjectId(auditMessage.getEmlId()))));
 		}
 		auditMessage.setEmlId(objId.toHexString());
-		auditMessage.setErrorMessge(exception.getMessage());
+		auditMessage.setErrorMessage(exception.getMessage());
 		
 		//stack trace to string
 		StringWriter sw = new StringWriter();
