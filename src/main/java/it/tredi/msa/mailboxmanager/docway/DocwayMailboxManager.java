@@ -678,7 +678,11 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			storiaItem.setOra(currentDate);
 			doc.addStoriaItem(storiaItem);
 		}
-
+		
+		// mbernardini 19/12/2018 : spostato sopra il set della bozza perche' da questo metodo derivano eventuali errori sulla segnatura
+		//files + immagini + allegato
+		motivazioneNotificaEccezione += createDocwayFilesForInteropPAMessage(segnaturaDocument, parsedMessage, doc);		
+		
 		//bozza
 		doc.setBozza(!conf.isProtocollaSegnatura() || !motivazioneNotificaEccezione.isEmpty());
 		
@@ -688,12 +692,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//num_prot
 		doc.setNumProt(!doc.isBozza()? buildNewNumprotStringForSavingDocument() : "");
 
-		//files + immagini + allegato
-		motivazioneNotificaEccezione += createDocwayFilesForInteropPAMessage(segnaturaDocument, parsedMessage, doc);		
-		
 		//motivazione -> relevant message
 		if (!motivazioneNotificaEccezione.isEmpty()) {
-			if (conf.isProtocollaSegnatura())
+			if (doc.isBozza())
 				motivazioneNotificaEccezione = SEGNATURA_MESSAGE_AS_BOZZA + motivazioneNotificaEccezione;
 			else
 				motivazioneNotificaEccezione = SEGNATURA_PARSE_ERROR + motivazioneNotificaEccezione;
@@ -776,7 +777,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 					doc.addAllegato(file.getName());	
 				return "";
 			}
-			else if (documentoEl.attributeValue("TipoRiferimento", "").equals("MIME"))
+			else if (documentoEl.attributeValue("TipoRiferimento", "MIME").equals("MIME"))
 				return String.format(FILE_NOT_FOUND_IN_SEGNATURA, documentoEl.attributeValue("nome"));
 		}	
 		return "";
