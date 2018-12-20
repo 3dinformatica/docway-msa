@@ -90,32 +90,4 @@ public class EmlExtractionTest extends EmlReader {
 		assertEquals("paolapenna@ordineavvocatiroma.org", fromDatiCert);
 	}
 	
-	/**
-	 * Errore NotWellFormed su ServerCommand.send su eXtraWay server
-	 * @throws Exception
-	 */
-	@Test
-	public void notWellFormed2Extraction() throws Exception {
-		String fileName = "notWellFormed_2.eml";
-		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
-		
-		System.out.println("input file = " + fileName);
-		
-		ParsedMessage parsed = new ParsedMessage(readEmlFile(file));
-		
-		assertNotNull(parsed);
-		assertNotNull(parsed.getMessageId());
-		
-		System.out.println("messageId = " + parsed.getMessageId());
-		System.out.println("subject = " + parsed.getSubject());
-		System.out.println("from address = " + parsed.getFromAddress());
-		
-		List<String> attachments = parsed.getAttachmentsName();
-		System.out.println("attachments count = " + attachments.size());
-		for (String name : attachments)
-			System.out.println("\tattach name = " + name);
-		
-		assertEquals(5, parsed.getAttachments().size());
-	}
-	
 }

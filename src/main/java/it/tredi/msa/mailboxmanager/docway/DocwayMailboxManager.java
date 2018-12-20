@@ -84,7 +84,16 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract RifEsterno createRifEsterno(String name, String address) throws Exception;
 	protected abstract List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception;
 	protected abstract void sendNotificationEmails(DocwayDocument doc, Object saveDocRetObj);
+	
+	/**
+	 * Dato il messaggio email parsato, viene identificato il tipo di registrazione da compiere (creazione di un nuovo documento, aggancio
+	 * di una notifica a doc esistente, ecc.)
+	 * @param parsedMessage Messaggio email parsato
+	 * @return Tipologia di registrazione da applicare al messaggio parsato (nuovo doc, update di doc esistente, ecc.)
+	 * @throws Exception
+	 */
 	protected abstract StoreType decodeStoreType(ParsedMessage parsedMessage) throws Exception;
+	
 	protected abstract void attachInteropPAPecReceiptToDocument(ParsedMessage parsedMessage) throws Exception;
 	protected abstract void attachInteropPANotificationToDocument(ParsedMessage parsedMessage) throws Exception;
 	protected abstract String buildNewNumprotStringForSavingDocument() throws Exception;
