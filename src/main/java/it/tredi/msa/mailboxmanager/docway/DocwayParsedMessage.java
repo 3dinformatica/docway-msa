@@ -101,6 +101,12 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return false;
 	}
 	
+	/**
+	 * Costruzione della query di ricerca del documento al quale agganciare una notifica di interoperabilita' attraverso 
+	 * l'analisi dell'oggetto del messaggio email relativo alla notifica stessa
+	 * @return
+	 * @throws Exception
+	 */
 	public String buildQueryForDocway4DocumentFromInteropPASubject() throws Exception {
 		String originalSubject = super.getSubjectFromDatiCertPec();
 		originalSubject = cleanInteropPASubject(originalSubject);	
@@ -127,7 +133,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return segnaturaInteropPADocument; 		
 	}
 	
-	public Document getConfermaRicezioneInteropPADocument() {
+	private Document getConfermaRicezioneInteropPADocument() {
 		if (!confermaRicezioneInteropPADocumentInCache) {
 			confermaRicezioneInteropPADocument = getInteropPAMessageDocument("Conferma.xml", "ConfermaRicezione");
 			confermaRicezioneInteropPADocumentInCache = true;
@@ -135,7 +141,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return confermaRicezioneInteropPADocument; 				
 	}	
 	
-	public Document getNotificaEccezioneInteropPADocument() {
+	private Document getNotificaEccezioneInteropPADocument() {
 		if (!notificaEccezioneInteropPADocumentInCache) {
 			notificaEccezioneInteropPADocument = getInteropPAMessageDocument("Eccezione.xml", "NotificaEccezione");
 			notificaEccezioneInteropPADocumentInCache = true;
@@ -143,7 +149,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return notificaEccezioneInteropPADocument; 		
 	}
 	
-	public Document getAggiornamentoConfermaInteropPADocument() {
+	private Document getAggiornamentoConfermaInteropPADocument() {
 		if (!aggiornamentoConfermaInteropPADocumentInCache) {
 			aggiornamentoConfermaInteropPADocument = getInteropPAMessageDocument("Aggiornamento.xml", "AggiornamentoConferma");
 			notificaEccezioneInteropPADocumentInCache = true;
@@ -151,7 +157,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return aggiornamentoConfermaInteropPADocument; 			
 	}	
 	
-	public Document getAnnullamentoProtocollazioneInteropPADocument() {
+	private Document getAnnullamentoProtocollazioneInteropPADocument() {
 		if (!annullamentoProtocollazioneInteropPADocumentInCache) {
 			annullamentoProtocollazioneInteropPADocument = getInteropPAMessageDocument("Annullamento.xml", "AnnullamentoProtocollazione");
 			annullamentoProtocollazioneInteropPADocumentInCache = true;
@@ -194,11 +200,11 @@ public class DocwayParsedMessage extends ParsedMessage {
 			if ((document = getSegnaturaInteropPADocument()) != null)
 				return checkInteropPADocument(document, "Segnatura.xml", codAmmInteropPA, codAooInteropPA, "/Segnatura/Intestazione/Identificatore", false);
 			if ((document = getConfermaRicezioneInteropPADocument()) != null)
-				return checkInteropPADocument(document, "Conferma.xml", codAmmInteropPA, codAooInteropPA, "/ConfermaRicezione/Identificatore", false);
+				return checkInteropPADocument(document, "Conferma.xml", codAmmInteropPA, codAooInteropPA, "/ConfermaRicezione/MessaggioRicevuto/Identificatore", false);
 			if ((document = getNotificaEccezioneInteropPADocument()) != null)
-				return checkInteropPADocument(document, "Eccezione.xml", codAmmInteropPA, codAooInteropPA, "/NotificaEccezione/Identificatore", true);
+				return checkInteropPADocument(document, "Eccezione.xml", codAmmInteropPA, codAooInteropPA, "/NotificaEccezione/MessaggioRicevuto/Identificatore", false);
 			if ((document = getAggiornamentoConfermaInteropPADocument()) != null)
-				return checkInteropPADocument(document, "Aggiornamento.xml", codAmmInteropPA, codAooInteropPA, "/AggiornamentoConferma/Identificatore", false);
+				return checkInteropPADocument(document, "Aggiornamento.xml", codAmmInteropPA, codAooInteropPA, "/AggiornamentoConferma/MessaggioRicevuto/Identificatore", false);
 			if ((document = getAnnullamentoProtocollazioneInteropPADocument()) != null)
 				return checkInteropPADocument(document, "Annullamento.xml", codAmmInteropPA, codAooInteropPA, "/AnnullamentoProtocollazione/Identificatore", false);
 		}
@@ -296,6 +302,12 @@ public class DocwayParsedMessage extends ParsedMessage {
 		return query;
 	}
 	
+	/**
+	 * Costruzione della query per il recupero del documento al quale agganciare una notifica relativa ad un messaggio email di interoperabilita'
+	 * @param codAmm
+	 * @param codAoo
+	 * @return
+	 */
 	public String buildQueryForDocway4DocumentFromInteropPAPecReceipt(String codAmm, String codAoo) {
 		String query = "";
 		if (interopPaDocument != null) {
