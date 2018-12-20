@@ -188,11 +188,11 @@ public abstract class MailboxManager implements Runnable {
         		try {
             		//TEMPLATE STEP - parsedMessage
         			if (logger.isInfoEnabled())
-        				logger.info("[" + configuration.getName() + "] parsing message (" + (i++) + "/" + messages.length + ")...");
+        				logger.info("[" + configuration.getName() + "] parsing message (" + i + "/" + messages.length + ")...");
             		parsedMessage = parseMessage(message);
         			
             		if (logger.isInfoEnabled())
-            			logger.info("[" + configuration.getName() + "] message (" + (i++) + "/" + messages.length + ") [" + parsedMessage.getMessageId() + "]");
+            			logger.info("[" + configuration.getName() + "] message (" + i + "/" + messages.length + ") [" + parsedMessage.getMessageId() + "]");
             		
             		if (Services.getAuditService().auditMessageInErrorFound(configuration, parsedMessage)) { //message found in error in audit
             			auditMailboxRun.incrementErrorCount();
@@ -208,6 +208,8 @@ public abstract class MailboxManager implements Runnable {
         			//TEMPLATE STEP - handleError
         			handleError(e, parsedMessage==null? message : parsedMessage);
         		}
+        		
+        		i++;
         	}
     	}
     	catch (Throwable t) {
