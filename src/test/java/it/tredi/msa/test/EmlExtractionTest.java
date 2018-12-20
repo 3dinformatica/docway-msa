@@ -90,4 +90,39 @@ public class EmlExtractionTest extends EmlReader {
 		assertEquals("paolapenna@ordineavvocatiroma.org", fromDatiCert);
 	}
 	
+	/**
+	 * Estrazione dati da messaggio contenente molteplici istanze del file daticert.xml (inoltri vari di email)
+	 * @throws Exception
+	 */
+	@Test
+	public void nullPointerMultiDatiCertExtraction() throws Exception {
+		String fileName = "nullPointer_multi_daticert.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		ParsedMessage parsed = new ParsedMessage(readEmlFile(file));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		// TODO la mail contiene un allegato messaggio-originale.eml che non viene elaborato (si tratta di un allegato presente in una mail inoltrata)
+		assertEquals(11, parsed.getAttachments().size());
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("dp.Padova@pce.agenziaentrate.it", fromDatiCert);
+	}
+	
 }
