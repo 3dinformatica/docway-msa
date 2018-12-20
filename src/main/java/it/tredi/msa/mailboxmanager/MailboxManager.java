@@ -240,9 +240,8 @@ public abstract class MailboxManager implements Runnable {
     	auditMailboxRun.setMailboxName(configuration.getName());
     	auditMailboxRun.setMailboxAddress(configuration.getUser());
     	
-    	// TODO metodo reset dell'audit (azzero la data di fine, eventuali count da azzerare, ecc.)
-    	auditMailboxRun.setStartDate(new Date());
-    	auditMailboxRun.setStatus(AuditMailboxRunStatus.SUCCESS);
+    	// Reset dell'audit (azzero la data di fine, eventuali count da azzerare, ecc.)
+    	auditMailboxRun.reset();
     	
 		mailReader.connect();
 		mailReader.openFolder(configuration.getFolderName());
