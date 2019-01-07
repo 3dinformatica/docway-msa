@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.0.3] - SNAPSHOT 
+## [3.0.3] - 2019-01-07
 
 ### Changed
 - Aumentato il livello di log a DEBUG
