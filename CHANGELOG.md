@@ -1,5 +1,10 @@
 # Change Log
 
+## [3.0.4] - SNAPSHOT
+
+### Fixed
+- In generazione documenti da fatturePA, compilazione dei campi del rif. esterno con i dati estratti dalla fattura stessa (e non recuperati da ACL) (Task #16546)
+
 ## [3.0.3] - 2019-01-07
 
 ### Changed
@@ -7,12 +12,12 @@
 
 ### Fixed
 - Corretto errore in fase di elaborazione di un messaggio: Part NULL (Task #16775).
-- Corretto query su ricerca documento per aggancio notifiche. Ci sono casi nei quali vengono fatte ricerche su nrecord anziche' num_prot (Task #16797).
+- Corretto query su ricerca documento per aggancio notifiche. Ci sono casi nei quali vengono fatte ricerche su nrecord anziche' num\_prot (Task #16797).
 - Corretto controllo su porta socket occupata. Su versione precedente possibilità di avviare istanze multiple di MSA.
 - Aggiunta del riferimento al thread corrente allo username dell'utente per xw per eliminazione di eventuali problemi di "Protezione file non riuscita" dovuti a gestione multithread.
 - Riconoscimento di file danneggiati all'interno della mail: Viene forzato il caricamento dell'EML come allegato al documento e viene aggiunta al campo note l'indicazione dei file danneggiati rilevati (Task #16824)
 - Corretto bug in individuazione di files definiti su segnatura.xml (validazione della segnatura)
-- Corretti xpath di estrazione Identificatore da notifiche relative ad interoperabilità 
+- Corretti xpath di estrazione Identificatore da notifiche relative ad interoperabilità
 
 ## [3.0.2] - 2018-12-07 
 
@@ -22,12 +27,12 @@
 ## [3.0.1] - 2018-10-17 
 
 ### Added
-- Aggiunto store type UPDATE_NEW_RECIPIENT_INTEROP_PA per gestire le seguenti casistiche:
+- Aggiunto store type UPDATE\_NEW\_RECIPIENT\_INTEROP\_PA per gestire le seguenti casistiche:
     - messaggio di interoperabilità inviato più caselle di posta gestite dall'archiviatore
     - differenti messaggi contenenti la medesima Segnatura.xml inviate a più caselle di posta gestite dall'archiviatore
 
 ### Fixed
-- Corretto comportamento dello store type UPDATE_NEW_RECIPIENT: gli RPA delle caselle successive (alla prima) vengono riportati come CC con diritto di intervento
+- Corretto comportamento dello store type UPDATE\_NEW\_RECIPIENT: gli RPA delle caselle successive (alla prima) vengono riportati come CC con diritto di intervento
 
 ## [3.0.0] - 2018-09-06 
 

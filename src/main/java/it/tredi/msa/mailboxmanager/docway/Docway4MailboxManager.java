@@ -1171,10 +1171,21 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			int pD = aclClient.saveNewDocument(aclDocument);
 			rifEsterno = getRifEsternoFromAcl(aclClient.loadDocByPhysdoc(pD));
 		}
+		else {
+			
+			// mbernardini 17/01/2019 : sovrascrittura del rif esterno recuperato da ACL con i dati contenuti nella fatturaPA ricervuta
+			rifEsterno = updateRifEsternoByDatiFattura(rifEsterno, fatturaPADocument, rifElemNameInFatturaPA);
+		}
 		
 		return rifEsterno;
-	}	
+	}
 
+	/**
+	 * Dato un documento recuperato da ACL, si occupa di recuperare tutte le informazioni del rif. esterno da associare al documento
+	 * inerente la fatturaPA ricevuta
+	 * @param doc
+	 * @return
+	 */
 	private RifEsterno getRifEsternoFromAcl(Document doc) {
 		RifEsterno rif = new RifEsterno();
 	
@@ -1208,12 +1219,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			indirizzo = indirizzo + " - " + ((Attribute) doc.selectSingleNode(pne + elementoRecapito + "/indirizzo/@nazione")).getValue();
 		
 		String email = "";
-		@SuppressWarnings("unchecked")
-		List<Attribute> emails = doc.selectNodes(pne + elementoRecapito + "/email/@addr");
+		List<?> emails = doc.selectNodes(pne + elementoRecapito + "/email/@addr");
 		if (emails != null && emails.size() > 0) {
 			for (int i=0; i<emails.size(); i++) {
-				if (emails.get(i) != null && emails.get(i).getValue() != null && !emails.get(i).getValue().equals(""))
-					email = email + emails.get(i).getValue() + ";";
+				Attribute emailAttr = (Attribute) emails.get(i);
+				if (emailAttr != null && emailAttr.getValue() != null && !emailAttr.getValue().equals(""))
+					email = email + emailAttr.getValue() + ";";
 			}
 			
 			if (email.length() > 0)
@@ -1234,6 +1245,63 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}
 		
 		return rif;
+	}
+	
+	/**
+	 * Aggiornamento del rif esterno prodotto tramite query su ACL con i dati estratti dalla fatturaPA
+	 * @param rif
+	 * @param rifElemNameInFatturaPA
+	 * @return
+	 */
+	private RifEsterno updateRifEsternoByDatiFattura(RifEsterno rifEsterno, Document fatturaPADocument, String rifElemNameInFatturaPA) {
+		if (rifEsterno != null) {
+			// Aggiornamento del nome recuperato da ACL con quello letto dalla fattura
+			Node node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/Anagrafica/Denominazione");
+			String nome = (node == null) ? "" : node.getText();
+			if (nome.isEmpty()) {
+				node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/Anagrafica/Cognome");
+				nome = (node == null) ? "" : node.getText();
+				node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/Anagrafica/Nome");
+				nome = (node == null) ? "" : " " + node.getText();
+				nome = nome.trim();
+			}
+			if (!nome.isEmpty())
+				rifEsterno.setNome(nome);
+			
+			// Costruzione dell'indirizzo
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/Indirizzo");
+			String indirizzo = (node == null)? "" : node.getText();
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/NumeroCivico");
+			if (node != null && !node.getText().isEmpty())
+				indirizzo += " " + node.getText();
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/CAP");
+			if (node != null && !node.getText().isEmpty())
+				indirizzo = indirizzo + " - " + node.getText();
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/Comune");
+			if (node != null && !node.getText().isEmpty())
+				indirizzo = indirizzo + " " + node.getText();
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/Provincia");
+			if (node != null && !node.getText().isEmpty())
+				indirizzo = indirizzo + " (" + node.getText() + ")";
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Sede/Nazione");
+			if (node != null && !node.getText().isEmpty())
+				indirizzo = indirizzo + " - " + node.getText();
+			indirizzo = indirizzo.trim();
+			if (!indirizzo.isEmpty())
+				rifEsterno.setIndirizzo(indirizzo);
+			
+			// Recupero email e fax
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Contatti/Email");
+			String email = (node == null)? "" : node.getText();
+			if (!email.isEmpty())
+				rifEsterno.setEmail(email);
+			
+			node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/Contatti/Fax");
+			String fax = (node == null)? "" : node.getText();
+			if (!fax.isEmpty())
+				rifEsterno.setFax(fax);
+		}
+		return rifEsterno;
 	}
 
 	@Override

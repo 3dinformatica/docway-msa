@@ -33,7 +33,7 @@ public class FatturaPAUtils {
 	public static final String TIPO_MESSAGGIO_EC = "EC"; // Notifica di esito cessionario / committente
 	public static final String TIPO_MESSAGGIO_SE = "SE"; // Notifica di scarto esito cessionario / committente
 	public static final String TIPO_MESSAGGIO_DT = "DT"; // Notifica decorrenza termini
-	public static final String TIPO_MESSAGGIO_AT = "AT"; // Attestazione di avvenuta trasmissione della fattura con impossibilitÃ  di recapito
+	public static final String TIPO_MESSAGGIO_AT = "AT"; // Attestazione di avvenuta trasmissione della fattura con impossibilita' di recapito
 
 	public static final String TIPO_MESSAGGIO_SEND = "SEND"; // Invio della fatturaPA al SdI
 	
