@@ -358,9 +358,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setProtocollaFattura(casellaEl.attributeValue("protocollaFattura", "false").equalsIgnoreCase("true"));
     	//conf.setProtocollaFattura(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA, true));
     	
-    	conf.setIgnoreStandardOrphanPecReceipts(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS, false));
+    	conf.setIgnoreStandardOrphanPecReceipts(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS, true));
     	// mbernardini 18/01/2019 : salvataggio di ricevute PEC orfane come doc non protocollati
-    	conf.setOrphanPecReceiptsAsVarie(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_ORPHAN_RECEIPTS_AS_VARIE, false));
+    	conf.setOrphanPecReceiptsAsVarie(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_ORPHAN_RECEIPTS_AS_VARIE, true));
     	
 		return conf;
 	}
