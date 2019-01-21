@@ -57,6 +57,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	private final static String SEGNATURA_NULL_EMPTY_FIELD = "Valore campo '%s' nullo o vuoto.\n";
 	private final static String SEGNATURA_FIELD_FORMAT_ERROR = "Valore campo '%s' in formato scorretto: %s\n";
 	
+	private final static String ORPHAN_RECEIPTS_MESSAGE = "Ricevuta Orfana: Non è stato possibile individuare il documento di origine al quale la ricevuta fa riferimento.";
+	
 	private final static int MAILSENDER_CONNECTION_ATTEMPTS = 3;
 	
 	private static final Logger logger = LogManager.getLogger(DocwayMailboxManager.class.getName());
@@ -66,6 +68,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	    UPDATE_PARTIAL_DOCUMENT,
 	    UPDATE_NEW_RECIPIENT,
 	    SKIP_DOCUMENT,
+	    SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE,
 	    ATTACH_INTEROP_PA_PEC_RECEIPT,
 	    ATTACH_INTEROP_PA_NOTIFICATION,
 	    SAVE_NEW_DOCUMENT_INTEROP_PA,
@@ -164,14 +167,19 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		if (logger.isInfoEnabled())
 			logger.info("[" + conf.getName() + "] message [" + parsedMessage.getMessageId() + "] store type [" + storeType + "]");
 		
-		if (storeType == StoreType.SAVE_NEW_DOCUMENT || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT || storeType == StoreType.UPDATE_NEW_RECIPIENT) { //save new document or update existing one
+		if (storeType == StoreType.SAVE_NEW_DOCUMENT || storeType == StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT || storeType == StoreType.UPDATE_NEW_RECIPIENT) { //save new document or update existing one
 			//build new Docway document
-			DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
-
+			boolean docAsVarie = false;
+			if (storeType == StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE) {
+				docAsVarie = true ; // viene forzata la creazione di un documento non protocollato (generico)
+				parsedMessage.addRelevantMessage(ORPHAN_RECEIPTS_MESSAGE); // aggiunta al documento dell'annotazione relativa alla ricevuta orfana
+			}
+			DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage, docAsVarie);
+			
 			//save new document
 			Object retObj = null;
-			if (storeType == StoreType.SAVE_NEW_DOCUMENT) //1. doc not found by messageId -> save new document
-				retObj = saveNewDocument(doc, parsedMessage); 
+			if (storeType == StoreType.SAVE_NEW_DOCUMENT || storeType == StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE) //1. doc not found by messageId -> save new document
+				retObj = saveNewDocument(doc, parsedMessage);
 			else if (storeType == StoreType.UPDATE_PARTIAL_DOCUMENT) //2. doc found by messageId flagged as partial (attachments upload not completed) -> update document adding missing attachments
 				retObj = updatePartialDocument(doc);			
 			else if (storeType == StoreType.UPDATE_NEW_RECIPIENT) //3. doc found with different recipient email (same email sent to different mailboxes) -> update document adding new CCs
@@ -242,18 +250,54 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			throw new Exception("Unsupported store type: " + storeType);
 	}
 	
+	/**
+	 * Dato il messaggio parsato letto dalla casella di posta viene istanziato l'oggetto documento in base alle
+	 * specifiche della configurazione della casella stessa
+	 * @param parsedMessage Messaggio di posta da convertire in documento
+	 * @return Documento da registrare su DocWay
+	 * @throws Exception
+	 */
 	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {
+		return createDocwayDocumentByMessage(parsedMessage, false);
+	}
+	
+	/**
+	 * Dato il messaggio parsato letto dalla casella di posta viene istanziato l'oggetto documento in base alle
+	 * specifiche della configurazione della casella stessa
+	 * @param parsedMessage Messaggio di posta da convertire in documento
+	 * @param docAsVarie true se occorre forzare il salvataggio del documento come "non protocollato", false altrimenti (generazione del documento in base alla configurazione prevista)
+	 * @return Documento da registrare su DocWay
+	 * @throws Exception
+	 */
+	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage, boolean docAsVarie) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		DocwayDocument doc = new DocwayDocument();
 		
 		if (logger.isDebugEnabled())
-			logger.debug("[" + conf.getName() + "] creazione del documento da messaggio parsato. messageId = " + parsedMessage.getMessageId());
+			logger.debug("[" + conf.getName() + "] creazione del documento da messaggio parsato. messageId = " 
+						+ parsedMessage.getMessageId() 
+						+ ((docAsVarie) ? ", FORZATO IL SALVATAGGIO COME DOCUMENTO NON PROTOCOLLATO/GENERICO" : ""));
 		
 		//tipo doc
-		doc.setTipo(conf.getTipoDoc());
+		if (docAsVarie)
+			doc.setTipo(DocwayMailboxConfiguration.DOC_TIPO_VARIE);
+		else
+			doc.setTipo(conf.getTipoDoc());
 		
-		//bozza
-		doc.setBozza(conf.isBozza());
+		if (!docAsVarie) {
+			//bozza
+			doc.setBozza(conf.isBozza());
+			
+			//num_prot
+			doc.setNumProt(conf.getNumProt());
+			
+			//repertorio
+			doc.setRepertorio(conf.getRepertorio());
+			doc.setRepertorioCod(conf.getRepertorioCod());
+			
+			//annullato
+			doc.setAnnullato(false);
+		}
 		
 		//cod_amm_aoo
 		doc.setCodAmmAoo(conf.getCodAmmAoo());
@@ -264,20 +308,14 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//data prot
 		doc.setDataProt(conf.isCurrentDate()? (new SimpleDateFormat("yyyyMMdd")).format(currentDate) : "");
 		
-		//num_prot
-		doc.setNumProt(conf.getNumProt());
-		
 		//messageId
 		doc.setMessageId(parsedMessage.getMessageId());
 		
 		//recipientEmail
 		doc.setRecipientEmail(conf.getEmail());
 		
-		//annullato
-		doc.setAnnullato(false);
-		
 		//autore
-		if (doc.getTipo().toUpperCase().equals("VARIE"))
+		if (doc.getTipo().equalsIgnoreCase(DocwayMailboxConfiguration.DOC_TIPO_VARIE))
 			doc.setAutore((parsedMessage.getFromPersonal() == null || parsedMessage.getFromPersonal().isEmpty())? parsedMessage.getFromAddress() : parsedMessage.getFromPersonal());
 
 		//oggetto
@@ -290,11 +328,11 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		doc.setMezzoTrasmissione(conf.getMezzoTrasmissione());
 		
 		//rif esterni
-		if (doc.getTipo().toUpperCase().equals("ARRIVO")) {
+		if (doc.getTipo().equalsIgnoreCase(DocwayMailboxConfiguration.DOC_TIPO_ARRIVO)) {
 			String address = parsedMessage.isPecMessage()? parsedMessage.getMittenteAddressFromDatiCertPec() : parsedMessage.getFromAddress();
 			doc.addRifEsterno(createRifEsterno((parsedMessage.getFromPersonal() == null || parsedMessage.getFromPersonal().isEmpty())? address : parsedMessage.getFromPersonal(), address));
 		}
-		else if (doc.getTipo().toUpperCase().equals("PARTENZA")) {
+		else if (doc.getTipo().equalsIgnoreCase(DocwayMailboxConfiguration.DOC_TIPO_PARTENZA)) {
 			Address []recipients = parsedMessage.getMessage().getRecipients(RecipientType.TO);
 			for (Address recipient:recipients) {
 				String personal = ((InternetAddress)recipient).getPersonal();
@@ -309,10 +347,6 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//classif
 		doc.setClassif(conf.getClassif());
 		doc.setClassifCod(conf.getClassifCod());
-		
-		//repertorio
-		doc.setRepertorio(conf.getRepertorio());
-		doc.setRepertorioCod(conf.getRepertorioCod());
 		
 		//note
 		if (conf.isNoteAutomatiche()) {
@@ -358,7 +392,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		return doc;
 	}
-
+	
 	private void createDocwayFiles(ParsedMessage parsedMessage, DocwayDocument doc) throws Exception {
 
 		//email body html/text attachment
@@ -561,7 +595,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		DocwayDocument doc = new DocwayDocument();
 		
 		//tipo doc
-		doc.setTipo("arrivo");
+		doc.setTipo(DocwayMailboxConfiguration.DOC_TIPO_ARRIVO);
 		
 		//cod_amm_aoo
 		doc.setCodAmmAoo(conf.getCodAmmAoo());
@@ -920,7 +954,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//costruzione standard da document model
 		DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
 		
-		if (doc.getTipo().equals("arrivo")) {
+		if (doc.getTipo().equalsIgnoreCase(DocwayMailboxConfiguration.DOC_TIPO_ARRIVO)) {
 			doc.setAnno((new SimpleDateFormat("yyyy")).format(currentDate));
 			
 			//repertorio fatturaPA

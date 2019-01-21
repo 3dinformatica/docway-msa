@@ -5,6 +5,8 @@ import java.util.List;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
+
 public class Docway4NotificationEmailsUtils {
 
 	private static final String _DB_ ="%DB%";
@@ -39,9 +41,9 @@ public class Docway4NotificationEmailsUtils {
 		String mittOrDest = "";
 		if (tipo_doc == null)
 			num_prot = tipo_doc = "";
-		if (tipo_doc.equals("arrivo"))
+		if (tipo_doc.equals(DocwayMailboxConfiguration.DOC_TIPO_ARRIVO))
 			mittOrDest = "\nMittente: ";
-		else if (tipo_doc.equals("partenza"))
+		else if (tipo_doc.equals(DocwayMailboxConfiguration.DOC_TIPO_PARTENZA))
 			mittOrDest = "\nDestinatario: ";
 		if (mittOrDest.length() > 0) {
 			@SuppressWarnings("unchecked")
@@ -139,7 +141,7 @@ public class Docway4NotificationEmailsUtils {
 		String tipo_doc = document.getRootElement().attributeValue("tipo");
 
 		String mittOrDest = "";
-		if (tipo_doc.equals("arrivo") || tipo_doc.equals("partenza")) {
+		if (tipo_doc.equals(DocwayMailboxConfiguration.DOC_TIPO_ARRIVO) || tipo_doc.equals(DocwayMailboxConfiguration.DOC_TIPO_PARTENZA)) {
 			@SuppressWarnings("unchecked")
 			List<Element> l = (List<Element>)document.selectNodes("/doc/rif_esterni/rif/nome");            
 			if (l.size() > 0)

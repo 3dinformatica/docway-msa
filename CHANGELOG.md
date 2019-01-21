@@ -2,6 +2,9 @@
 
 ## [3.0.4] - SNAPSHOT
 
+### Added
+- Aggiunto store type SAVE\_ORPHAN\_PEC\_RECEIPT\_AS\_VARIE per il salvataggio di ricevute PEC orfane come documenti non protocollati (richiede la property '_docway4mailboxmanager.pec.orphan-receipts-as-varie_')
+
 ### Fixed
 - In generazione documenti da fatturePA, compilazione dei campi del rif. esterno con i dati estratti dalla fattura stessa (e non recuperati da ACL) (Task #16546)
 

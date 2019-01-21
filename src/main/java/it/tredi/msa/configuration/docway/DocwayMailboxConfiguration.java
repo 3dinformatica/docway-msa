@@ -14,6 +14,11 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public final static String DEFAULT_FTR_PA_CLASSIF = "00/00 - Non Classificato";
 	public final static String DEFAULT_FTR_PA_CLASSIF_COD = "00/00";
 	
+	public static final String DOC_TIPO_ARRIVO = "arrivo";
+	public static final String DOC_TIPO_PARTENZA = "partenza";
+	public static final String DOC_TIPO_INTERNO = "interno"; // documento tra uffici
+	public static final String DOC_TIPO_VARIE = "varie"; // documento non protocollato / generico
+	
 	//email address
 	private String email;
 	
@@ -91,6 +96,9 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	//ricevute PEC orfane
 	private boolean ignoreStandardOrphanPecReceipts;
+	
+	//salvataggio ricevute PEC orfane come doc non protocollato
+	private boolean orphanPecReceiptsAsVarie;
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -542,6 +550,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setIgnoreStandardOrphanPecReceipts(boolean ignoreStandardOrphanPecReceipts) {
 		this.ignoreStandardOrphanPecReceipts = ignoreStandardOrphanPecReceipts;
+	}
+	
+	public boolean isOrphanPecReceiptsAsVarie() {
+		return orphanPecReceiptsAsVarie;
+	}
+
+	public void setOrphanPecReceiptsAsVarie(boolean orphanPecReceiptsAsVarie) {
+		this.orphanPecReceiptsAsVarie = orphanPecReceiptsAsVarie;
 	}
 	
 	

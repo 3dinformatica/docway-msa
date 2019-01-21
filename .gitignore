@@ -44,6 +44,9 @@ local.properties
 # PDT-specific
 .buildpath
 
+# STS
+.factorypath
+
 ######################
 # Intellij
 ######################

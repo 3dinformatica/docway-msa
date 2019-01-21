@@ -150,8 +150,16 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					else
 						dcwParsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_ATTACHING_FILE, query));
 				}
-				else if (dcwParsedMessage.isPecReceipt() && conf.isIgnoreStandardOrphanPecReceipts()) { //ricevuta PEC (non relativa a interopPA/fatturaPA) e property attiva per evitare l'archiviazione -> il messaggio viene ignorato e rimane sulla casella di posta
-					return StoreType.IGNORE_MESSAGE;
+				else if (dcwParsedMessage.isPecReceipt()) { //ricevuta PEC (non relativa a interopPA/fatturaPA)
+					if (conf.isIgnoreStandardOrphanPecReceipts()) {
+						// property attiva per evitare l'archiviazione -> il messaggio viene ignorato e rimane sulla casella di posta
+						return StoreType.IGNORE_MESSAGE;
+					}
+					// mbernardini 21/01/2019 : se il salvataggio riguarda ricevute orfane potrebbe essere stato richiesto il salvataggio
+					// come documento non protocollato
+					else if (conf.isOrphanPecReceiptsAsVarie()) {
+						return StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE;
+					}
 				}
 			}
 			else if (dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio di segnatura di interoperabilità PA
@@ -224,8 +232,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				return StoreType.UPDATE_NEW_RECIPIENT;
 			}
 		}
-		else //messageId not found
+		else {
+			//messageId not found
 			return StoreType.SAVE_NEW_DOCUMENT;
+		}
 	}  	
 	
 	@Override
@@ -291,6 +301,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
 				xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 			}
+			
 
 		}
 		

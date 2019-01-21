@@ -50,6 +50,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_TEMPLATE_OGGETTO = "docway4mailboxmanager.ftr-pa.template-oggetto";
 	public final static String DOCWAY4MAILBOXMANAGER_FTR_PA_OGGETTO_PARSE_MODE = "docway4mailboxmanager.ftr-pa.oggetto-parse-mode";
 	public final static String DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS = "docway4mailboxmanager.pec.ignore-standard-orphan-receipts";
+	public final static String DOCWAY4MAILBOXMANAGER_PEC_ORPHAN_RECEIPTS_AS_VARIE = "docway4mailboxmanager.pec.orphan-receipts-as-varie";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_SOCKET_TIMEOUT = "docway4mailboxmanager.mail-sender.socket-timeout";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_CONNECTION_TIMEOUT = "docway4mailboxmanager.mail-sender.connection-timeout";
 	
@@ -358,6 +359,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	//conf.setProtocollaFattura(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA, true));
     	
     	conf.setIgnoreStandardOrphanPecReceipts(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS, false));
+    	// mbernardini 18/01/2019 : salvataggio di ricevute PEC orfane come doc non protocollati
+    	conf.setOrphanPecReceiptsAsVarie(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_ORPHAN_RECEIPTS_AS_VARIE, false));
     	
 		return conf;
 	}
