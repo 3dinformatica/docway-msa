@@ -8,6 +8,7 @@
 ### Fixed
 - In generazione documenti da fatturePA, compilazione dei campi del rif. esterno con i dati estratti dalla fattura stessa (e non recuperati da ACL) (Task #16546)
 - Corretto indice del messaggio in elaborazione sul log di MSA
+- Corretta la registrazione dell'indirizzo mail del mittente su audit di MSA
 
 ## [3.0.3] - 2019-01-07
 

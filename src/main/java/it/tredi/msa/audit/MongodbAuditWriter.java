@@ -58,6 +58,7 @@ public class MongodbAuditWriter extends AuditWriter {
 			auditMessage.setSentDate(parsedMessage.getSentDate());
 			auditMessage.setStatus(AuditMessageStatus.SUCCESS);
 			auditMessage.setSubject(parsedMessage.getSubject());
+			auditMessage.setFromAddress(_retrieveFromAddress(parsedMessage));
 			auditMessageRepository.save(auditMessage);
 		}	
 		else { //base audit -> (if found) remove audit message from mongoDb collection
@@ -69,6 +70,29 @@ public class MongodbAuditWriter extends AuditWriter {
 			}
 		}
 		
+	}
+	
+	/**
+	 * Caricamento dell'indirizzo email del mittente dal messaggio per la registrazione sul record di audit di msa
+	 * @param parsedMessage
+	 * @return
+	 */
+	private String _retrieveFromAddress(ParsedMessage parsedMessage) {
+		String address = "";
+		if (parsedMessage != null) {
+			try {
+				// se il messaggio e' di tipo PEC cerco di recuperare il mittente reale ...
+				if (parsedMessage.isPecMessage())
+					address = parsedMessage.getMittenteAddressFromDatiCertPec();
+				// ... se non e' PEC o e' fallito il recupero del mittente reale carico il valore di from dall'header del messaggio
+				if (address == null || address.isEmpty())
+					address = parsedMessage.getFromAddress();
+			}
+			catch(Exception e) {
+				logger.error("MongodbAuditWriter: Unable to retrieve 'from-address' from message... " + e.getMessage());
+			}
+		}
+		return address;
 	}
 
 	@Override
@@ -99,13 +123,7 @@ public class MongodbAuditWriter extends AuditWriter {
 		auditMessage.setSentDate(parsedMessage.getSentDate());
 		auditMessage.setStatus(AuditMessageStatus.ERROR);
 		auditMessage.setSubject(parsedMessage.getSubject());
-		try {
-			auditMessage.setFromAddress(parsedMessage.getFromAddress());
-		}
-		catch(Exception e) {
-			logger.error("MongodbAuditWriter: Unable to retrieve 'from-address' from message... " + e.getMessage());
-		}
-		
+		auditMessage.setFromAddress(_retrieveFromAddress(parsedMessage));
 		auditMessageRepository.save(auditMessage);
 	}
 
