@@ -179,10 +179,14 @@ public abstract class MailboxManager implements Runnable {
         		logger.info("[" + configuration.getName() + "] FOUND " + messages.length + " MESSAGES");
         	auditMailboxRun.setMessageCount(messages.length);
         	
-        	int i=1;
+        	int i=0;
         	for (Message message:messages) { //for each email message
         		if (shutdown)
         			return;
+        		
+        		// mbernardini 23/01/2019 : spostato incremento di i perche' in fondo non gestito se messaggio skippato (continue 
+        		// dentro a for, andrebbe evitato per maggiore leggibilita')
+        		i++;
         		
         		ParsedMessage parsedMessage = null;
         		try {
@@ -208,8 +212,6 @@ public abstract class MailboxManager implements Runnable {
         			//TEMPLATE STEP - handleError
         			handleError(e, parsedMessage==null? message : parsedMessage);
         		}
-        		
-        		i++;
         	}
     	}
     	catch (Throwable t) {
