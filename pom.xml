@@ -73,8 +73,7 @@
         <dependency>
             <groupId>it.tredi</groupId>
             <artifactId>msa-repository</artifactId>
-            <version>1.0.0</version>
-            <scope>compile</scope>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
 	

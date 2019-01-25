@@ -158,7 +158,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	@Override
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
-		super.storeMessage(parsedMessage);
+		if (logger.isInfoEnabled())
+    		logger.info("[" + conf.getName() + "] storing message [" + parsedMessage.getMessageId() + "]");
 		
 		this.currentDate = new Date();
 		this.ignoreMessage = false;
@@ -1030,7 +1031,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
     	if (!ignoreMessage)
     		super.messageStored(parsedMessage);
     	else
-    		; //DO NOTHING
+    		// mbernardini 25/01/2019 : registrazione nell'audit di msa dello skip
+    		super.messageSkipped(parsedMessage); // in realta' il messaggio risulta skippato
     }
 	
 }

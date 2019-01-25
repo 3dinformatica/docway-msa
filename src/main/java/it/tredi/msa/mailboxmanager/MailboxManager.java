@@ -178,6 +178,7 @@ public abstract class MailboxManager implements Runnable {
         	if (logger.isInfoEnabled())
         		logger.info("[" + configuration.getName() + "] FOUND " + messages.length + " MESSAGES");
         	auditMailboxRun.setMessageCount(messages.length);
+        	// TODO aggiornamento messaggi di errore presenti nella casella
         	
         	int i=0;
         	for (Message message:messages) { //for each email message
@@ -342,8 +343,6 @@ public abstract class MailboxManager implements Runnable {
     		if (obj != null)  { //message exception [parseMessage(), storeMessage]
 
     			auditMailboxRun.incrementErrorCount();
-    			auditMailboxRun.incrementNewErrorCount();
-    			
     			try {
             		if (obj instanceof ParsedMessage) { //message exception - processMessage
             			ParsedMessage parsedMessage = (ParsedMessage)obj;
@@ -384,20 +383,51 @@ public abstract class MailboxManager implements Runnable {
     	}
     }
     
-    public void storeMessage(ParsedMessage parsedMessage) throws Exception {
-    	if (logger.isInfoEnabled())
-    		logger.info("[" + configuration.getName() + "] storing message [" + parsedMessage.getMessageId() + "]");
+    /**
+     * Metodo di registrazione del messaggio di posta. Verifica sull'effettiva registrazione, conversione del messaggio in documento e 
+     * successivo salvataggio sul database documentale.
+     * @param parsedMessage
+     * @throws Exception
+     */
+    public abstract void storeMessage(ParsedMessage parsedMessage) throws Exception;
+    
+    /**
+     * 
+     * @param parsedMessage
+     * @throws Exception
+     */
+    private void skipMessage(ParsedMessage parsedMessage) throws Exception {
+    	this.messageSkipped(parsedMessage);
     }
     
-    public void skipMessage(ParsedMessage parsedMessage) throws Exception {
-    	if (logger.isInfoEnabled())
-    		logger.info("[" + configuration.getName() + "] message skipped [" + parsedMessage.getMessageId() + "]");
-    }
-    
+    /**
+     * Ritorna true se il messagio deve essere elaborato, false altrimenti
+     * @param parsedMessage
+     * @return
+     */
     public boolean isMessageStorable(ParsedMessage parsedMessage) {
+    	// FIXME: di base tutti i messaggi presenti nella mailbox devono essere elaborati. Ulteriori verifiche a riguardo sono fatte sull'implementazione di storeMessage
     	return true;
     }
     
+    /**
+     * Aggiornamento dell'audit di MSA: Registrazione del messaggio skippato
+     * @param parsedMessage
+     * @throws Exception
+     */
+    public void messageSkipped(ParsedMessage parsedMessage) throws Exception {
+    	if (logger.isInfoEnabled())
+    		logger.info("[" + configuration.getName() + "] message skipped [" + parsedMessage.getMessageId() + "]");
+    	
+    	//audit - skipped
+    	auditMailboxRun.incrementSkipCount();
+    }
+    
+    /**
+     * Aggiornamento dell'audit di MSA: Registrazione del messaggio elaborato con successo
+     * @param parsedMessage
+     * @throws Exception
+     */
     public void messageStored(ParsedMessage parsedMessage) throws Exception {
     	if (logger.isInfoEnabled())
     		logger.info("[" + configuration.getName() + "] message stored [" + parsedMessage.getMessageId() + "]");
@@ -418,7 +448,7 @@ public abstract class MailboxManager implements Runnable {
     	
     	//audit - success
     	Services.getAuditService().writeSuccessAuditMessage(configuration, parsedMessage);
-    	auditMailboxRun.incrementStoredCount();
+    	auditMailboxRun.incrementStoreCount();
     }
  
 }
