@@ -4,7 +4,7 @@
 
 	<groupId>it.tredi</groupId>
 	<artifactId>msa</artifactId>
-	<version>3.0.4-SNAPSHOT</version>
+	<version>3.0.4</version>
 	<packaging>jar</packaging>
 	<name>msa</name>
 
@@ -47,7 +47,7 @@
 		<dependency>
   			<groupId>it.tredi</groupId>
   			<artifactId>mail</artifactId>
-  			<version>1.0.7-SNAPSHOT</version>
+  			<version>1.0.7</version>
 		</dependency>
 		<dependency>
 			<groupId>it.tredi</groupId>
@@ -73,7 +73,7 @@
         <dependency>
             <groupId>it.tredi</groupId>
             <artifactId>msa-repository</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.1</version>
         </dependency>
     </dependencies>
 	

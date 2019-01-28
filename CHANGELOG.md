@@ -1,7 +1,7 @@
 # Change Log
 
 
-## [3.0.4] - SNAPSHOT
+## [3.0.4] - 2019-01-28
 
 ### Added
 - Aggiunto store type SAVE\_ORPHAN\_PEC\_RECEIPT\_AS\_VARIE per il salvataggio di ricevute PEC orfane come documenti non protocollati (richiede la property '_docway4mailboxmanager.pec.orphan-receipts-as-varie_')
