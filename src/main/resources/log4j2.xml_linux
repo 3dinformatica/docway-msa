@@ -26,9 +26,21 @@
                 </Delete>
             </DefaultRolloverStrategy>
         </RollingFile>
+		<!--RollingFile name="AUDITLOG" fileName="${logdir}/audit-msa.log" filePattern="${logdir}/audit-msa-%d{yyyy-MM-dd}.log">
+			<PatternLayout>
+				<pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+			</Policies>
+		</RollingFile-->
     </Appenders>
     
     <Loggers>
+    	<!-- AUDIT LOG Logger (se abilitato) -->
+    	<!--Logger name="it.tredi.msa.audit.LogAuditWriter" level="info" additivity="false">
+			<AppenderRef ref="AUDITLOG"/>
+		</Logger-->
 		<Logger name="it.tredi.msa" level="debug" additivity="false"> <!-- MSA Logger -->
 			<AppenderRef ref="ROLLFILE"/>
 		</Logger>

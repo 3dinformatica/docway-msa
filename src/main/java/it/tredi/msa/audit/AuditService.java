@@ -1,9 +1,13 @@
 package it.tredi.msa.audit;
 
 import it.tredi.msa.entity.AuditMailboxRun;
+
+import javax.mail.Message;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import it.tredi.mail.MessageUtils;
 import it.tredi.msa.ObjectFactory;
 import it.tredi.msa.Services;
 import it.tredi.msa.configuration.MailboxConfiguration;
@@ -39,6 +43,12 @@ public class AuditService {
 		level = auditWriter.isFull()? "FULL" : "BASE";
 	}
 
+	/**
+	 * Scrittura sull'audit di MSA di un messaggio email processato correttamente
+	 * @param mailboxConfiguration
+	 * @param parsedMessage
+	 * @throws Exception
+	 */
 	public void writeSuccessAuditMessage(MailboxConfiguration mailboxConfiguration, ParsedMessage parsedMessage) throws Exception {
 		try {
 			logger.info(String.format(WRITE_AUDIT_MESSAGE_LOG_MESSAGE, mailboxConfiguration.getName(), parsedMessage.getMessageId(), "SUCCESS", level));
@@ -50,6 +60,13 @@ public class AuditService {
 		}
 	}
 
+	/**
+	 * Scrittura sull'audit di MSA di un messaggio email parsato sul quale sono stati riscontrati errori
+	 * @param mailboxConfiguration
+	 * @param parsedMessage
+	 * @param exception
+	 * @throws Exception
+	 */
 	public void writeErrorAuditMessage(MailboxConfiguration mailboxConfiguration, ParsedMessage parsedMessage, Exception exception) throws Exception {
 		try {
 			logger.info(String.format(WRITE_AUDIT_MESSAGE_LOG_MESSAGE, mailboxConfiguration.getName(), parsedMessage.getMessageId(), "ERROR", level));
@@ -61,25 +78,44 @@ public class AuditService {
 		}
 	}
 	
-	public boolean auditMessageInErrorFound (MailboxConfiguration mailboxConfiguration, ParsedMessage parsedMessage) throws Exception {
-		return auditWriter.isErrorMessageFoundInAudit(mailboxConfiguration, parsedMessage);
-	}
-
-	public AuditMailboxRun writeAuditMailboxRun(AuditMailboxRun auditMailboxRun) {
-		return writeAuditMailboxRun(auditMailboxRun, true);
+	/**
+	 * Scrittura sull'audit di MSA di un messaggio email sul quale risulta fallito anche il parsing iniziale
+	 * @param mailboxConfiguration
+	 * @param message
+	 * @param exception
+	 * @throws Exception
+	 */
+	public void writeErrorAuditMessage(MailboxConfiguration mailboxConfiguration, Message message, Exception exception) throws Exception {
+		String messageId = null;
+		try {
+			messageId = MessageUtils.getMessageId(message);
+			logger.info(String.format(WRITE_AUDIT_MESSAGE_LOG_MESSAGE, mailboxConfiguration.getName(), messageId, "ERROR", level));
+			auditWriter.writeErrorAuditMessage(mailboxConfiguration, message, exception);
+		}
+		catch (Exception e) {
+			logger.error(String.format(WRITE_AUDIT_MESSAGE_LOG_ERROR_MESSAGE, messageId, "error"), e);
+			Services.getNotificationService().notifyError(String.format(WRITE_AUDIT_MESSAGE_MAIL_ERROR_MESSAGE, messageId, e.getMessage()));			
+		}
 	}
 	
-	public AuditMailboxRun writeAuditMailboxRun(AuditMailboxRun auditMailboxRun, boolean notifyError) {
+	public boolean auditMessageInErrorFound(MailboxConfiguration mailboxConfiguration, String messageId) throws Exception {
+		return auditWriter.isErrorMessageFoundInAudit(mailboxConfiguration, messageId);
+	}
+
+	public void writeAuditMailboxRun(AuditMailboxRun auditMailboxRun) {
+		writeAuditMailboxRun(auditMailboxRun, true);
+	}
+	
+	public void writeAuditMailboxRun(AuditMailboxRun auditMailboxRun, boolean notifyError) {
 		try {
 			logger.info(String.format(WRITE_AUDIT_MAILBOX_RUN_LOG_MESSAGE, auditMailboxRun.getMailboxName(), auditMailboxRun.getStatus()));
-			return auditWriter.writeAuditMailboxRun(auditMailboxRun);
+			auditWriter.writeAuditMailboxRun(auditMailboxRun);
 		}
 		catch (Exception e) {
 			logger.error(String.format(WRITE_AUDIT_MAILBOX_RUN_LOG_ERROR_MESSAGE, auditMailboxRun.getMailboxName()), e);
 			if (notifyError)
 				Services.getNotificationService().notifyError(String.format(WRITE_AUDIT_MAILBOX_RUN_MAIL_ERROR_MESSAGE, auditMailboxRun.getMailboxName(), e.getMessage()));	
-		}	
-		return null;
+		}
 	}
 	
 }

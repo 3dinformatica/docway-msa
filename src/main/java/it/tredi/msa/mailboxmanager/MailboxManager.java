@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import it.tredi.mail.MailReader;
+import it.tredi.mail.MessageUtils;
 import it.tredi.msa.ContextProvider;
 import it.tredi.msa.Services;
 import it.tredi.msa.configuration.MailboxConfiguration;
@@ -52,6 +53,7 @@ public abstract class MailboxManager implements Runnable {
 	private final static int MAILREADER_CONNECTION_ATTEMPTS = 3;
 	private final static String PROCESS_MAILBOX_ERROR_MESSAGE = "Errore imprevisto durante le gestione della casella di posta [%s].\nControllare la configurazione [%s://%s:%s][User:%s]\nConsultare il log per maggiori dettagli.\n\n%s";
 	private final static String STORE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante l'archiviazione del messaggio di posta [%s].\nMessage Id: %s\nSent Date: %s\nSubject: %s\nConsultare il log per maggiori dettagli.\n\n%s";
+	private final static String PARSE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante il parsinge di un messaggio di posta [%s].\nMessage Type: %s\nConsultare il log per maggiori dettagli.\n\n%s";
 	private final static String HANDLE_ERROR_ERROR_MESSAGE = "Errore imprevisto durante la gestione di un errore in fase di archiviazione di un messaggio di posta\nConsultare il log per maggiori dettagli.\n\n%s";
 	
 	public MailboxConfiguration getConfiguration() {
@@ -178,7 +180,6 @@ public abstract class MailboxManager implements Runnable {
         	if (logger.isInfoEnabled())
         		logger.info("[" + configuration.getName() + "] FOUND " + messages.length + " MESSAGES");
         	auditMailboxRun.setMessageCount(messages.length);
-        	// TODO aggiornamento messaggi di errore presenti nella casella
         	
         	int i=0;
         	for (Message message:messages) { //for each email message
@@ -199,7 +200,7 @@ public abstract class MailboxManager implements Runnable {
             		if (logger.isInfoEnabled())
             			logger.info("[" + configuration.getName() + "] message (" + i + "/" + messages.length + ") [" + parsedMessage.getMessageId() + "]");
             		
-            		if (Services.getAuditService().auditMessageInErrorFound(configuration, parsedMessage)) { //message found in error in audit
+            		if (Services.getAuditService().auditMessageInErrorFound(configuration, parsedMessage.getMessageId())) { //message found in error in audit
             			auditMailboxRun.incrementErrorCount();
             			logger.info("[" + configuration.getName() + "] message skipped [" + parsedMessage.getMessageId() + "]. Message already found in audit in [ERROR] state");
             			continue; //skip to next message
@@ -355,9 +356,26 @@ public abstract class MailboxManager implements Runnable {
             		}
             		else if (obj instanceof Message) { //message exception - parseMessage
             			Message message = (Message)obj;
-            			logger.error("[" + configuration.getName() + "] unexpected error parsing message [Sent: " + message.getSentDate() + "] [Subject: " + message.getSentDate() + "]");
+            			
+        				// mbernardini 29/01/2019 : salvataggio in audit anche di eventuali errori in fase di parse del messaggio
+            			String messageId = null;
+            			try {
+            				messageId = MessageUtils.getMessageId(message);
+	            			if (!Services.getAuditService().auditMessageInErrorFound(configuration, messageId)) // controllo che il messaggio non risulti gia' registrato sull'audit
+	            				Services.getAuditService().writeErrorAuditMessage(configuration, message, (Exception)t);
+            			}
+            			catch(Exception e) {
+            				logger.error("[" + configuration.getName() + "] unable to save error in audit [MessageId: " + messageId + "]... " + e.getMessage(), e);
+            			}
+            			// mbernardini 28/01/2019 : aumentato il livello di log in caso message non parsato
+            			logger.error("[" + configuration.getName() + "] unexpected error parsing message [Sent: " + message.getSentDate() + "] [Subject: " + message.getSentDate() + "]", t);
             			Services.getNotificationService().notifyError(String.format(STORE_MESSAGE_ERROR_MESSAGE, configuration.getName(), "", message.getSentDate(), message.getSubject(), t.getMessage()));
-            		}        				
+            		}
+            		// mbernardini 28/01/2019 : aggiunto caso di oggetto sconosciuto
+            		else { // unknown object
+            			logger.error("[" + configuration.getName() + "] unexpected error parsing message [unknown object] [type: " + obj.getClass().getName() + "]", t);
+            			Services.getNotificationService().notifyError(String.format(PARSE_MESSAGE_ERROR_MESSAGE, configuration.getName(), obj.getClass().getName(), t.getMessage()));
+            		}
     			}
     			catch (Exception e) {
     				logger.error("[" + configuration.getName() + "] unexpected error handling message error", e);
