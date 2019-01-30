@@ -125,4 +125,80 @@ public class EmlExtractionTest extends EmlReader {
 		assertEquals("dp.Padova@pce.agenziaentrate.it", fromDatiCert);
 	}
 	
+	/**
+	 * Estrazione dati da messaggio contenente spazi o caratteri di controllo su un indirizzo 
+	 * email: javax.mail.internet.AddressException: Domain contains control or whitespace
+	 * @throws Exception
+	 */
+	@Test
+	public void domainContainsControlOrWhitespaceExtraction() throws Exception {
+		String fileName = "domain_contains_control_or_whitespace.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		ParsedMessage parsed = new ParsedMessage(readEmlFile(file, false));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(3, parsed.getAttachments().size());
+		
+		System.out.println("to addresses = " + parsed.getToAddressesAsString());
+		assertNotNull(parsed.getToAddressesAsString());
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("t.c.m.srl@pec.it", fromDatiCert);
+	}
+	
+	/**
+	 * Estrazione dati da messaggio in caso di eccezione nel parsing dell'indirizzo 
+	 * email: javax.mail.internet.AddressException: Missing '<'
+	 * @throws Exception
+	 */
+	@Test
+	public void addressExceptionExtraction() throws Exception {
+		String fileName = "address_exception.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		ParsedMessage parsed = new ParsedMessage(readEmlFile(file, false));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(2, parsed.getAttachments().size());
+		
+		System.out.println("to addresses = " + parsed.getToAddressesAsString());
+		assertNotNull(parsed.getToAddressesAsString());
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("riccardoguerra@pec.ordineavvocatigrosseto.com", fromDatiCert);
+	}
+	
 }

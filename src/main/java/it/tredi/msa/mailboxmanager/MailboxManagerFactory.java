@@ -27,7 +27,16 @@ public class MailboxManagerFactory {
 	public static void update(MailboxManager mailboxManager, MailboxConfiguration mailboxConfiguration) throws Exception {
 		if (mailboxManager.getConfiguration() == null || Services.getConfigurationService().getMSAConfiguration().isMailboxManagersHotReloading()) {
 			mailboxManager.setConfiguration(mailboxConfiguration);
-			MailReader mailReader = MailClientHelper.createMailReader(mailboxConfiguration.getHost(), mailboxConfiguration.getPort(), mailboxConfiguration.getUser(), mailboxConfiguration.getPassword(), mailboxConfiguration.getProtocol());
+			
+			MailReader mailReader = MailClientHelper.createMailReader(
+					mailboxConfiguration.getHost(),
+					mailboxConfiguration.getPort(),
+					mailboxConfiguration.getUser(),
+					mailboxConfiguration.getPassword(),
+					mailboxConfiguration.getProtocol(),
+					mailboxConfiguration.isMailMimeAddressStrict(), 
+					mailboxConfiguration.isMailMimeAllowutf8());
+			
 			if (mailboxConfiguration.getMailserverConnectionTimeout() != -1)
 				mailReader.setConnectionTimeout(mailboxConfiguration.getMailserverConnectionTimeout());
 			if (mailboxConfiguration.getMailserverSocketTimeout() != -1)

@@ -1,6 +1,17 @@
 # Change Log
 
 
+## [3.0.5] - SNAPSHOT
+
+### Added
+- Prima implementazione del writer dell'audit su LOG anziché su MongoDB (__da verificare__)
+- Possibilità di istanziare il MailReader specificando le property mail.mime.address.strict (default = true) per evitare la validazione dell'header di javamail
+
+### Fixed
+- Corretta la scrittura di log di errore in caso di mancato parsing di un messaggio email (registrazione sul log dell'applicativo dell'errore riscontrato in fase di parsing)
+- Registrazione su Audit di messaggi sui quali è fallito il parsing iniziale (fino alla versione precedente venivano ignorati a livello di audit)
+
+
 ## [3.0.4] - 2019-01-28
 
 ### Added

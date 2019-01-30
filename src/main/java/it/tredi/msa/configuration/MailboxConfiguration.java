@@ -17,6 +17,14 @@ public abstract class MailboxConfiguration {
 	private int mailserverConnectionTimeout = -1;
 	private String folderName;
 	
+	// The mail.mime.address.strict session property controls the parsing of address headers. By default, strict parsing of 
+	// address headers is done. If this property is set to "false", strict parsing is not done and many illegal addresses that 
+	// sometimes occur in real messages are allowed. See the InternetAddress class for details.
+	private boolean mailMimeAddressStrict = true;
+	// If set to "true", UTF-8 strings are allowed in message headers, e.g., in addresses. This should only be set 
+	// if the mail server also supports UTF-8. 
+	private boolean mailMimeAllowutf8 = false;
+	
 	boolean isPec;
 	
 	private int delay = -1; //delay (mailbox manager polling time)
@@ -136,6 +144,22 @@ public abstract class MailboxConfiguration {
 
 	public void setPec(boolean isPec) {
 		this.isPec = isPec;
+	}
+	
+	public boolean isMailMimeAddressStrict() {
+		return mailMimeAddressStrict;
+	}
+
+	public void setMailMimeAddressStrict(boolean mailMimeAddressStrict) {
+		this.mailMimeAddressStrict = mailMimeAddressStrict;
+	}
+
+	public boolean isMailMimeAllowutf8() {
+		return mailMimeAllowutf8;
+	}
+
+	public void setMailMimeAllowutf8(boolean mailMimeAllowutf8) {
+		this.mailMimeAllowutf8 = mailMimeAllowutf8;
 	}
 	
 }

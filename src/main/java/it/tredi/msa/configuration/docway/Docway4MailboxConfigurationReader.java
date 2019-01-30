@@ -54,6 +54,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_SOCKET_TIMEOUT = "docway4mailboxmanager.mail-sender.socket-timeout";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_CONNECTION_TIMEOUT = "docway4mailboxmanager.mail-sender.connection-timeout";
 	
+	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_MIME_ADDRESS_STRICT = "docway4mailboxmanager.mail-reader.mail-mime-address-strict";
+	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_MIME_ALLOW_UTF8 = "docway4mailboxmanager.mail-reader.mail-mime-allowutf8";
+	
 	private String host;
 	private int port;
 	private String user;
@@ -361,6 +364,10 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	conf.setIgnoreStandardOrphanPecReceipts(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS, true));
     	// mbernardini 18/01/2019 : salvataggio di ricevute PEC orfane come doc non protocollati
     	conf.setOrphanPecReceiptsAsVarie(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_ORPHAN_RECEIPTS_AS_VARIE, true));
+    	
+    	// mbernardini 29/01/2019 : parametri aggiuntivi per javamail di configurazione del parsing dell'header del messaggio
+    	conf.setMailMimeAddressStrict(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_MIME_ADDRESS_STRICT, true));
+    	conf.setMailMimeAddressStrict(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_MIME_ALLOW_UTF8, false));
     	
 		return conf;
 	}
