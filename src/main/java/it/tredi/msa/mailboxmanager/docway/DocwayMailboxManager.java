@@ -23,7 +23,7 @@ import org.dom4j.Element;
 
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
-import it.tredi.mail.MessageUtils;
+import it.tredi.mail.entity.MailAttach;
 import it.tredi.msa.Utils;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.ContentProvider;
@@ -412,28 +412,27 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		List<String> damagedFiles = new ArrayList<>();
 		
 		//email attachments (files + immagini)
-		List<Part> attachments = parsedMessage.getAttachments();
-		for (Part attachment:attachments) {
+		List<MailAttach> attachments = parsedMessage.getAttachments();
+		for (MailAttach attachment:attachments) {
 			file = createDocwayFile();
 			
-			String currentFileName = MessageUtils.decodeAttachmentFileName(attachment.getFileName());
 			if (logger.isDebugEnabled())
-				logger.debug("Read content from attachment " + currentFileName + "...");
+				logger.debug("Read content from attachment " + attachment.getFileName() + "...");
 			
 			// Se non si riesce a caricare il contenuto del file diamo per scontato che si tratti di un file danneggiato
 			boolean fileLoaded = false;
 			try {
-				file.setContentByProvider(new PartContentProvider(attachment));
+				file.setContentByProvider(new PartContentProvider(attachment.getPart()));
 				fileLoaded = true;
 			}
 			catch(Exception e) {
 				logger.warn("[" + attachment.getFileName() + "] Unable to read file content, damaged file... " + e.getMessage(), e);
-				logger.info("Mark file " + currentFileName + " as DAMAGED file!");
+				logger.info("Mark file " + attachment.getFileName() + " as DAMAGED file!");
 				damagedFound = true;
-				damagedFiles.add(currentFileName);
+				damagedFiles.add(attachment.getFileName());
 			}
 			if (fileLoaded) {
-				file.setName(currentFileName);
+				file.setName(attachment.getFileName());
 				if (isImage(file.getName())) //immagine
 						doc.addImmagine(file);
 				else //file
@@ -441,7 +440,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			}
 			
 			//allegato
-			doc.addAllegato(currentFileName);
+			doc.addAllegato(attachment.getFileName());
 		}
 		
 		//allegato - default
@@ -811,7 +810,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			if (attachment != null) {
 				DocwayFile file = createDocwayFile();
 				file.setContentByProvider(new PartContentProvider(attachment));
-				file.setName(MessageUtils.decodeAttachmentFileName(attachment.getFileName()));
+				file.setName(attachment.getFileName());
 				if (isImage(file.getName())) //immagine
 						doc.addImmagine(file);
 				else //file

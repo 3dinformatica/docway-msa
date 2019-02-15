@@ -14,7 +14,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import it.tredi.mail.MessageUtils;
+import it.tredi.mail.entity.MailAttach;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
 
@@ -345,8 +345,8 @@ public class DocwayParsedMessage extends ParsedMessage {
 	}
 	
 	private Document getFileInterscambioFatturaPADocument(boolean isNotifica) throws Exception {
-		for (Part attachment:super.getAttachments()) {
-			String fileName = MessageUtils.decodeAttachmentFileName(attachment.getFileName());
+		for (MailAttach attachment:super.getAttachments()) {
+			String fileName = attachment.getFileName();
 			if (fileName.toUpperCase().endsWith(".XML") || fileName.toUpperCase().endsWith(".XML.P7M")) {
 				int underscoreOccurrences = fileName.replaceAll("[^_]", "").length();
 				if (isNotifica && underscoreOccurrences > 1 || !isNotifica && underscoreOccurrences == 1) {
@@ -366,7 +366,7 @@ public class DocwayParsedMessage extends ParsedMessage {
 					Pattern pattern = Pattern.compile(regex);
 					Matcher matcher = pattern.matcher(fileName);
 					if (matcher.find()) {
-						byte []b = (new PartContentProvider(attachment)).getContent();
+						byte []b = (new PartContentProvider(attachment.getPart())).getContent();
 						
 			            //se base64 -> decode
 			            if (Base64.isBase64(b)) {

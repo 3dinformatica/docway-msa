@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import it.tredi.mail.MessageParser;
+import it.tredi.mail.entity.MailAttach;
 
 public class ParsedMessage {
 	
@@ -107,7 +108,7 @@ public class ParsedMessage {
 		return this.parser.getMessageParts();
 	}
 	
-	public List<Part> getAttachments() {
+	public List<MailAttach> getAttachments() {
 		return this.parser.getAttachments();
 	}
 	
@@ -278,12 +279,9 @@ public class ParsedMessage {
 	public List<String> getAttachmentsName() {
 		List<String> names = new ArrayList<>();
 		if (this.getAttachments() != null && !this.getAttachments().isEmpty()) {
-			for (Part part : this.getAttachments()) {
-				if (part != null) {
-					String filename = this.parser.loadAttachmentNameFromPart(part);
-					if (filename != null && !filename.isEmpty())
-						names.add(filename);
-				}
+			for (MailAttach attach : this.getAttachments()) {
+				if (attach != null && attach.getFileName() != null && !attach.getFileName().isEmpty())
+					names.add(attach.getFileName());
 			}
 		}
 		return names;

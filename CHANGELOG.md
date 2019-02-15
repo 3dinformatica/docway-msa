@@ -6,6 +6,7 @@
 ### Added
 - Prima implementazione del writer dell'audit su LOG anziché su MongoDB (__da verificare__)
 - Possibilità di istanziare il MailReader specificando le property mail.mime.address.strict (default = true) per evitare la validazione dell'header di javamail
+- Migliorata la gestione del recupero dei nomi di file allegati ai messaggi (gestione di eventuali problemi di encoding nel nome dei file)
 
 ### Changed
 - Aggiornata la dipendenza del broker per supporto a numero di documenti superiore a 16 milioni.
