@@ -68,9 +68,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			logger.error("Unable to append thread name to xway user [xwUser = " + xwUser + "]... " + e.getMessage(), e);
 		}
 		
-		xwClient = new ExtrawayClient(conf.getXwHost(), conf.getXwPort(), conf.getXwDb(), conf.getXwUser(), conf.getXwPassword());
+		xwClient = new ExtrawayClient(conf.getXwHost(), conf.getXwPort(), conf.getXwDb(), xwUser, conf.getXwPassword());
 		xwClient.connect();
-		aclClient = new ExtrawayClient(conf.getXwHost(), conf.getXwPort(), conf.getAclDb(), conf.getXwUser(), conf.getXwPassword());
+		aclClient = new ExtrawayClient(conf.getXwHost(), conf.getXwPort(), conf.getAclDb(), xwUser, conf.getXwPassword());
 		aclClient.connect();
 		extRestrictionsOnAcl = checkExtRestrictionsOnAcl();
     }
