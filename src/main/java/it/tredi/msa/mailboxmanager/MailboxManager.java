@@ -169,6 +169,7 @@ public abstract class MailboxManager implements Runnable {
             		break;
             	}
             	catch (Exception e) {
+            		logger.error("[" + configuration.getName() + "] got exception... " + e.getMessage(), e);
             		if (logger.isDebugEnabled())
             			logger.debug("[" + configuration.getName() + "] connection failed: (" + attemptIndex + "/" +MAILREADER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
             		if (attemptIndex == MAILREADER_CONNECTION_ATTEMPTS)
@@ -248,6 +249,8 @@ public abstract class MailboxManager implements Runnable {
     	
     	// Reset dell'audit (azzero la data di fine, eventuali count da azzerare, ecc.)
     	auditMailboxRun.reset();
+    	if (logger.isDebugEnabled())
+    		logger.debug("[" + configuration.getName() + "] audit initialized!");
     	
 		mailReader.connect();
 		mailReader.openFolder(configuration.getFolderName());
