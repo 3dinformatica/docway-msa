@@ -1,7 +1,7 @@
 # Change Log
 
 
-## [3.0.5] - SNAPSHOT
+## [3.0.5] - 2019-02-25
 
 ### Added
 - Prima implementazione del writer dell'audit su LOG anziché su MongoDB (__da verificare__)
