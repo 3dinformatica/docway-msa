@@ -24,7 +24,6 @@ import org.dom4j.Element;
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
 import it.tredi.mail.entity.MailAttach;
-import it.tredi.msa.MailboxesManagersMap;
 import it.tredi.msa.Utils;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.ContentProvider;
