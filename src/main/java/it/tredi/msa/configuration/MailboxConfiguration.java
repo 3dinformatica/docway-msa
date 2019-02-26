@@ -74,6 +74,11 @@ public abstract class MailboxConfiguration {
 		this.protocol = protocol;
 	}
 	
+	/**
+	 * Username utilizzato per la connessione alla mailbox (corrisponde sempre all'indirizzo email della casella
+	 * di posta)
+	 * @return
+	 */
 	public String getUser() {
 		return user;
 	}

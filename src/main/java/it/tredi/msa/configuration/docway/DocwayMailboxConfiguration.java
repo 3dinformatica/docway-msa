@@ -93,6 +93,7 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String templateOggetto;
 	private OggettoParseMode oggettoParseMode;
 	private boolean protocollaFattura;
+	private boolean smistamentoFatturePA; // mbernardini 25/02/2019 : smistamento fatturaPA
 
 	//ricevute PEC orfane
 	private boolean ignoreStandardOrphanPecReceipts;
@@ -542,6 +543,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setProtocollaFattura(boolean protocollaFattura) {
 		this.protocollaFattura = protocollaFattura;
+	}
+	
+	public boolean isSmistamentoFatturePA() {
+		return smistamentoFatturePA;
+	}
+
+	public void setSmistamentoFatturePA(boolean smistamentoFatturePA) {
+		this.smistamentoFatturePA = smistamentoFatturePA;
 	}
 
 	public boolean isIgnoreStandardOrphanPecReceipts() {

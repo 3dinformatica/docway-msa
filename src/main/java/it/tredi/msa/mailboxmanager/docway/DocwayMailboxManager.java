@@ -24,6 +24,7 @@ import org.dom4j.Element;
 import it.tredi.mail.MailClientHelper;
 import it.tredi.mail.MailSender;
 import it.tredi.mail.entity.MailAttach;
+import it.tredi.msa.MailboxesManagersMap;
 import it.tredi.msa.Utils;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.ContentProvider;
@@ -85,7 +86,16 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract Object updatePartialDocument(DocwayDocument doc) throws Exception;
 	protected abstract Object updateDocumentWithRecipient(DocwayDocument doc) throws Exception;
 	protected abstract RifEsterno createRifEsterno(String name, String address) throws Exception;
+	
+	/**
+	 * Definizione dei riferimenti interni (assegnatari) del documento in base al messaggio parsato e i parametri di configurazione
+	 * letti dalla casella di posta
+	 * @param parsedMessage Messaggio parsato (in fase di elaborazione)
+	 * @return
+	 * @throws Exception
+	 */
 	protected abstract List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception;
+	
 	protected abstract void sendNotificationEmails(DocwayDocument doc, Object saveDocRetObj);
 	
 	/**
@@ -128,7 +138,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
             		break;
             	}
             	catch (Exception e) {
-            		logger.warn("[" + conf.getName() + "] connection failed: (" + attemptIndex + "/" +MAILSENDER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
+            		logger.warn("[" + conf.getUser() + "] connection failed: (" + attemptIndex + "/" +MAILSENDER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
             		if (attemptIndex == MAILSENDER_CONNECTION_ATTEMPTS)
             			throw e;
             		Thread.sleep(1000); //1 sec delay
@@ -146,7 +156,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 				mailSender.disconnect();
 		}
 		catch (Exception e) {
-			logger.warn("[" + getConfiguration().getName() + "] failed to close mailSender session", e);
+			logger.warn("[" + getConfiguration().getUser() + "] failed to close mailSender session", e);
 		}		
 	}	
 	
@@ -159,14 +169,14 @@ public abstract class DocwayMailboxManager extends MailboxManager {
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		if (logger.isInfoEnabled())
-    		logger.info("[" + conf.getName() + "] storing message [" + parsedMessage.getMessageId() + "]");
+    		logger.info("[" + conf.getUser() + "] storing message [" + parsedMessage.getMessageId() + "]");
 		
 		this.currentDate = new Date();
 		this.ignoreMessage = false;
 		
 		StoreType storeType = decodeStoreType(parsedMessage);
 		if (logger.isInfoEnabled())
-			logger.info("[" + conf.getName() + "] message [" + parsedMessage.getMessageId() + "] store type [" + storeType + "]");
+			logger.info("[" + conf.getUser() + "] message [" + parsedMessage.getMessageId() + "] store type [" + storeType + "]");
 		
 		if (storeType == StoreType.SAVE_NEW_DOCUMENT || storeType == StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT || storeType == StoreType.UPDATE_NEW_RECIPIENT) { //save new document or update existing one
 			//build new Docway document
@@ -189,7 +199,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			//notify emails
 			if (conf.isNotificationEnabled() && (conf.isNotifyRPA() || conf.isNotifyCC())) { //if notification is activated
 				if (logger.isInfoEnabled())
-					logger.info("[" + conf.getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
+					logger.info("[" + conf.getUser() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
 				sendNotificationEmails(doc, retObj);
 			}							
 		}
@@ -209,7 +219,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			//notify emails
 			if (conf.isNotificationEnabled() && (conf.isNotifyRPA() || conf.isNotifyCC())) { //if notification is activated
 				if (logger.isInfoEnabled())
-					logger.info("[" + conf.getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
+					logger.info("[" + conf.getUser() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
 				sendNotificationEmails(doc, retObj);
 			}
 		}		
@@ -233,7 +243,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			//notify emails
 			if (conf.isNotificationEnabled() && (conf.isNotifyRPA() || conf.isNotifyCC())) { //if notification is activated
 				if (logger.isInfoEnabled())
-					logger.info("[" + conf.getName() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
+					logger.info("[" + conf.getUser() + "] sending notification emails [" + parsedMessage.getMessageId() + "]");
 				sendNotificationEmails(doc, retObj);
 			}
 		}		
@@ -275,7 +285,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		DocwayDocument doc = new DocwayDocument();
 		
 		if (logger.isDebugEnabled())
-			logger.debug("[" + conf.getName() + "] creazione del documento da messaggio parsato. messageId = " 
+			logger.debug("[" + conf.getUser() + "] creazione del documento da messaggio parsato. messageId = " 
 						+ parsedMessage.getMessageId() 
 						+ ((docAsVarie) ? ", FORZATO IL SALVATAGGIO COME DOCUMENTO NON PROTOCOLLATO/GENERICO" : ""));
 		
@@ -378,7 +388,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//files + immagini + allegato
 		if (logger.isDebugEnabled())
-			logger.debug("[" + conf.getName() + "] gestione files e immagini...");
+			logger.debug("[" + conf.getUser() + "] gestione files e immagini...");
 		createDocwayFiles(parsedMessage, doc);
 		
 		//parsedMessage.relevantMessages -> postit
@@ -490,7 +500,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	private DocwayDocument createDocwayDocumentByInteropPAMessage(ParsedMessage  parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		if (logger.isDebugEnabled())
-			logger.debug("[" + conf.getName() + "] creazione del documento da messaggio Interoperabilita'. messageId = " + parsedMessage.getMessageId());
+			logger.debug("[" + conf.getUser() + "] creazione del documento da messaggio Interoperabilita'. messageId = " + parsedMessage.getMessageId());
 		
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();
@@ -830,7 +840,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		
 		if (logger.isDebugEnabled())
-			logger.debug("[" + conf.getName() + "] invio della conferma di ricezione per il messaggio di Interoperabilita'. messageId = " + parsedMessage.getMessageId());
+			logger.debug("[" + conf.getUser() + "] invio della conferma di ricezione per il messaggio di Interoperabilita'. messageId = " + parsedMessage.getMessageId());
 		
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();
@@ -901,7 +911,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		
 		if (logger.isDebugEnabled())
-			logger.debug("[" + conf.getName() + "] invio della notifica di eccezione per il messaggio di Interoperabilita'. messageId = " + parsedMessage.getMessageId());
+			logger.debug("[" + conf.getUser() + "] invio della notifica di eccezione per il messaggio di Interoperabilita'. messageId = " + parsedMessage.getMessageId());
 		
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();		
@@ -942,10 +952,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	}
 
 	private DocwayDocument createDocwayDocumentByFatturaPAMessage(ParsedMessage  parsedMessage) throws Exception {
-		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration) getConfiguration();
 		
 		if (logger.isDebugEnabled())
-			logger.debug("[" + conf.getName() + "] creazione del documento da messaggio FatturaPA. messageId = " + parsedMessage.getMessageId());
+			logger.debug("[" + conf.getUser() + "] creazione del documento da messaggio FatturaPA. messageId = " + parsedMessage.getMessageId());
 		
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document fatturaPADocument = dcwParsedMessage.getFatturaPADocument();

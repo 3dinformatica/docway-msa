@@ -808,6 +808,22 @@ public class FatturaPAUtils {
 		// TODO gestire i casi mancanti
 		
 		return "";
-	}	
+	}
+	
+	/**
+	 * Ritorna l'eventuale indirizzo PEC del destinatario indicato all'interno dell'XML della fattura.
+	 * Indirizzo di Posta Elettronica Certificata al quale viene recapitata la fattura; viene valorizzato nei soli casi 
+	 * di destinatario diverso da Pubblica Amministrazione, qualora il destinatario utilizzi il canale PEC per ricevere le 
+	 * fatture. Può essere valorizzato solo seil valore di CodiceDestinatarioè uguale a '0000000'.
+	 * @param fatturaPADocument
+	 * @return
+	 */
+	public static String getPECDestinatarioFromFatturaPA(Document fatturaPADocument) {
+		Node node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/DatiTrasmissione/PECDestinatario");
+		if (node != null)
+			return node.getText();
+		else
+			return null;
+	}
 	
 }

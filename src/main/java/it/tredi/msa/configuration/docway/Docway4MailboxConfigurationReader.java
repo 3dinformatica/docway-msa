@@ -183,6 +183,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 				List<Element> elsL = xmlDocument.selectNodes(xpath + "[./mailbox_in/@host!='']");
 	            for (Element casellaEl:elsL) { //for each mailbox relative to the current xpath
 	            	Docway4MailboxConfiguration conf = createDocway4MailboxConfigurationByConfig(casellaEl, isPec);
+	            	
 	            	mailboxConfigurations.add(conf);
 	            	
 	        		//parse documentModel
@@ -360,6 +361,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	// mbernardini 04/09/2018 : protocollazione della fattura recuperato dalla configurazione della casella e non dal file di properties di MSA
     	conf.setProtocollaFattura(casellaEl.attributeValue("protocollaFattura", "false").equalsIgnoreCase("true"));
     	//conf.setProtocollaFattura(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_FTR_PA_PROTOCOLLA_FATTURA, true));
+    	
+    	// mbernardini 25/02/2019 : lettura del parametro di smistamento fatturaPA dalla casella di posta
+    	conf.setSmistamentoFatturePA(casellaEl.attributeValue("smistamentoFatturePA", "false").equalsIgnoreCase("true"));
     	
     	conf.setIgnoreStandardOrphanPecReceipts(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS, true));
     	// mbernardini 18/01/2019 : salvataggio di ricevute PEC orfane come doc non protocollati
