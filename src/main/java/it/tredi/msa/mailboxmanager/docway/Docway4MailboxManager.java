@@ -18,9 +18,12 @@ import org.dom4j.Node;
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
 import it.tredi.mail.MailSender;
+import it.tredi.msa.MailboxesManagersMap;
 import it.tredi.msa.Services;
 import it.tredi.msa.configuration.docway.AssegnatarioMailboxConfiguration;
 import it.tredi.msa.configuration.docway.Docway4MailboxConfiguration;
+import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
+import it.tredi.msa.mailboxmanager.MailboxManager;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
@@ -84,14 +87,14 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				xwClient.disconnect();
 		}
 		catch (Exception e) {
-			logger.warn("[" + conf.getName() + "] failed to close eXtraWay session [" + conf.getXwDb() + "]", e);			
+			logger.warn("[" + conf.getUser() + "] failed to close eXtraWay session [" + conf.getXwDb() + "]", e);			
 		}
 		try {
 			if (aclClient != null)
 				aclClient.disconnect();
 		}
 		catch (Exception e) {
-			logger.warn("[" + conf.getName() + "] failed to close eXtraWay session [" + conf.getAclDb() + "]", e);
+			logger.warn("[" + conf.getUser() + "] failed to close eXtraWay session [" + conf.getAclDb() + "]", e);
 		}
 	}
 	
@@ -265,7 +268,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 						sendConfermaRicezioneInteropPAMessage(parsedMessage, doc, "PROTOCOLLO", numProt.substring(numProt.lastIndexOf("-") + 1), new SimpleDateFormat("yyyy-MM-dd").format(dataProtD), emailSubject);
 					}
 					catch (Exception e) {
-						logger.error("[" + conf.getName() + "] error sending ConfermaRicezione InteropPA message.", e);
+						logger.error("[" + conf.getUser() + "] error sending ConfermaRicezione InteropPA message.", e);
 						parsedMessage.addRelevantMessage(String.format(INVIO_INTEROP_PA_MESSAGE_FAILED, "Conferma Ricezione", e.getMessage()));
 					}				
 				}				
@@ -281,7 +284,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					sendNotificaEccezioneInteropPAMessage(parsedMessage, doc, "PROTOCOLLO", numProt.isEmpty() ? null : numProt.substring(numProt.lastIndexOf("-") + 1), new SimpleDateFormat("yyyy-MM-dd").format(dataProtD), emailSubject, dcwParsedMessage.getMotivazioneNotificaEccezioneToSend());
 				}
 				catch (Exception e) {
-					logger.error("[" + conf.getName() + "] error sending NotificaEccezione InteropPA message.", e);
+					logger.error("[" + conf.getUser() + "] error sending NotificaEccezione InteropPA message.", e);
 					parsedMessage.addRelevantMessage(String.format(INVIO_INTEROP_PA_MESSAGE_FAILED, "Notifica Eccezione", e.getMessage()));
 				}			
 			}
@@ -662,9 +665,38 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	@Override
 	protected List<RifInterno> createRifInterni(ParsedMessage parsedMessage) throws Exception {
-		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		List<RifInterno> rifInterni = new ArrayList<RifInterno>();
-		String codAmmAoo = ((Docway4MailboxConfiguration)super.getConfiguration()).getCodAmmAoo();
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration) super.getConfiguration();
+		String currentEmailAddress = conf.getUser();
+		
+		// mbernardini 26/02/2019 : override degli assegnatari se smistamento fatturePA risulta abilitato sulla mailbox
+		if (conf.isSmistamentoFatturePA() && parsedMessage instanceof DocwayParsedMessage) {
+			// lettura dell'indirizzo email del destinatario dal file XML della fattura
+			DocwayParsedMessage dwParsedMessage = (DocwayParsedMessage) parsedMessage;
+			if (dwParsedMessage.isPecMessage() && dwParsedMessage.getFatturaPADocument() != null) {
+				String fatturaPaEmailTo = FatturaPAUtils.getPECDestinatarioFromFatturaPA(dwParsedMessage.getFatturaPADocument());
+				if (fatturaPaEmailTo != null && !fatturaPaEmailTo.isEmpty()) {
+					if (logger.isDebugEnabled())
+						logger.debug("[" + currentEmailAddress + "] smistamento assegnati fattura su " + fatturaPaEmailTo + ". messageId = " + parsedMessage.getMessageId());
+					
+					// ricerca della mailbox relativa all'indirizzo letto
+					MailboxManager anotherManager = MailboxesManagersMap.getInstance().getManager(fatturaPaEmailTo);
+					if (anotherManager != null && anotherManager.getConfiguration() != null && anotherManager.getConfiguration() instanceof DocwayMailboxConfiguration) {
+						if (logger.isDebugEnabled())
+							logger.debug("[" + currentEmailAddress + "] mailbox " + fatturaPaEmailTo + " found... override configuration in use!");
+						
+						// override degli assegnatari del documento in base a quelli recuperati dalla mailbox caricata
+						conf = (DocwayMailboxConfiguration) anotherManager.getConfiguration();
+					}
+					else {
+						if (logger.isWarnEnabled())
+							logger.warn("[" + currentEmailAddress + "] nessuna mailbox configurata su " + fatturaPaEmailTo + ". Smistamento NON possibile!");
+					}
+				}
+			}
+		}
+		
+		String codAmmAoo = conf.getCodAmmAoo();
 		
 		//RPA
 		List<RifInterno> rifsL = null;
@@ -722,14 +754,14 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			}				
 		} 
 		catch (Exception e) {
-			logger.error("[" + conf.getName() + "] unexpected error sending notification emails", e);
+			logger.error("[" + conf.getUser() + "] unexpected error sending notification emails", e);
 		}
 		finally {
 			try {
 				mailSender.disconnect();
 			} 
 			catch (Exception e) {
-				logger.warn("[" + conf.getName() + "] failed to close mailSender session", e);
+				logger.warn("[" + conf.getUser() + "] failed to close mailSender session", e);
 			}				
 		}
 	}
@@ -744,19 +776,19 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				if (!dest.isEmpty() && !notifiedAddresses.contains(dest)) {
 					try {
 						if (logger.isInfoEnabled())
-							logger.info("[" + conf.getName() + "] sending notification email [" + dest + "]");
+							logger.info("[" + conf.getUser() + "] sending notification email [" + dest + "]");
 						notifiedAddresses.add(dest);
 						mailSender.sendMail(senderAddress, senderPersonal, dest, subject, body);	
 					}
 					catch (Exception e) {
-						logger.error("[" + conf.getName() + "] unexpected error sending notification email [" + dest + "]", e);
+						logger.error("[" + conf.getUser() + "] unexpected error sending notification email [" + dest + "]", e);
 					}
 				}
 			}
 			
 		} 
 		catch (Exception e) {
-			logger.error("[" + conf.getName() + "] unexpected error extracting email address for matricola [" + matricola + "]", e);
+			logger.error("[" + conf.getUser() + "] unexpected error extracting email address for matricola [" + matricola + "]", e);
 		}
 	}
     
@@ -1060,7 +1092,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			int count = aclClient.search("([/struttura_esterna/@partita_iva/]=\"" + piva + "\" AND [/struttura_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\") OR ([/persona_esterna/@partita_iva/]=\"" + piva + "\" AND [/persona_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\")");
 			if (count == 1) { // e' stata individuata una struttura esterna con la partita iva indicata
 				if (logger.isInfoEnabled())
-					logger.info("[" + conf.getName() + "] found rif esterno in ACL. Piva [" + piva + "]");
+					logger.info("[" + conf.getUser() + "] found rif esterno in ACL. Piva [" + piva + "]");
 				
 				found = true;
 				rifEsterno = getRifEsternoFromAcl(aclClient.loadDocByQueryResult(0));
@@ -1070,7 +1102,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			int count = aclClient.search("([/struttura_esterna/@codice_fiscale/]=\"" + cf + "\" AND [/struttura_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo()+ "\") OR ([/persona_esterna/@codice_fiscale/]=\"" + cf + "\" AND [/persona_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\")");
 			if (count == 1) { // e' stata individuata una struttura esterna con la partita iva indicata
 				if (logger.isInfoEnabled())
-					logger.info("[" + conf.getName() + "] found rif esterno in ACL. CF [" + cf + "]");
+					logger.info("[" + conf.getUser() + "] found rif esterno in ACL. CF [" + cf + "]");
 				
 				found = true;
 				rifEsterno = getRifEsternoFromAcl(aclClient.loadDocByQueryResult(0));
@@ -1120,7 +1152,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				nomeEl.addText(denominazione);
 				
 				if (logger.isInfoEnabled())
-					logger.info("[" + conf.getName() + "] rif esterno NOT found in ACL. Inserting SE [" + denominazione + "]");				
+					logger.info("[" + conf.getUser() + "] rif esterno NOT found in ACL. Inserting SE [" + denominazione + "]");				
 				
 				root.addAttribute("partita_iva", piva);
 				root.addAttribute("codice_fiscale", cf);
@@ -1153,7 +1185,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				root.addAttribute("cognome", node == null? "" : node.getText());
 				
 				if (logger.isInfoEnabled())
-					logger.info("[" + conf.getName() + "] rif esterno NOT found in ACL. Inserting PE [" + root.attributeValue("cognome") + " " + root.attributeValue("nome") + "]");
+					logger.info("[" + conf.getUser() + "] rif esterno NOT found in ACL. Inserting PE [" + root.attributeValue("cognome") + " " + root.attributeValue("nome") + "]");
 				
 				root.addAttribute("partita_iva", piva);
 				root.addAttribute("codice_fiscale", cf);
@@ -1423,7 +1455,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					Node node = document.selectSingleNode("/struttura_interna/fatturaPA/@emailSdI");
 					if (node == null || node.getText().isEmpty()) {
 						if (logger.isInfoEnabled())
-							logger.info("[" + conf.getName() + "] updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]");
+							logger.info("[" + conf.getUser() + "] updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]");
 						
 						int pD = aclClient.getPhysdocByQueryResult(0);
 						try {
@@ -1437,7 +1469,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 							aclClient.saveDocument(document, pD);
 						}
 						catch (Exception e) {
-							logger.error("[" + conf.getName() + "]. Unexpected error updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
+							logger.error("[" + conf.getUser() + "]. Unexpected error updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
 							try {
 								aclClient.unlockDocument(pD);
 							}
@@ -1449,7 +1481,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				}
 			}
 			catch (Exception e) {
-				logger.error("[" + conf.getName() + "]. Unexpected error updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
+				logger.error("[" + conf.getUser() + "]. Unexpected error updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
 			}
 		}
 	}
@@ -1469,7 +1501,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				fatturaPosition = Integer.parseInt(identificazioneFattura);
 		}
 		catch (NumberFormatException e) {
-			logger.warn("[" + conf.getName() + "]. Unexpected error parsing fatturaPA index number from subject [" + parsedMessage.getSubject() + "]", e);
+			logger.warn("[" + conf.getUser() + "]. Unexpected error parsing fatturaPA index number from subject [" + parsedMessage.getSubject() + "]", e);
 		}		
 		
 		//load and lock existing document
@@ -1498,7 +1530,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
             		}
         		}
         		catch (Exception e) {
-        			logger.warn("[" + conf.getName() + "]. Unexpected error identifing fatturaPA [index: " + fatturaPosition + "] in document [physodc: " + this.physDocForAttachingFile + "]", e);
+        			logger.warn("[" + conf.getUser() + "]. Unexpected error identifing fatturaPA [index: " + fatturaPosition + "] in document [physodc: " + this.physDocForAttachingFile + "]", e);
         		}
         	}			
 			

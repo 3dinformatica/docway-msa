@@ -1,5 +1,15 @@
 # Change Log
 
+## [3.0.6] - SNAPSHOT
+
+### Added
+- Smistamento fatturaPA agli assegnatari in base all'indirizzo email presente sulla fattura e non alla mailbox alla quale è stata spedita la
+ fattura da parte dello SdI (Task #17297)
+
+### Changed 
+- Rimossa property _mailboxmanagers.allow-email-duplicates_: Disabilitato il supporto allo stesso indirizzo email configurato su più caselle di posta (indirizzo email univoco su msa)
+- Sostituzione, sui log di msa, del rifermento al nome della casella con il relativo indirizzo email
+
 
 ## [3.0.5] - 2019-02-25
 
