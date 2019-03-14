@@ -10,6 +10,9 @@
 - Rimossa property _mailboxmanagers.allow-email-duplicates_: Disabilitato il supporto allo stesso indirizzo email configurato su più caselle di posta (indirizzo email univoco su msa)
 - Sostituzione, sui log di msa, del rifermento al nome della casella con il relativo indirizzo email
 
+### Fixed
+- Corretto BUG su tentativo di invio di email di notifica anche in caso di notifiche disabilitate da properties
+
 
 ## [3.0.5] - 2019-02-25
 

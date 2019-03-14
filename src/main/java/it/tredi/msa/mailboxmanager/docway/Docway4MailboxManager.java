@@ -30,6 +30,7 @@ import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
 import it.tredi.msa.notification.MailNotificationSender;
+import it.tredi.msa.notification.NotificationSender;
 
 /**
  * Estensione della gestione delle mailbox (lettura, elaborazione messaggi, ecc.) specifica per DocWay4 (es. chiamate eXtraWay)
@@ -739,30 +740,34 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	@Override
 	protected void sendNotificationEmails(DocwayDocument doc, Object saveDocRetObj) {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
-		MailNotificationSender notificationSender = (MailNotificationSender)Services.getNotificationService().getNotificationSender();
-		MailSender mailSender = notificationSender.createMailSender();
-		try {
-			mailSender.connect();
-			String body = Docway4NotificationEmailsUtils.getBodyForEmail(conf.getNotificationAppHost(), conf.getNotificationAppHost1(), conf.getNotificationAppUri(), conf.getXwDb(), (Document)saveDocRetObj);
-			
-			Set<String>	notifiedAddresses = new HashSet<String>();
-			for (RifInterno rifInterno:doc.getRifInterni()) {
-				if (rifInterno.isNotify()) { //if rif interno has to be notified
-					if ((rifInterno.getDiritto().equals("RPA") && conf.isNotifyRPA()) || (!rifInterno.getDiritto().equals("RPA") && conf.isNotifyCC()))
-						sendNotificationEmail(mailSender, notificationSender.getSenderAdress(), notificationSender.getSenderPersonal(), rifInterno.getCodPersona(), rifInterno.getDiritto().equals("RPA"), doc, (Document)saveDocRetObj, body, conf.getCodAmmAoo(), notifiedAddresses);
-				}
-			}				
-		} 
-		catch (Exception e) {
-			logger.error("[" + conf.getUser() + "] unexpected error sending notification emails", e);
-		}
-		finally {
+		// mbernardini 14/03/2019 : verifico che effettivamente le notifiche via email siano abilitate sul notification sender
+		NotificationSender notificationSender = Services.getNotificationService().getNotificationSender();
+		if (notificationSender != null && notificationSender instanceof MailNotificationSender) {
+			MailNotificationSender mailNotification = (MailNotificationSender) notificationSender;
+			MailSender mailSender = mailNotification.createMailSender();
 			try {
-				mailSender.disconnect();
+				mailSender.connect();
+				String body = Docway4NotificationEmailsUtils.getBodyForEmail(conf.getNotificationAppHost(), conf.getNotificationAppHost1(), conf.getNotificationAppUri(), conf.getXwDb(), (Document)saveDocRetObj);
+				
+				Set<String>	notifiedAddresses = new HashSet<String>();
+				for (RifInterno rifInterno:doc.getRifInterni()) {
+					if (rifInterno.isNotify()) { //if rif interno has to be notified
+						if ((rifInterno.getDiritto().equals("RPA") && conf.isNotifyRPA()) || (!rifInterno.getDiritto().equals("RPA") && conf.isNotifyCC()))
+							sendNotificationEmail(mailSender, mailNotification.getSenderAdress(), mailNotification.getSenderPersonal(), rifInterno.getCodPersona(), rifInterno.getDiritto().equals("RPA"), doc, (Document)saveDocRetObj, body, conf.getCodAmmAoo(), notifiedAddresses);
+					}
+				}				
 			} 
 			catch (Exception e) {
-				logger.warn("[" + conf.getUser() + "] failed to close mailSender session", e);
-			}				
+				logger.error("[" + conf.getUser() + "] unexpected error sending notification emails", e);
+			}
+			finally {
+				try {
+					mailSender.disconnect();
+				} 
+				catch (Exception e) {
+					logger.warn("[" + conf.getUser() + "] failed to close mailSender session", e);
+				}				
+			}
 		}
 	}
 
