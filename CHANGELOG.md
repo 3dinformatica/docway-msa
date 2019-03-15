@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.0.6] - SNAPSHOT
+## [3.0.6] - 2019-03-15
 
 ### Added
 - Smistamento fatturaPA agli assegnatari in base all'indirizzo email presente sulla fattura e non alla mailbox alla quale è stata spedita la
