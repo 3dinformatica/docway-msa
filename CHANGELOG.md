@@ -12,6 +12,7 @@
 
 ### Fixed
 - Corretto BUG su tentativo di invio di email di notifica anche in caso di notifiche disabilitate da properties
+- Corretto problema nel parsing delle fatture con indicazione del foglio di stile XSL (ovviamente non presente nella mail) (Task #17445)
 
 
 ## [3.0.5] - 2019-02-25

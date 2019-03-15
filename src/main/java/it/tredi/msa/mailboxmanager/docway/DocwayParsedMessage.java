@@ -1,5 +1,6 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,10 +14,12 @@ import org.bouncycastle.cms.CMSSignedData;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 
 import it.tredi.mail.entity.MailAttach;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
+import it.tredi.utils.bom.UnicodeBOMInputStream;
 
 /**
  * Parsing aggiuntivo del messaggio in base alle finalita' di DocWay. Estrazioni di ulteriori informazioni (rispetto a quelle di base) necessarie all'elaborazione
@@ -380,12 +383,30 @@ public class DocwayParsedMessage extends ParsedMessage {
 			            	b = (byte[])cpb.getContent();
 			            }
 			            
-			            return DocumentHelper.parseText(new String(b));
+			            // mbernardini 15/03/2019 : problema nel parsing delle fatture con indicazione del foglio di stile XSL (ovviamente non presente
+			            // nella mail)
+			            //return DocumentHelper.parseText(new String(b));
+			            return getDocument(b);
 					}						
 				}
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Parsing dell'XML di una fattura tramite SAXReader per evitare errori di parse dovuti all'indicazione su XML del foglio
+	 * di stile XSL (non presente nella realta')
+	 * @param inputstream
+	 * @return
+	 * @throws Exception
+	 */
+	private Document getDocument(byte[] content) throws Exception {
+		SAXReader reader = new SAXReader();
+		UnicodeBOMInputStream is = new UnicodeBOMInputStream(new ByteArrayInputStream(content));
+		is.skipBOM();
+		
+		return reader.read(is);
 	}
 
 	public Document getFatturaPADocument() throws Exception {
