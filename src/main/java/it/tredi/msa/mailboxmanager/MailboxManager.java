@@ -103,20 +103,20 @@ public abstract class MailboxManager implements Runnable {
         	if (!shutdown) {
         		if (logger.isInfoEnabled()) {
         			String pecLog = configuration.isPec()? " [PEC]" : "";
-        			logger.info("[" + configuration.getUser() + "] starting execution" + " [" + configuration.getName() + "]" + pecLog);
+        			logger.info("[" + configuration.getAddress() + "] starting execution" + " [" + configuration.getName() + "]" + pecLog);
         		}
 
             	//TEMPLATE STEP - processMailbox
             	processMailbox(); //customization is achieved via template pattern
             	
             	if (logger.isInfoEnabled()) {
-            		logger.info("[" + configuration.getUser() + "] execution completed");
-            		logger.info("[" + configuration.getUser() + "] next execution in (" + configuration.getDelay() + ") s");
+            		logger.info("[" + configuration.getAddress() + "] execution completed");
+            		logger.info("[" + configuration.getAddress() + "] next execution in (" + configuration.getDelay() + ") s");
             	}
         	}    		
     	}
        	catch (Throwable t) {
-    		logger.fatal("[" + configuration.getUser() + "] execution failed: " + t);
+    		logger.fatal("[" + configuration.getAddress() + "] execution failed: " + t);
     		shutdown();
     	}  
     	finally {
@@ -132,15 +132,15 @@ public abstract class MailboxManager implements Runnable {
         	shutdown = true;
         	
         	if (logger.isInfoEnabled())
-        		logger.info("[" + configuration.getUser() + "] shutting down");
+        		logger.info("[" + configuration.getAddress() + "] shutting down");
         	
         	closeSession();
     		
         	if (logger.isInfoEnabled())
-        		logger.info("[" + configuration.getUser() + "] shutdown completed");
+        		logger.info("[" + configuration.getAddress() + "] shutdown completed");
     	}
     	catch (Exception e) {
-    		logger.warn("[" + configuration.getUser() + "] shutdown failed: ", e);
+    		logger.warn("[" + configuration.getAddress() + "] shutdown failed: ", e);
     	}
     	finally {
     		Thread.currentThread().interrupt();
@@ -153,7 +153,7 @@ public abstract class MailboxManager implements Runnable {
     public void processMailbox() {
     	try {
         	if (logger.isDebugEnabled())
-        		logger.debug("[" + configuration.getUser() + "] processMailbox() called");	
+        		logger.debug("[" + configuration.getAddress() + "] processMailbox() called");	
     		
         	//connection attempts
         	Message[] messages = null;
@@ -169,9 +169,9 @@ public abstract class MailboxManager implements Runnable {
             		break;
             	}
             	catch (Exception e) {
-            		logger.error("[" + configuration.getUser() + "] got exception... " + e.getMessage(), e);
+            		logger.error("[" + configuration.getAddress() + "] got exception... " + e.getMessage(), e);
             		if (logger.isDebugEnabled())
-            			logger.debug("[" + configuration.getUser() + "] connection failed: (" + attemptIndex + "/" +MAILREADER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
+            			logger.debug("[" + configuration.getAddress() + "] connection failed: (" + attemptIndex + "/" +MAILREADER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
             		if (attemptIndex == MAILREADER_CONNECTION_ATTEMPTS)
             			throw e;
             		Thread.sleep(1000); //1 sec delay
@@ -179,7 +179,7 @@ public abstract class MailboxManager implements Runnable {
         	}        	
         	
         	if (logger.isInfoEnabled())
-        		logger.info("[" + configuration.getUser() + "] FOUND " + messages.length + " MESSAGES");
+        		logger.info("[" + configuration.getAddress() + "] FOUND " + messages.length + " MESSAGES");
         	auditMailboxRun.setMessageCount(messages.length);
         	
         	int i=0;
@@ -195,15 +195,15 @@ public abstract class MailboxManager implements Runnable {
         		try {
             		//TEMPLATE STEP - parsedMessage
         			if (logger.isInfoEnabled())
-        				logger.info("[" + configuration.getUser() + "] parsing message (" + i + "/" + messages.length + ")...");
+        				logger.info("[" + configuration.getAddress() + "] parsing message (" + i + "/" + messages.length + ")...");
             		parsedMessage = parseMessage(message);
         			
             		if (logger.isInfoEnabled())
-            			logger.info("[" + configuration.getUser() + "] message (" + i + "/" + messages.length + ") [" + parsedMessage.getMessageId() + "]");
+            			logger.info("[" + configuration.getAddress() + "] message (" + i + "/" + messages.length + ") [" + parsedMessage.getMessageId() + "]");
             		
             		if (Services.getAuditService().auditMessageInErrorFound(configuration, parsedMessage.getMessageId())) { //message found in error in audit
             			auditMailboxRun.incrementErrorCount();
-            			logger.info("[" + configuration.getUser() + "] message skipped [" + parsedMessage.getMessageId() + "]. Message already found in audit in [ERROR] state");
+            			logger.info("[" + configuration.getAddress() + "] message skipped [" + parsedMessage.getMessageId() + "]. Message already found in audit in [ERROR] state");
             			continue; //skip to next message
             		}
             		
@@ -227,7 +227,7 @@ public abstract class MailboxManager implements Runnable {
 			closeSession();	
 			
         	if (logger.isDebugEnabled())
-        		logger.debug("[" + configuration.getUser() + "] processMailbox() done");
+        		logger.debug("[" + configuration.getAddress() + "] processMailbox() done");
     	}
     }
     
@@ -237,7 +237,7 @@ public abstract class MailboxManager implements Runnable {
      */
     public void openSession() throws Exception {
     	if (logger.isDebugEnabled())
-    		logger.debug("[" + configuration.getUser() + "] opening mailReader connection");
+    		logger.debug("[" + configuration.getAddress() + "] opening mailReader connection");
     	
     	// audit - init mailbox run obj
     	auditMailboxRun = auditMailboxRunRepository.findByMailboxName(configuration.getName());
@@ -245,12 +245,12 @@ public abstract class MailboxManager implements Runnable {
     		auditMailboxRun = new AuditMailboxRun();
     	
     	auditMailboxRun.setMailboxName(configuration.getName());
-    	auditMailboxRun.setMailboxAddress(configuration.getUser());
+    	auditMailboxRun.setMailboxAddress(configuration.getAddress());
     	
     	// Reset dell'audit (azzero la data di fine, eventuali count da azzerare, ecc.)
     	auditMailboxRun.reset();
     	if (logger.isDebugEnabled())
-    		logger.debug("[" + configuration.getUser() + "] audit initialized!");
+    		logger.debug("[" + configuration.getAddress() + "] audit initialized!");
     	
 		mailReader.connect();
 		mailReader.openFolder(configuration.getFolderName());
@@ -259,7 +259,7 @@ public abstract class MailboxManager implements Runnable {
     		mailReader.createFolder(configuration.getStoredMessageFolderName()); //if folder exists this method has no effect
 		
     	if (logger.isDebugEnabled())
-    		logger.debug("[" + configuration.getUser() + "] mailReader connection opened");		
+    		logger.debug("[" + configuration.getAddress() + "] mailReader connection opened");		
     }
 
     /**
@@ -277,17 +277,17 @@ public abstract class MailboxManager implements Runnable {
 		try {
 			if (mailReader != null) {
 	        	if (logger.isDebugEnabled())
-	        		logger.debug("[" + configuration.getUser() + "] closing mailReader connection");				
+	        		logger.debug("[" + configuration.getAddress() + "] closing mailReader connection");				
 
 	        	mailReader.closeFolder();
 				mailReader.disconnect();
 				
 	        	if (logger.isDebugEnabled())
-	        		logger.debug("[" + configuration.getUser() + "] mailReader connection closed");
+	        		logger.debug("[" + configuration.getAddress() + "] mailReader connection closed");
 			}			
 		}
 		catch (Exception e) {
-			logger.warn("[" + configuration.getUser() + "] failed to close mailReader session", e);
+			logger.warn("[" + configuration.getAddress() + "] failed to close mailReader session", e);
 		}
     }    
     
@@ -309,13 +309,13 @@ public abstract class MailboxManager implements Runnable {
      */
     public void processMessage(ParsedMessage parsedMessage) throws Exception {
     	if (logger.isDebugEnabled())
-    		logger.debug("[" + configuration.getUser() + "] processMessage() called");
+    		logger.debug("[" + configuration.getAddress() + "] processMessage() called");
     	
 		if (logger.isInfoEnabled()) {
 			String pecLog = "";
 			if (configuration.isPec())
 				pecLog = parsedMessage.isPecMessage()? " [PEC Message]" : parsedMessage.isPecReceipt()? " [PEC Receipt]" : "";
-			logger.info("[" + configuration.getUser() + "] processing message [" + parsedMessage.getMessageId() + "] [Sent: " + parsedMessage.getSentDate() + "] [Subject: " + parsedMessage.getSubject() + "]" + pecLog);
+			logger.info("[" + configuration.getAddress() + "] processing message [" + parsedMessage.getMessageId() + "] [Sent: " + parsedMessage.getSentDate() + "] [Subject: " + parsedMessage.getSubject() + "]" + pecLog);
 		}
     	
     	//TEMPLATE STEP - isMessageStorable
@@ -332,7 +332,7 @@ public abstract class MailboxManager implements Runnable {
     	}
     	
     	if (logger.isDebugEnabled())
-    		logger.debug("[" + configuration.getUser() + "] processMessage() done");
+    		logger.debug("[" + configuration.getAddress() + "] processMessage() done");
     }
 
     /**
@@ -342,7 +342,7 @@ public abstract class MailboxManager implements Runnable {
      */
     public void handleError(Throwable t, Object obj) {
     	if (shutdown)
-    		logger.warn("[" + configuration.getUser() + "] exception during shutdown... ignoring error", t);
+    		logger.warn("[" + configuration.getAddress() + "] exception during shutdown... ignoring error", t);
     	else {
     		if (obj != null)  { //message exception [parseMessage(), storeMessage]
 
@@ -354,7 +354,7 @@ public abstract class MailboxManager implements Runnable {
         				//audit - error
         				Services.getAuditService().writeErrorAuditMessage(configuration, parsedMessage, (Exception)t);
             			
-            			logger.error("[" + configuration.getUser() + "] unexpected error processing message [" + parsedMessage.getMessageId() + "]", t);
+            			logger.error("[" + configuration.getAddress() + "] unexpected error processing message [" + parsedMessage.getMessageId() + "]", t);
             			Services.getNotificationService().notifyError(String.format(STORE_MESSAGE_ERROR_MESSAGE, configuration.getName(), parsedMessage.getMessageId(), parsedMessage.getSentDate(), parsedMessage.getSubject(), t.getMessage()));
             		}
             		else if (obj instanceof Message) { //message exception - parseMessage
@@ -368,27 +368,27 @@ public abstract class MailboxManager implements Runnable {
 	            				Services.getAuditService().writeErrorAuditMessage(configuration, message, (Exception)t);
             			}
             			catch(Exception e) {
-            				logger.error("[" + configuration.getUser() + "] unable to save error in audit [MessageId: " + messageId + "]... " + e.getMessage(), e);
+            				logger.error("[" + configuration.getAddress() + "] unable to save error in audit [MessageId: " + messageId + "]... " + e.getMessage(), e);
             			}
             			// mbernardini 28/01/2019 : aumentato il livello di log in caso message non parsato
-            			logger.error("[" + configuration.getUser() + "] unexpected error parsing message [Sent: " + message.getSentDate() + "] [Subject: " + message.getSentDate() + "]", t);
+            			logger.error("[" + configuration.getAddress() + "] unexpected error parsing message [Sent: " + message.getSentDate() + "] [Subject: " + message.getSentDate() + "]", t);
             			Services.getNotificationService().notifyError(String.format(STORE_MESSAGE_ERROR_MESSAGE, configuration.getName(), "", message.getSentDate(), message.getSubject(), t.getMessage()));
             		}
             		// mbernardini 28/01/2019 : aggiunto caso di oggetto sconosciuto
             		else { // unknown object
-            			logger.error("[" + configuration.getUser() + "] unexpected error parsing message [unknown object] [type: " + obj.getClass().getName() + "]", t);
+            			logger.error("[" + configuration.getAddress() + "] unexpected error parsing message [unknown object] [type: " + obj.getClass().getName() + "]", t);
             			Services.getNotificationService().notifyError(String.format(PARSE_MESSAGE_ERROR_MESSAGE, configuration.getName(), obj.getClass().getName(), t.getMessage()));
             		}
     			}
     			catch (Exception e) {
-    				logger.error("[" + configuration.getUser() + "] unexpected error handling message error", e);
+    				logger.error("[" + configuration.getAddress() + "] unexpected error handling message error", e);
     				Services.getNotificationService().notifyError(String.format(HANDLE_ERROR_ERROR_MESSAGE, e.getMessage()));
     			}
     			
     		}
     		else { //error [processMailbox()]
-    			logger.error("[" + configuration.getUser() + "] [" + configuration.getProtocol() + "://" + configuration.getHost() + ":" + configuration.getPort()  + "][User:" + configuration.getUser()  + "]");
-    			logger.error("[" + configuration.getUser() + "] unexpected error processing mailbox. Check configuration!", t);
+    			logger.error("[" + configuration.getAddress() + "] [" + configuration.getProtocol() + "://" + configuration.getHost() + ":" + configuration.getPort()  + "][User:" + configuration.getAddress()  + "]");
+    			logger.error("[" + configuration.getAddress() + "] unexpected error processing mailbox. Check configuration!", t);
     			Services.getNotificationService().notifyError(String.format(PROCESS_MAILBOX_ERROR_MESSAGE, configuration.getName(), configuration.getProtocol(), configuration.getHost(), configuration.getPort(), configuration.getUser(), t.getMessage()));
 
     			//stack trace to string
@@ -438,7 +438,7 @@ public abstract class MailboxManager implements Runnable {
      */
     public void messageSkipped(ParsedMessage parsedMessage) throws Exception {
     	if (logger.isInfoEnabled())
-    		logger.info("[" + configuration.getUser() + "] message skipped [" + parsedMessage.getMessageId() + "]");
+    		logger.info("[" + configuration.getAddress() + "] message skipped [" + parsedMessage.getMessageId() + "]");
     	
     	//audit - skipped
     	auditMailboxRun.incrementSkipCount();
@@ -451,17 +451,17 @@ public abstract class MailboxManager implements Runnable {
      */
     public void messageStored(ParsedMessage parsedMessage) throws Exception {
     	if (logger.isInfoEnabled())
-    		logger.info("[" + configuration.getUser() + "] message stored [" + parsedMessage.getMessageId() + "]");
+    		logger.info("[" + configuration.getAddress() + "] message stored [" + parsedMessage.getMessageId() + "]");
     	
     	if (configuration.getStoredMessagePolicy() == StoredMessagePolicy.DELETE_FROM_FOLDER) { //rimozione email
     		if (logger.isInfoEnabled())
-    			logger.info("[" + configuration.getUser() + "] deleting message [" + parsedMessage.getMessageId() + "]");
+    			logger.info("[" + configuration.getAddress() + "] deleting message [" + parsedMessage.getMessageId() + "]");
 
     		mailReader.deleteMessage(parsedMessage.getMessage());
     	}
     	else if (configuration.getStoredMessagePolicy() == StoredMessagePolicy.MOVE_TO_FOLDER) { //spostamento email
     		if (logger.isInfoEnabled())
-    			logger.info("[" + configuration.getUser() + "] moving message to folder(" + configuration.getStoredMessageFolderName() + ") [" + parsedMessage.getMessageId() + "]");
+    			logger.info("[" + configuration.getAddress() + "] moving message to folder(" + configuration.getStoredMessageFolderName() + ") [" + parsedMessage.getMessageId() + "]");
     		
     		mailReader.copyMessageToFolder(parsedMessage.getMessage(), configuration.getStoredMessageFolderName());
     		mailReader.deleteMessage(parsedMessage.getMessage());

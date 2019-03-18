@@ -225,6 +225,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	String port = mailboxInEl.attributeValue("port", "-1");
     	conf.setPort(Integer.parseInt(port.isEmpty()?"-1":port)); 
     	
+    	//address
+    	conf.setAddress(mailboxInEl.attributeValue("email"));
+    	
     	//user
     	conf.setUser(mailboxInEl.attributeValue("login"));
     	

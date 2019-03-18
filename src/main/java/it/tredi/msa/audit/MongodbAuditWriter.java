@@ -54,7 +54,7 @@ public class MongodbAuditWriter extends AuditWriter {
 			auditMessage.setEmlId(null);
 			auditMessage.setErrorMessage(null);
 			auditMessage.setErrorStackTrace(null);
-			auditMessage.setMailboxAddress(mailboxConfiguration.getUser());
+			auditMessage.setMailboxAddress(mailboxConfiguration.getAddress());
 			auditMessage.setMailboxName(mailboxConfiguration.getName());
 			auditMessage.setMessageId(parsedMessage.getMessageId());
 			auditMessage.setSentDate(parsedMessage.getSentDate());
@@ -80,7 +80,7 @@ public class MongodbAuditWriter extends AuditWriter {
 		byte[] b = (new MessageContentProvider(parsedMessage.getMessage(), false)).getContent();
 		this._writeErrorAuditMessage(
 				mailboxConfiguration.getName(), 
-				mailboxConfiguration.getUser(), 
+				mailboxConfiguration.getAddress(), 
 				parsedMessage.getMessageId(), 
 				parsedMessage.getSentDate(), 
 				parsedMessage.getSubject(), 
@@ -96,7 +96,7 @@ public class MongodbAuditWriter extends AuditWriter {
 		
 		this._writeErrorAuditMessage(
 				mailboxConfiguration.getName(), 
-				mailboxConfiguration.getUser(), 
+				mailboxConfiguration.getAddress(), 
 				messageId, 
 				message.getSentDate(), 
 				message.getSubject(), 

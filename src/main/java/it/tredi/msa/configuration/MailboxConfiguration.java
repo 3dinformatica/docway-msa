@@ -11,6 +11,10 @@ public abstract class MailboxConfiguration {
 	private String host;
 	private int port;
 	private String protocol;
+	
+	// mbernardini 15/03/2019 : aggiunto campo indirizzo email (non sempre user corrisponde all'indirizzo email, vedi task #17447)
+	private String address;
+	
 	private String user;
 	private String password;
 	private int mailserverSocketTimeout = -1;
@@ -74,11 +78,14 @@ public abstract class MailboxConfiguration {
 		this.protocol = protocol;
 	}
 	
-	/**
-	 * Username utilizzato per la connessione alla mailbox (corrisponde sempre all'indirizzo email della casella
-	 * di posta)
-	 * @return
-	 */
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+	
 	public String getUser() {
 		return user;
 	}

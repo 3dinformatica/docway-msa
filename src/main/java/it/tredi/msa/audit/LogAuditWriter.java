@@ -28,7 +28,7 @@ public class LogAuditWriter extends AuditWriter {
 		if (mailboxConfiguration != null && parsedMessage != null) {
 			if (logger.isInfoEnabled()) {
 				logger.info("[" + mailboxConfiguration.getName() + "]: LOG MESSAGE " +  parsedMessage.getMessageId() + " -> " + AuditMessageStatus.SUCCESS);
-				logger.info("\tmailbox.address = " + mailboxConfiguration.getUser());
+				logger.info("\tmailbox.address = " + mailboxConfiguration.getAddress());
 				logger.info("\tmessage.id = " + parsedMessage.getMessageId());
 				logger.info("\tmessage.sendDate = " + dateToAuditLog(parsedMessage.getSentDate()));
 				logger.info("\tmessage.subject = " + parsedMessage.getSubject());
@@ -44,7 +44,7 @@ public class LogAuditWriter extends AuditWriter {
 	public void writeErrorAuditMessage(MailboxConfiguration mailboxConfiguration, ParsedMessage parsedMessage, Exception exception) throws Exception {
 		if (mailboxConfiguration != null && parsedMessage != null) {
 			logger.error("[" + mailboxConfiguration.getName() + "]: LOG MESSAGE " +  parsedMessage.getMessageId() + " -> " + AuditMessageStatus.ERROR);
-			logger.error("\tmailbox.address = " + mailboxConfiguration.getUser());
+			logger.error("\tmailbox.address = " + mailboxConfiguration.getAddress());
 			logger.error("\tmessage.id = " + parsedMessage.getMessageId());
 			logger.error("\tmessage.sendDate = " + dateToAuditLog(parsedMessage.getSentDate()));
 			logger.error("\tmessage.subject = " + parsedMessage.getSubject());
@@ -63,7 +63,7 @@ public class LogAuditWriter extends AuditWriter {
 			String messageId = MessageUtils.getMessageId(message);
 			
 			logger.error("[" + mailboxConfiguration.getName() + "]: LOG MESSAGE " +  messageId + " -> " + AuditMessageStatus.ERROR);
-			logger.error("\tmailbox.address = " + mailboxConfiguration.getUser());
+			logger.error("\tmailbox.address = " + mailboxConfiguration.getAddress());
 			logger.error("\tmessage.id = " + messageId);
 			logger.error("\tmessage.sendDate = " + dateToAuditLog(message.getSentDate()));
 			logger.error("\tmessage.subject = " + message.getSubject());

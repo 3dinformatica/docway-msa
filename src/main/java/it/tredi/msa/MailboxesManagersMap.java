@@ -66,7 +66,7 @@ public class MailboxesManagersMap {
 	protected void addManager(MailboxManager manager) {
 		String key = null;
 		if (manager != null && manager.getConfiguration() != null)
-			key = manager.getConfiguration().getUser();
+			key = manager.getConfiguration().getAddress();
 		if (key != null && !key.isEmpty())
 			this.map.put(key, manager);
 	}

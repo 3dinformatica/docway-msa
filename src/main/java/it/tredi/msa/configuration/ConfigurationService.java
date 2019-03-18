@@ -60,7 +60,7 @@ public class ConfigurationService {
 	private void checkForduplicates(MailboxConfiguration []configurations, boolean checkForName) throws Exception {
 		HashSet<String> set = new HashSet<>();
 		for (int i=0; i<configurations.length; i++) {
-			String key = checkForName? configurations[i].getName() : configurations[i].getUser();
+			String key = checkForName? configurations[i].getName() : configurations[i].getAddress();
 			if (set.add(key) == false) {
 		    	 throw new Exception(checkForName? String.format(MAILBOX_NAME_DUPLICATES_NOT_ALLOWED, key) : String.format(EMAIL_DUPLICATES_NOT_ALLOWED, key));
 			}

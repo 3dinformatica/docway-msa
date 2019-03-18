@@ -39,12 +39,12 @@ public class ExecutorServiceHandler implements Runnable {
     			int i = 0;
     			for (MailboxConfiguration mailboxConfiguration:freshMailboxConfigurations) {
     				if (!shutdown) {
-    					freshMailboxConfigurationsSet.add(mailboxConfiguration.getUser());
+    					freshMailboxConfigurationsSet.add(mailboxConfiguration.getAddress());
     					
-    					if (MailboxesManagersMap.getInstance().getManager(mailboxConfiguration.getUser()) == null) { //create and start mailbox managers for new configurations
+    					if (MailboxesManagersMap.getInstance().getManager(mailboxConfiguration.getAddress()) == null) { //create and start mailbox managers for new configurations
 
     						if (logger.isDebugEnabled())
-    							logger.debug("Found new mailbox configuration: [" + mailboxConfiguration.getUser() + " / " + mailboxConfiguration.getName() + "]");
+    							logger.debug("Found new mailbox configuration: [" + mailboxConfiguration.getAddress() + " / " + mailboxConfiguration.getName() + "]");
         					
         					MailboxManager mailboxManager = MailboxManagerFactory.createMailboxManager(mailboxConfiguration);
         					MailboxesManagersMap.getInstance().addManager(mailboxManager);
@@ -53,12 +53,12 @@ public class ExecutorServiceHandler implements Runnable {
         				}
     					else { //update existing configuration
     						if (logger.isDebugEnabled())
-    							logger.debug("Updating mailbox configuration: [" + mailboxConfiguration.getUser() + " / " + mailboxConfiguration.getName() + "]");
+    							logger.debug("Updating mailbox configuration: [" + mailboxConfiguration.getAddress() + " / " + mailboxConfiguration.getName() + "]");
     						
-    						if (!MailboxesManagersMap.getInstance().getManager(mailboxConfiguration.getUser()).isRunning())
-    							MailboxManagerFactory.update(MailboxesManagersMap.getInstance().getManager(mailboxConfiguration.getUser()), mailboxConfiguration);
+    						if (!MailboxesManagersMap.getInstance().getManager(mailboxConfiguration.getAddress()).isRunning())
+    							MailboxManagerFactory.update(MailboxesManagersMap.getInstance().getManager(mailboxConfiguration.getAddress()), mailboxConfiguration);
     						else if (logger.isDebugEnabled())
-    							logger.debug("Could not update mailbox configuration: [" + mailboxConfiguration.getUser() + " / " + mailboxConfiguration.getName() + "] because mailbox manager is running");
+    							logger.debug("Could not update mailbox configuration: [" + mailboxConfiguration.getAddress() + " / " + mailboxConfiguration.getName() + "] because mailbox manager is running");
     					}
     					
     				}
