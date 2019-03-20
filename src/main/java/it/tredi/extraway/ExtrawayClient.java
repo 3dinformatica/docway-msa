@@ -20,7 +20,10 @@ import it.tredi.msa.Utils;
 public class ExtrawayClient {
 	
 	private static final Logger logger = LogManager.getLogger(ExtrawayClient.class.getName());
-
+	
+	private final String ENCODING = "UTF-8";
+	private static final String XW_NAMESPACE = "http://www.3di.it/ns/xw-200303121136";
+	
 	private Broker broker;
 	private String host;
 	private int port;
@@ -28,10 +31,6 @@ public class ExtrawayClient {
 	private String user;
 	private String password;
 	private int connId;
-	private QueryResult queryResult;
-	private final String ENCODING = "UTF-8";
-	private static final String XW_NAMESPACE = "http://www.3di.it/ns/xw-200303121136";
-	private String theLock;
 	
 	/**
 	 * Costruttore. Init del Broker
@@ -87,10 +86,10 @@ public class ExtrawayClient {
 	/**
 	 * Ricerca di documenti XML in base alla query specificata. Viene restituito il numero di risultati ottenuto dalla ricerca
 	 * @param query Query in formato eXtraWay da eseguire 
-	 * @return Numero di risultati ottenuto in base ai filtri specificati
+	 * @return Selezione di risultati ottenuto in base ai filtri specificati
 	 * @throws SQLException
 	 */
-	public int search(String query) throws SQLException {
+	public QueryResult search(String query) throws SQLException {
 		return this.search(query, null, "", 0, -1);
 	}
 	
@@ -101,10 +100,10 @@ public class ExtrawayClient {
 	 * @param sort Eventuale criterio di ordinamento
 	 * @param hwQOpts
 	 * @param adj
-	 * @return Numero di risultati ottenuto in base ai filtri specificati
+	 * @return Selezione di risultati ottenuto in base ai filtri specificati
 	 * @throws SQLException
 	 */
-    public int search(String query, String selToRefine, String sort, int hwQOpts, int adj) throws SQLException {
+    public QueryResult search(String query, String selToRefine, String sort, int hwQOpts, int adj) throws SQLException {
         hwQOpts |= (sort != null && sort.length() > 0 ? it.highwaytech.broker.ServerCommand.find_SORT : 0);
         if (selToRefine != null && !selToRefine.isEmpty()) {
             query += " AND [?SEL]=\"" + selToRefine + "\"";
@@ -113,18 +112,18 @@ public class ExtrawayClient {
         if (logger.isInfoEnabled())
     		logger.info("ExtrawayClient: Execute Query = " + query);
         
-        this.queryResult = broker.find(connId, db, query, sort, hwQOpts, adj ,0, null);
-        return queryResult.elements;
+        return broker.find(connId, db, query, sort, hwQOpts, adj ,0, null);
     }	
 	
     /**
      * Caricamento di un documento XML in base alla posizione su una selezione
      * @param position Posizione all'interno della selezione della ricerca
+     * @param qr QueryResult dal quale recuperare il documento in base alla posizione
      * @return
      * @throws Exception
      */
-    public Document loadDocByQueryResult(int position) throws Exception {
-    	return loadDoc(position, true);
+    public Document loadDocByQueryResult(int position, QueryResult qr) throws Exception {
+    	return loadDoc(position, qr);
     }
     
     /**
@@ -134,49 +133,33 @@ public class ExtrawayClient {
      * @throws Exception
      */
     public Document loadDocByPhysdoc(int physdoc) throws Exception {
-    	return loadDoc(physdoc, false);
+    	return loadDoc(physdoc, null);
     }
     
     /**
      * Caricamento di un documento XML in base alla posizione su una selezione o al proprio numero fisico
      * @param docNum Posizione nella selezione o numero fisico del documento
-     * @param fromQueryResult true se occorre caricare il doc in base alla posizione nella selezione, false in caso di caricamento tramite numero fisico
+     * @param qr QueryResult dal quale recuperare il documento in base alla posizione. Se NULL viene tentato il caricamento tramite numero fisico
      * @return
      * @throws Exception
      */
-    private Document loadDoc(int docNum, boolean fromQueryResult) throws Exception {
+    private Document loadDoc(int docNum, QueryResult qr) throws Exception {
     	Doc doc = null;
-        if (fromQueryResult) {
+        if (qr != null) {
         	if (logger.isInfoEnabled())
-        		logger.info("ExtrawayClient: Load document by physDoc = " + docNum);
+        		logger.info("ExtrawayClient: Load document from QueryResult[qr.id='" + qr.id + "'] = " + docNum);
         	
-            doc = broker.getDoc(connId, db, queryResult, docNum, it.highwaytech.broker.ServerCommand.subcmd_NONE, "");
+            doc = broker.getDoc(connId, db, qr, docNum, it.highwaytech.broker.ServerCommand.subcmd_NONE, "");
         }
         else {
         	if (logger.isInfoEnabled())
-        		logger.info("ExtrawayClient: Load document from QueryResult. Position = " + docNum);
+        		logger.info("ExtrawayClient: Load document by PhysDoc = " + docNum);
         	
             doc = broker.getDoc(connId, db, docNum, 0);
         }
         Document document = DocumentHelper.parseText(doc.XML());
         return document;
     }
-
-    /**
-     * Ritorna le informazioni sulla selezione di una ricerca
-     * @return
-     */
-	public QueryResult getQueryResult() {
-		return queryResult;
-	}
-
-	/**
-	 * Imposta le informazioni sulla selezione di una ricerca
-	 * @param queryResult
-	 */
-	public void setQueryResult(QueryResult queryResult) {
-		this.queryResult = queryResult;
-	}
 	
 	/**
 	 * Salvataggio di un nuovo documento XML
@@ -185,17 +168,18 @@ public class ExtrawayClient {
 	 * @throws Exception
 	 */
 	public int saveNewDocument(Document xmlDocument) throws Exception {
-		return saveDocument(xmlDocument, 0);
+		return saveDocument(xmlDocument, 0, null);
 	}
 	
 	/**
 	 * Salvataggio di un documento XML
 	 * @param xmlDocument
 	 * @param docNum
+	 * @param theLock
 	 * @return
 	 * @throws Exception
 	 */
-	public int saveDocument(Document xmlDocument, int docNum) throws Exception {
+	public int saveDocument(Document xmlDocument, int docNum, String theLock) throws Exception {
 		if (logger.isInfoEnabled()) {
 			if (docNum == 0)
 				logger.info("ExtrawayClient: Save new document...");
@@ -222,11 +206,12 @@ public class ExtrawayClient {
 	/**
 	 * Ritorna il numero fisico di un documento identificato tramite la propria posizione su una selezione risultante da una ricerca
 	 * @param position
+	 * @param qr
 	 * @return
 	 * @throws SQLException
 	 */
-	public int getPhysdocByQueryResult(int position) throws SQLException {
-		return broker.getNumDoc(connId, db, queryResult, position);
+	public int getPhysdocByQueryResult(int position, QueryResult qr) throws SQLException {
+		return broker.getNumDoc(connId, db, qr, position);
 	}
 	
 	/**
@@ -235,7 +220,7 @@ public class ExtrawayClient {
 	 * @return
 	 * @throws Exception
 	 */
-	public Document loadAndLockDocument(int physdoc) throws Exception {
+	public LockedDocument loadAndLockDocument(int physdoc) throws Exception {
 		return loadAndLockDocument(physdoc, 1, 0);
 	}
 	
@@ -247,7 +232,7 @@ public class ExtrawayClient {
 	 * @return
 	 * @throws Exception
 	 */
-	public Document loadAndLockDocument(int physdoc, int attempts, long delay) throws Exception {
+	public LockedDocument loadAndLockDocument(int physdoc, int attempts, long delay) throws Exception {
         XMLCommand theCommand = new XMLCommand(it.highwaytech.broker.XMLCommand.LoadDocument, XMLCommand.LoadDocument_Lock, physdoc);
         theCommand.encoding = ENCODING;
         String xresponse = null;
@@ -268,18 +253,20 @@ public class ExtrawayClient {
             }
         } //end-for
         
-        this.theLock = XMLCommand.getLockCode(xresponse);
+        String theLock = XMLCommand.getLockCode(xresponse);
         String theContent = xresponse.substring(XMLCommand.getBstContentStartOffset(xresponse), XMLCommand.getBstContentStopOffset(xresponse));        
         Document document = DocumentHelper.parseText(theContent);
-        return document;
+        
+        return new LockedDocument(document, theLock);
 	}
 	
 	/**
 	 * Unlock di un documento precedentemente bloccato
 	 * @param physdoc
+	 * @param theLock Codice di LOCK assegnato in precedenza
 	 * @throws Exception
 	 */
-	public void unlockDocument(int physdoc) throws Exception {
+	public void unlockDocument(int physdoc, String theLock) throws Exception {
 		if (logger.isInfoEnabled())
     		logger.info("ExtrawayClient: Unlock document " + physdoc + "...");
 		

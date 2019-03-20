@@ -7,6 +7,7 @@
 - Aggiunto l'indirizzo email nella configurazione della casella (username non sempre identico all'indirizzo, vedi caselle fax - Task #17447)
 - Se 'daCopiaConoscenza' risulta attiva la query sulle persone interne deve essere fatto sugli indirizzi in CC e non sul TO
 - Corretto bug sul recupero dei CC da associare al documento (NullPointerException)
+- Ristrutturato il client verso eXtraWay per problemi di accesso alle selezioni derivanti da query in caso di "concorrenza"
 
 ## [3.0.6] - 2019-03-15
 

@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
 import it.tredi.msa.test.conf.MsaTesterApplication;
 
@@ -60,14 +61,15 @@ public class ExtrawayClientTests {
 	@Test
 	@Ignore
 	public void searchTest() throws Exception {
-		int count = extrawayClient.search("[/comune/@nazione/]=\"italia\"");
-		assertTrue(count > 0);
+		QueryResult qr = extrawayClient.search("[/comune/@nazione/]=\"italia\"");
+		assertNotNull(qr);
+		assertTrue(qr.elements > 0);
 		
 		// caricamento di un record
 		int position = 0;
-		if (count > 1)
+		if (qr.elements > 1)
 			position = 1;
-		Document doc = extrawayClient.loadDocByQueryResult(position);
+		Document doc = extrawayClient.loadDocByQueryResult(position, qr);
 		assertNotNull(doc);
 		assertNotNull(doc.getRootElement());
 		
@@ -77,8 +79,9 @@ public class ExtrawayClientTests {
 		String nome = doc.getRootElement().attributeValue("nome", "");
 		assertNotEquals("", nome);
 		
-		count = extrawayClient.search("[/comune/@nome/]=\" " + nome + "\"");
-		assertEquals(1, count);
+		qr = extrawayClient.search("[/comune/@nome/]=\" " + nome + "\"");
+		assertNotNull(qr);
+		assertEquals(1, qr.elements);
 	}
 
 }

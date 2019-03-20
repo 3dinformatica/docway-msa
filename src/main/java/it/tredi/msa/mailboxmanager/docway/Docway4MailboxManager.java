@@ -17,6 +17,7 @@ import org.dom4j.Node;
 
 import it.highwaytech.db.QueryResult;
 import it.tredi.extraway.ExtrawayClient;
+import it.tredi.extraway.LockedDocument;
 import it.tredi.mail.MailSender;
 import it.tredi.msa.MailboxesManagersMap;
 import it.tredi.msa.Services;
@@ -111,7 +112,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					(conf.isEnableFatturePA() && dcwParsedMessage.isNotificaFatturaPAMessage(conf.getSdiDomainAddress()))) { //messaggio è una ricevuta PEC oppure è una notifica (messaggio di ritorno) di interoperabilità PA oppure è una notifica di fatturaPA
 				String query = "([/doc/rif_esterni/rif/interoperabilita/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\" OR [/doc/rif_esterni/interoperabilita_multipla/interoperabilita/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\""
 						+ " OR [/doc/extra/fatturaPA/notifica/@messageId]=\"" + dcwParsedMessage.getMessageId() + "\") AND [/doc/@cod_amm_aoo/]=\"" + conf.getCodAmmAoo() + "\"";
-				if (xwClient.search(query) > 0)
+				QueryResult qr = xwClient.search(query);
+				if (qr.elements > 0)
 					return StoreType.SKIP_DOCUMENT;
 					
 				query = "";
@@ -133,12 +135,13 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				}
 				else if (dcwParsedMessage.isNotificaFatturaPAMessage(conf.getSdiDomainAddress())) { //notifia di fattura PA
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromFatturaPANotification();
-					int count = xwClient.search(query);
+					QueryResult qr1 = xwClient.search(query);
+					int count = qr1.elements;
 					for (int i=0; i<count; i++) {
-						Document xmlDocument = xwClient.loadDocByQueryResult(i);
+						Document xmlDocument = xwClient.loadDocByQueryResult(i, qr1);
 						Node node = xmlDocument.selectSingleNode("/doc/extra/fatturaPA[@fileNameFattura='" + dcwParsedMessage.getFileNameFatturaRiferita() + "']");
 						if (node != null) {
-							this.physDocForAttachingFile = xwClient.getPhysdocByQueryResult(i);
+							this.physDocForAttachingFile = xwClient.getPhysdocByQueryResult(i, qr1);
 							return StoreType.ATTACH_FATTURA_PA_NOTIFICATION;
 						}
 					}
@@ -146,9 +149,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				}
 				
 				if (query.length() > 0) { //trovato doc a cui allegare file
-					int count = xwClient.search(query);
+					QueryResult qr1 = xwClient.search(query);
+					int count = qr1.elements;
 					if (count > 0) {
-						this.physDocForAttachingFile = xwClient.getPhysdocByQueryResult(0);
+						this.physDocForAttachingFile = xwClient.getPhysdocByQueryResult(0, qr1);
 						return storeType;
 					}
 					else
@@ -168,26 +172,25 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			}
 			else if (dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //messaggio di segnatura di interoperabilità PA
 				String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo]=\"" + conf.getCodAmmAoo() + "\"";
-				int count = xwClient.search(query);
-
-				if (count == 0) { //2nd try: potrebbe essere la stessa segnatura su messaggi diversi
+				QueryResult qr = xwClient.search(query);
+				if (qr.elements == 0) { //2nd try: potrebbe essere la stessa segnatura su messaggi diversi
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPASegnatura(conf.getCodAmm(), conf.getCodAoo());
-					count = xwClient.search(query);
+					qr = xwClient.search(query);
 				}
 
-				if (count > 0) { //messageId found
-					Document xmlDocument = xwClient.loadDocByQueryResult(0);
+				if (qr.elements > 0) { //messageId found
+					Document xmlDocument = xwClient.loadDocByQueryResult(0, qr);
 					Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
 					if (archiviatoreEl != null) { //same mailbox
 						if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
-							this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+							this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0, qr);
 							return StoreType.UPDATE_PARTIAL_DOCUMENT_INTEROP_PA;
 						}
 						else
 							return StoreType.SKIP_DOCUMENT;						
 					}
 					else { //different mailbox
-						this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+						this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0, qr);
 						return StoreType.UPDATE_NEW_RECIPIENT_INTEROP_PA;
 					}
 				}
@@ -196,12 +199,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			}
 			else if (conf.isEnableFatturePA() && dcwParsedMessage.isFatturaPAMessage(conf.getSdiDomainAddress())) { //messaggio fattura PA
 				String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo]=\"" + conf.getCodAmmAoo() + "\"";
-				int count = xwClient.search(query);
-				if (count > 0) { //messageId found
-					Document xmlDocument = xwClient.loadDocByQueryResult(0);
+				QueryResult qr = xwClient.search(query);
+				if (qr.elements > 0) { //messageId found
+					Document xmlDocument = xwClient.loadDocByQueryResult(0, qr);
 					Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
 					if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
-						this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+						this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0, qr);
 						return StoreType.UPDATE_PARTIAL_DOCUMENT_FATTURA_PA;
 					}
 					else
@@ -213,26 +216,26 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 
 		}
 		
-//TODO - inserire altre casistiche	(segnatura, notifiche interoperabilità, fattura pa, notifiche fattura PA)
+		//TODO - inserire altre casistiche	(segnatura, notifiche interoperabilità, fattura pa, notifiche fattura PA)
 		//casella ordinaria oppure casella PEC ma messaggio ordinario (oppure casella PEC ma non trovato documento a cui allegare ricevuta PEC o notifica di interoperabilità PA)
 		String query = "[/doc/@messageId]=\"" + parsedMessage.getMessageId() + "\" AND [/doc/@cod_amm_aoo]=\"" + conf.getCodAmmAoo() + "\"";
 		if (!conf.isCreateSingleDocByMessageId())
 			query += " AND [/doc/archiviatore/@recipientEmail]=\"" + conf.getEmail() + "\"";
 		
-		int count = xwClient.search(query);
-		if (count > 0) { //messageId found
-			Document xmlDocument = xwClient.loadDocByQueryResult(0);
+		QueryResult qr = xwClient.search(query);
+		if (qr.elements > 0) { //messageId found
+			Document xmlDocument = xwClient.loadDocByQueryResult(0, qr);
 			Element archiviatoreEl = (Element)xmlDocument.selectSingleNode("/doc/archiviatore[@recipientEmail='" + conf.getEmail() + "']");
 			if (archiviatoreEl != null) { //same mailbox
 				if (archiviatoreEl.attribute("completed") != null && archiviatoreEl.attributeValue("completed").equals("no")) {
-					this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+					this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0, qr);
 					return StoreType.UPDATE_PARTIAL_DOCUMENT;
 				}
 				else
 					return StoreType.SKIP_DOCUMENT;
 			}
 			else { //different mailbox
-				this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0);
+				this.physDocToUpdate = xwClient.getPhysdocByQueryResult(0, qr);
 				return StoreType.UPDATE_NEW_RECIPIENT;
 			}
 		}
@@ -253,7 +256,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		parsedMessage.clearRelevantMessages();
 		
 		//load and lock document
-		xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		LockedDocument lockedDoc = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		xmlDocument = lockedDoc.getDoc();
 
 		if (conf.isPec() && dcwParsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) { //casella PEC e interopPA Segnatura message
 
@@ -302,8 +306,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				}
 				
 				//salvataggio immediato
-				xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
-				xmlDocument = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+				xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc, lockedDoc.getTheLock());
+				lockedDoc = xwClient.loadAndLockDocument(lastSavedDocumentPhysDoc, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+				xmlDocument = lockedDoc.getDoc();
 			}
 			
 
@@ -336,15 +341,15 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			if (uploaded) {
 				updateXmlWithDocwayFiles(xmlDocument, doc);
 				setCompletedInDoc(xmlDocument, doc.getRecipientEmail());
-				xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc);
+				xwClient.saveDocument(xmlDocument, lastSavedDocumentPhysDoc, lockedDoc.getTheLock());
 			}
 			else { //no filed uploaded -> unlock document
-				xwClient.unlockDocument(lastSavedDocumentPhysDoc);
+				xwClient.unlockDocument(lastSavedDocumentPhysDoc, lockedDoc.getTheLock());
 			}			
 		}
 		catch (Exception e) {
 			try {
-				xwClient.unlockDocument(lastSavedDocumentPhysDoc);
+				xwClient.unlockDocument(lastSavedDocumentPhysDoc, lockedDoc.getTheLock());
 			}
 			catch (Exception unlockE) {
 				; //do nothing
@@ -452,12 +457,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
         }
 
         // first try: search email address
-        int count = aclClient.search(query, null, "ud(xpart:/xw/@UdType)", 0, 0);
-        if (count == 0) { // sender is not present in ACL
+        QueryResult qr = aclClient.search(query, null, "ud(xpart:/xw/@UdType)", 0, 0);
+        if (qr.elements == 0) { // sender is not present in ACL
             rifEsterno.setNome(name);
         }
         else { // extract sender info from ACL
-            Document document = aclClient.loadDocByQueryResult(0);
+            Document document = aclClient.loadDocByQueryResult(0, qr);
             if (document.getRootElement().getName().equals("struttura_esterna")) { // struttura_esterna
                 rifEsterno.setNome(document.getRootElement().element("nome").getText());
                 rifEsterno.setCod(document.getRootElement().attributeValue("cod_uff"));
@@ -544,25 +549,20 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                 	String queryStruest = "[struest_coduff]=" + appartenenze;
                 	if (!cod_amm.isEmpty() && !cod_aoo.isEmpty())
                 		queryStruest += " AND [/struttura_esterna/#cod_ammaoo]=\"" + cod_amm + cod_aoo + "\"";
-                	count = aclClient.search(queryStruest);
-                	QueryResult selezione = aclClient.getQueryResult();
-
-                    if (count > 0) { // at least one struttura_esterna found
-                        if (count > 1) {
+                	QueryResult qrStruEst = aclClient.search(queryStruest);
+                	
+                    if (qrStruEst.elements > 0) { // at least one struttura_esterna found
+                        if (qrStruEst.elements > 1) {
                             String emailDomain = address.substring(address.indexOf("@"));
                             queryStruest = "[struest_emailaddr]=\"*" + emailDomain + "\"";
                             if (!cod_amm.isEmpty() && !cod_aoo.isEmpty())
                         		queryStruest += " AND [/struttura_esterna/#cod_ammaoo]=\"" + cod_amm + cod_aoo + "\"";
 
-                            int count1 = aclClient.search(queryStruest, selezione.id, "", 0, 0);
-                            if (count1 > 0) {
-                                ; //uso la nuova selezione (quella raffinata)
-                            }
-                            else {
-                            	aclClient.setQueryResult(selezione);
-                            }
+                            QueryResult qrRefine = aclClient.search(queryStruest, qrStruEst.id, "", 0, 0);
+                            if (qrRefine.elements > 0)
+                            	qrStruEst = qrRefine;
                         }
-                        document = aclClient.loadDocByQueryResult(0);
+                        document = aclClient.loadDocByQueryResult(0, qrStruEst);
 
                         rifEsterno.setReferenteNominativo(rifEsterno.getNome());
                         rifEsterno.setReferenteCod(rifEsterno.getCod());
@@ -613,12 +613,12 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	private List<RifInterno> createRifInterniByPersintQuery(String query) throws Exception {
 		List<RifInterno> rifsL = new ArrayList<RifInterno>();
-		int count = aclClient.search(query);
-		if (count == 0)
+		QueryResult qr = aclClient.search(query);
+		if (qr.elements == 0)
 			return null;
-		for (int i=0; i<count; i++) { //per ogni persona interna
+		for (int i=0; i<qr.elements; i++) { //per ogni persona interna
 			RifInterno rifInterno = new RifInterno();
-	        Document document = aclClient.loadDocByQueryResult(i);
+	        Document document = aclClient.loadDocByQueryResult(i, qr);
 	        String codPersona = ((Attribute)document.selectSingleNode("persona_interna/@matricola")).getValue();
 	        String nomePersona = ((Attribute)document.selectSingleNode("persona_interna/@cognome")).getValue() + " " + ((Attribute)document.selectSingleNode("persona_interna/@nome")).getValue();
 	        String codUff = ((Attribute)document.selectSingleNode("persona_interna/@cod_uff")).getValue();
@@ -627,8 +627,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	        rifInterno.setNomePersona(nomePersona);
 	        rifInterno.setCodUff(codUff);
 	        rifsL.add(rifInterno);
-			aclClient.search("[struint_coduff]=\"" + rifInterno.getCodUff() + "\" AND [/struttura_interna/#cod_ammaoo/]=\"" + codAmmAoo + "\""); //estrazione nome ufficio
-	        document = aclClient.loadDocByQueryResult(0);
+			QueryResult qr1 = aclClient.search("[struint_coduff]=\"" + rifInterno.getCodUff() + "\" AND [/struttura_interna/#cod_ammaoo/]=\"" + codAmmAoo + "\""); //estrazione nome ufficio
+	        document = aclClient.loadDocByQueryResult(0, qr1);
 	        String nomeUff = document.getRootElement().elementText("nome").trim();
 	        rifInterno.setNomeUff(nomeUff);	        
 		}
@@ -640,8 +640,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		RifInterno rifInterno = new RifInterno();
 		if (assegnatario.isRuolo()) { //ruolo
 			String query = "[ruoli_id]=\"" + assegnatario.getCodRuolo() + "\" AND [/ruolo/#cod_ammaoo/]=\"" + codAmmAoo + "\"";
-			aclClient.search(query);
-	        Document document = aclClient.loadDocByQueryResult(0);
+			QueryResult qr = aclClient.search(query);
+	        Document document = aclClient.loadDocByQueryResult(0, qr);
 	        String nomeRuolo = document.getRootElement().elementText("nome").trim();
 			rifInterno.setRuolo(nomeRuolo, assegnatario.getCodRuolo());
 			rifInterno.setIntervento(assegnatario.isIntervento());			        
@@ -651,13 +651,13 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			rifInterno.setCodUff(assegnatario.getCodUff());
 			rifInterno.setIntervento(assegnatario.isIntervento());
 			
-			aclClient.search("[struint_coduff]=\"" + rifInterno.getCodUff() + "\" AND [/struttura_interna/#cod_ammaoo/]=\"" + codAmmAoo + "\"");
-	        Document document = aclClient.loadDocByQueryResult(0);
+			QueryResult qr = aclClient.search("[struint_coduff]=\"" + rifInterno.getCodUff() + "\" AND [/struttura_interna/#cod_ammaoo/]=\"" + codAmmAoo + "\"");
+	        Document document = aclClient.loadDocByQueryResult(0, qr);
 	        String nomeUff = document.getRootElement().elementText("nome").trim();
 	        rifInterno.setNomeUff(nomeUff);				
 
-			aclClient.search("[/persona_interna/@matricola]=\"" + rifInterno.getCodPersona() + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
-	        document = aclClient.loadDocByQueryResult(0);
+	        qr = aclClient.search("[/persona_interna/@matricola]=\"" + rifInterno.getCodPersona() + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
+	        document = aclClient.loadDocByQueryResult(0, qr);
 	        String nomePersona = ((Attribute)document.selectSingleNode("persona_interna/@cognome")).getValue() + " " + ((Attribute)document.selectSingleNode("persona_interna/@nome")).getValue();
 			rifInterno.setNomePersona(nomePersona);
 		}
@@ -817,9 +817,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			query = "[persint_matricola]=" + matricola + " AND [/persona_interna/#cod_ammaoo/]=" + codAmmAoo;
 		}
 
-		int count = aclClient.search(query);
+		QueryResult qr = aclClient.search(query);
+		int count = qr.elements;
 		for (int i=0; i<count; i++) {
-			Document document = aclClient.loadDocByQueryResult(i);
+			Document document = aclClient.loadDocByQueryResult(i, qr);
 			Attribute indirizzoEl = (Attribute)document.selectSingleNode("/persona_interna/recapito/email/@addr");
 			if (indirizzoEl != null) {
 				String indirizzo = indirizzoEl.getText().trim();
@@ -839,7 +840,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		
 		//load and lock existing document
-		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocToUpdate, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		LockedDocument lockedDoc = xwClient.loadAndLockDocument(this.physDocToUpdate, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		Document xmlDocument = lockedDoc.getDoc();
 		
 		try {
 			boolean uploaded = false;
@@ -879,15 +881,15 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			if (uploaded) {
 				updateXmlWithDocwayFiles(xmlDocument, doc);
 				setCompletedInDoc(xmlDocument, doc.getRecipientEmail());
-				xwClient.saveDocument(xmlDocument, this.physDocToUpdate);
+				xwClient.saveDocument(xmlDocument, this.physDocToUpdate, lockedDoc.getTheLock());
 			}
 			else { //no filed uploaded -> unlock document
-				xwClient.unlockDocument(this.physDocToUpdate);
+				xwClient.unlockDocument(this.physDocToUpdate, lockedDoc.getTheLock());
 			}			
 		}
 		catch (Exception e) {
 			try {
-				xwClient.unlockDocument(this.physDocToUpdate);
+				xwClient.unlockDocument(this.physDocToUpdate, lockedDoc.getTheLock());
 			}
 			catch (Exception unlockE) {
 				; //do nothing
@@ -923,7 +925,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		
 		//load and lock existing document
-		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocToUpdate, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		LockedDocument lockedDoc = xwClient.loadAndLockDocument(this.physDocToUpdate, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		Document xmlDocument = lockedDoc.getDoc();
 		
 		try {
 			Element docEl = xmlDocument.getRootElement();
@@ -947,11 +950,11 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			}
 			
 			updateXmlWithDocwayFiles(xmlDocument, doc);
-			xwClient.saveDocument(xmlDocument, this.physDocToUpdate);
+			xwClient.saveDocument(xmlDocument, this.physDocToUpdate, lockedDoc.getTheLock());
 		}
 		catch (Exception e) {
 			try {
-				xwClient.unlockDocument(this.physDocToUpdate);
+				xwClient.unlockDocument(this.physDocToUpdate, lockedDoc.getTheLock());
 			}
 			catch (Exception unlockE) {
 				; //do nothing
@@ -1004,7 +1007,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		
 		//load and lock existing document
-		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocForAttachingFile, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		LockedDocument lockedDoc = xwClient.loadAndLockDocument(this.physDocForAttachingFile, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		Document xmlDocument = lockedDoc.getDoc();
 		
 		try {
 			//upload file
@@ -1050,11 +1054,11 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
     			interoperabilitaMultiplaEl.add(Docway4EntityToXmlUtils.interoperabilitaItemToXml(interopItem));
             }
             
-			xwClient.saveDocument(xmlDocument, this.physDocForAttachingFile);
+			xwClient.saveDocument(xmlDocument, this.physDocForAttachingFile, lockedDoc.getTheLock());
 		}
 		catch (Exception e) {
 			try {
-				xwClient.unlockDocument(this.physDocForAttachingFile);
+				xwClient.unlockDocument(this.physDocForAttachingFile, lockedDoc.getTheLock());
 			}
 			catch (Exception unlockE) {
 				; //do nothing
@@ -1102,23 +1106,23 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		
 		if (!piva.isEmpty()) { // ricerca in anagrafica su campo partita iva
 
-			int count = aclClient.search("([/struttura_esterna/@partita_iva/]=\"" + piva + "\" AND [/struttura_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\") OR ([/persona_esterna/@partita_iva/]=\"" + piva + "\" AND [/persona_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\")");
-			if (count == 1) { // e' stata individuata una struttura esterna con la partita iva indicata
+			QueryResult qr = aclClient.search("([/struttura_esterna/@partita_iva/]=\"" + piva + "\" AND [/struttura_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\") OR ([/persona_esterna/@partita_iva/]=\"" + piva + "\" AND [/persona_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\")");
+			if (qr.elements == 1) { // e' stata individuata una struttura esterna con la partita iva indicata
 				if (logger.isInfoEnabled())
 					logger.info("[" + conf.getAddress() + "] found rif esterno in ACL. Piva [" + piva + "]");
 				
 				found = true;
-				rifEsterno = getRifEsternoFromAcl(aclClient.loadDocByQueryResult(0));
+				rifEsterno = getRifEsternoFromAcl(aclClient.loadDocByQueryResult(0, qr));
 			}
 		}
 		if (!found && !cf.isEmpty()) { // ricerca in anagrafica su campo codice fiscale
-			int count = aclClient.search("([/struttura_esterna/@codice_fiscale/]=\"" + cf + "\" AND [/struttura_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo()+ "\") OR ([/persona_esterna/@codice_fiscale/]=\"" + cf + "\" AND [/persona_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\")");
-			if (count == 1) { // e' stata individuata una struttura esterna con la partita iva indicata
+			QueryResult qr = aclClient.search("([/struttura_esterna/@codice_fiscale/]=\"" + cf + "\" AND [/struttura_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo()+ "\") OR ([/persona_esterna/@codice_fiscale/]=\"" + cf + "\" AND [/persona_esterna/#cod_ammaoo/]=\"" + conf.getCodAmmAoo() + "\")");
+			if (qr.elements == 1) { // e' stata individuata una struttura esterna con la partita iva indicata
 				if (logger.isInfoEnabled())
 					logger.info("[" + conf.getAddress() + "] found rif esterno in ACL. CF [" + cf + "]");
 				
 				found = true;
-				rifEsterno = getRifEsternoFromAcl(aclClient.loadDocByQueryResult(0));
+				rifEsterno = getRifEsternoFromAcl(aclClient.loadDocByQueryResult(0, qr));
 			}
 		}
 		
@@ -1366,7 +1370,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		
 		//load and lock existing document
-		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocForAttachingFile, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		LockedDocument lockedDoc = xwClient.loadAndLockDocument(this.physDocForAttachingFile, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		Document xmlDocument = lockedDoc.getDoc();
 		
 		try {
 			//upload file
@@ -1414,7 +1419,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				
 			fatturaPAEl.add(Docway4EntityToXmlUtils.notificaItemToXml(notificaItem));
             
-			xwClient.saveDocument(xmlDocument, this.physDocForAttachingFile);
+			xwClient.saveDocument(xmlDocument, this.physDocForAttachingFile, lockedDoc.getTheLock());
 			
             // se si sta analizzando una notifica relativa ad un invio di fatturaPA attiva occorre verificare se in ACL e' gia' registrato
             // l'indirizzo email del SdI da utilizzare per successive comunicazioni. In caso contrario occorre registrarlo sull'ufficio specificato
@@ -1431,7 +1436,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}
 		catch (Exception e) {
 			try {
-				xwClient.unlockDocument(this.physDocForAttachingFile);
+				xwClient.unlockDocument(this.physDocForAttachingFile, lockedDoc.getTheLock());
 			}
 			catch (Exception unlockE) {
 				; //do nothing
@@ -1462,29 +1467,30 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		if (codUff != null && codUff.length() > 0 && emailAddressSdI != null && emailAddressSdI.length() > 0) {
 			try {
-	            int count = aclClient.search("[/struttura_interna/@cod_uff/]=\"" + codUff + "\"");
-				if (count > 0) {
-					Document document = aclClient.loadDocByQueryResult(0);
+	            QueryResult qr = aclClient.search("[/struttura_interna/@cod_uff/]=\"" + codUff + "\"");
+				if (qr.elements > 0) {
+					Document document = aclClient.loadDocByQueryResult(0, qr);
 					Node node = document.selectSingleNode("/struttura_interna/fatturaPA/@emailSdI");
 					if (node == null || node.getText().isEmpty()) {
 						if (logger.isInfoEnabled())
 							logger.info("[" + conf.getAddress() + "] updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]");
 						
-						int pD = aclClient.getPhysdocByQueryResult(0);
+						int pD = aclClient.getPhysdocByQueryResult(0, qr);
+						LockedDocument lockedDoc = aclClient.loadAndLockDocument(pD, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 						try {
-							document = aclClient.loadAndLockDocument(pD, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+							document = lockedDoc.getDoc();
 
 							Element fatturaPAEl = document.getRootElement().element("fatturaPA");
 							if (fatturaPAEl == null)
 								fatturaPAEl = document.getRootElement().addElement("fatturaPA");
 							fatturaPAEl.addAttribute("emailSdI", emailAddressSdI);
 							
-							aclClient.saveDocument(document, pD);
+							aclClient.saveDocument(document, pD, lockedDoc.getTheLock());
 						}
 						catch (Exception e) {
 							logger.error("[" + conf.getAddress() + "]. Unexpected error updating SdI email [" + emailAddressSdI + "] for SI [" + codUff + "]", e);
 							try {
-								aclClient.unlockDocument(pD);
+								aclClient.unlockDocument(pD, lockedDoc.getTheLock());
 							}
 							catch (Exception e1) {
 								; //do nothing
@@ -1518,7 +1524,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}		
 		
 		//load and lock existing document
-		Document xmlDocument = xwClient.loadAndLockDocument(this.physDocForAttachingFile, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		LockedDocument lockedDoc = xwClient.loadAndLockDocument(this.physDocForAttachingFile, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+		Document xmlDocument = lockedDoc.getDoc();
 		
 		try {
 			//upload file
@@ -1560,11 +1567,11 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
     		}
 			fatturaPAEl.add(Docway4EntityToXmlUtils.notificaItemToXml(notificaItem));
             
-			xwClient.saveDocument(xmlDocument, this.physDocForAttachingFile);
+			xwClient.saveDocument(xmlDocument, this.physDocForAttachingFile, lockedDoc.getTheLock());
 		}
 		catch (Exception e) {
 			try {
-				xwClient.unlockDocument(this.physDocForAttachingFile);
+				xwClient.unlockDocument(this.physDocForAttachingFile, lockedDoc.getTheLock());
 			}
 			catch (Exception unlockE) {
 				; //do nothing

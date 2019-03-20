@@ -170,11 +170,10 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	
 	private List<MailboxConfiguration> readMailboxConfigurations(boolean isPec, String query, ExtrawayClient xwClient) throws Exception {
 		List<MailboxConfiguration> mailboxConfigurations = new ArrayList<MailboxConfiguration>();
-		int count = xwClient.search(query);
-		QueryResult qr = xwClient.getQueryResult();
+		QueryResult qr = xwClient.search(query);
+		int count = qr.elements;
 		for (int i=0; i<count; i++) { //iterate xw selection
-			xwClient.setQueryResult(qr); //fix - inner documentModel search changes current query result
-			Document xmlDocument = xwClient.loadDocByQueryResult(i);
+			Document xmlDocument = xwClient.loadDocByQueryResult(i, qr);
 			
 			//every doc in the selection could contain more mailboxes info (see xPathInfo)
 			String []xpaths = XPathInfo.split(";");
@@ -187,8 +186,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	            	mailboxConfigurations.add(conf);
 	            	
 	        		//parse documentModel
-	        		if (xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel")) > 0) {
-	        			Document dmDocument = xwClient.loadDocByQueryResult(0);
+	            	QueryResult dmodelQr = xwClient.search("[docmodelname]=" + casellaEl.attributeValue("documentModel"));
+	        		if (dmodelQr.elements > 0) {
+	        			Document dmDocument = xwClient.loadDocByQueryResult(0, dmodelQr);
 	        			parseDocumentModel(conf, dmDocument);
 	        		}
 	        		else
