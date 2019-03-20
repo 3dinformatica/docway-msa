@@ -720,18 +720,26 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		if (conf.isDaCopiaConoscenza()) {
 			String query = parsedMessage.getCcAddressesAsString().replaceAll(",", "\" OR \"");
 			if (!query.isEmpty()) {
-				rifsL = createRifInterniByPersintQuery("[persint_recapitoemailaddr]=\"" + parsedMessage.getFromAddress() + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
-				for (RifInterno cc:rifsL) {
-					cc.setDiritto("CC");
-					rifInterni.add(cc);
+				// mbernardini 20/03/2019 : se 'daCopiaConoscenza' risulta attiva la query sulle persone interne deve essere fatto sugli indirizzi in CC e non sul TO
+				rifsL = createRifInterniByPersintQuery("[persint_recapitoemailaddr]=\"" + query + "\" AND [persint_codammaoo]=\"" + codAmmAoo + "\"");
+				// mbernardini 20/03/2019 : la lista dei rifs potrebbe anche essere nulla
+				if (rifsL != null) {
+					for (RifInterno cc:rifsL) {
+						if (cc != null) {
+							cc.setDiritto("CC");
+							rifInterni.add(cc);
+						}
+					}
 				}
 			}
 		}
 		
 		for (AssegnatarioMailboxConfiguration assegnatario: conf.getAssegnatariCC()) {
-			RifInterno cc = createRifInternoByAssegnatario(assegnatario);
-			cc.setDiritto("CC");
-			rifInterni.add(cc);
+			if (assegnatario != null) {
+				RifInterno cc = createRifInternoByAssegnatario(assegnatario);
+				cc.setDiritto("CC");
+				rifInterni.add(cc);
+			}
 		}
 		
 		return rifInterni;
