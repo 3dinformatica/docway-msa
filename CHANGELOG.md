@@ -1,6 +1,12 @@
 # Change Log
 
 
+## [3.0.8] - SNAPSHOT
+
+### Fixed
+- Aggiornata la versione del broker per correzione su modulo di audit
+
+
 ## [3.0.7] - 2019-03-26
 
 ### Fixed
@@ -8,6 +14,7 @@
 - Se 'daCopiaConoscenza' risulta attiva la query sulle persone interne deve essere fatto sugli indirizzi in CC e non sul TO
 - Corretto bug sul recupero dei CC da associare al documento (NullPointerException)
 - Ristrutturato il client verso eXtraWay per problemi di accesso alle selezioni derivanti da query in caso di "concorrenza"
+
 
 ## [3.0.6] - 2019-03-15
 
