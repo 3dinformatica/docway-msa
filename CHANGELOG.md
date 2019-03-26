@@ -1,7 +1,7 @@
 # Change Log
 
 
-## [3.0.7] - SNAPSHOT
+## [3.0.7] - 2019-03-26
 
 ### Fixed
 - Aggiunto l'indirizzo email nella configurazione della casella (username non sempre identico all'indirizzo, vedi caselle fax - Task #17447)
