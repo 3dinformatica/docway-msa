@@ -133,7 +133,7 @@ public class DocwayDocument {
 	}
 
 	public String getNumProt() {
-		return numProt;
+		return (numProt != null) ? numProt : "";
 	}
 
 	public void setNumProt(String numProt) {

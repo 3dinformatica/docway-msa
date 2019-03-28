@@ -31,7 +31,7 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private boolean currentDate;
 	private String codAmm;
 	private String codAoo;
-	private String numProt;
+	private boolean numProt;
 	
 	//classificazione
 	private String classif;
@@ -189,11 +189,11 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 		this.codAoo = codAoo;
 	}
 
-	public String getNumProt() {
+	public boolean isNumProt() {
 		return numProt;
 	}
 
-	public void setNumProt(String numProt) {
+	public void setNumProt(boolean numProt) {
 		this.numProt = numProt;
 	}
 

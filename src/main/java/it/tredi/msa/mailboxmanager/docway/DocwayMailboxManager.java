@@ -294,26 +294,26 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		else
 			doc.setTipo(conf.getTipoDoc());
 		
-		if (!docAsVarie) {
-			//bozza
-			doc.setBozza(conf.isBozza());
-			
-			//num_prot
-			doc.setNumProt(conf.getNumProt());
-			
-			//repertorio
-			doc.setRepertorio(conf.getRepertorio());
-			doc.setRepertorioCod(conf.getRepertorioCod());
-			
-			//annullato
-			doc.setAnnullato(false);
-		}
-		
 		//cod_amm_aoo
 		doc.setCodAmmAoo(conf.getCodAmmAoo());
 		
 		//anno
 		doc.setAnno(conf.isCurrentYear()? (new SimpleDateFormat("yyyy")).format(currentDate) : "");
+		
+		if (!docAsVarie) {
+			//bozza
+			doc.setBozza(conf.isBozza());
+			
+			//num_prot
+			doc.setNumProt((conf.isNumProt()) ? doc.getAnno() + "-" + doc.getCodAmmAoo() + "-." : "");
+			
+			//annullato
+			doc.setAnnullato(false);
+		}
+		
+		//repertorio
+		doc.setRepertorio(conf.getRepertorio());
+		doc.setRepertorioCod(conf.getRepertorioCod());
 		
 		//data prot
 		doc.setDataProt(conf.isCurrentDate()? (new SimpleDateFormat("yyyyMMdd")).format(currentDate) : "");

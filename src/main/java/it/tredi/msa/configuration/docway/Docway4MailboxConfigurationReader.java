@@ -415,7 +415,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		
 		//numero protocollo
 		itemEl = (Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/@num_prot']");
-		conf.setNumProt(itemEl == null? "" : itemEl.attributeValue("value", ""));
+		conf.setNumProt(itemEl == null || itemEl.attributeValue("value", "").equals("") ? false : true);
+		if (conf.isNumProt())
+			conf.setBozza(false); // in caso di documento protocollato forzo la bozza a false
 		
 		//mezzo trasmissione
 		itemEl = (Element)dmDocument.selectSingleNode("/documentModel/item[@xpath='doc/mezzo_trasmissione/@cod']");

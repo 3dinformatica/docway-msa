@@ -5,6 +5,7 @@
 
 ### Fixed
 - Aggiornata la versione del broker per correzione su modulo di audit
+- Corretto bug in gestione del numero di protocollo (analisi del documentModel associato alla casella di posta)
 
 
 ## [3.0.7] - 2019-03-26
