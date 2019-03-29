@@ -70,7 +70,7 @@ start(){
 		exit 0 #LSB 4.1.0
 	else
 		echo -n "Starting Mail Storage Agent..."
-		nohup nice -n $NICE_LEVEL $JAVA_COMMAND -classpath "$CLASSPATH" $MAXHEAP ${JAVA_FLAGS} it.tredi.msa.MsaLauncher > $LOG_FILE 2>&1 &
+		nohup nice -n $NICE_LEVEL $JAVA_COMMAND -classpath "$CLASSPATH" $MAXHEAP ${JAVA_FLAGS} -Dmail.mime.contentdisposition.strict=true it.tredi.msa.MsaLauncher > $LOG_FILE 2>&1 &
 		sleep 2
 		rm -f $MSAPID
 		
