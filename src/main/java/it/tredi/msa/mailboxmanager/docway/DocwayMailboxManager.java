@@ -52,6 +52,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected static final String DEFAULT_ALLEGATO = "0 - nessun allegato";
 	
 	private final static String FILE_NOT_FOUND_IN_SEGNATURA = "Non è stato possibile individuare tra gli allegati della mail il file referenziato nel messaggio di interoperabilità PA: %s\n";
+	private final static String DAMAGED_FILE_IN_SEGNATURA = "Non è stato possibile scaricare uno degli allegati della mail referenziato nel messaggio di interoperabilità PA (possibile file corrotto): %s\n";
 	private final static String SEGNATURA_MESSAGE_AS_BOZZA = "Il documento è stato creato come bozza a causa di errori in fase di importazione del messaggio di interoperabilità Segnatura.xml.\n";
 	private final static String SEGNATURA_PARSE_ERROR = "Si sono verificati degli errori in fase di importazione del messaggio di interoperabilità Segnatura.xml.\n";
 	private final static String SEGNATURA_NULL_EMPTY_FIELD = "Valore campo '%s' nullo o vuoto.\n";
@@ -768,6 +769,14 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		return doc;
 	}	
 
+	/**
+	 * Creazione di un documento ricevuto tramite interoperabilità (parsing del file segnatura.xml)
+	 * @param segnaturaDocument
+	 * @param parsedMessage
+	 * @param doc
+	 * @return
+	 * @throws Exception
+	 */
 	private String createDocwayFilesForInteropPAMessage(Document segnaturaDocument, ParsedMessage parsedMessage, DocwayDocument doc) throws Exception {
 		String motivazioneNotificaEccezione = "";
 		
@@ -813,21 +822,46 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		return motivazioneNotificaEccezione;
 	}	
 	
+	/**
+	 * Caricamento sul documento di un file specificato dalla segnatura.xml
+	 * @param documentoEl
+	 * @param doc
+	 * @param parsedMessage
+	 * @param addAllegato
+	 * @return
+	 * @throws Exception
+	 */
 	private String addFileFromSegnatura(Element documentoEl, DocwayDocument doc, ParsedMessage parsedMessage, boolean addAllegato) throws Exception {
 		if (documentoEl != null && !documentoEl.attributeValue("nome", "").isEmpty()) {
 			Part attachment = parsedMessage.getFirstAttachmentByName(documentoEl.attributeValue("nome"));
 			if (attachment != null) {
 				DocwayFile file = createDocwayFile();
-				file.setContentByProvider(new PartContentProvider(attachment));
-				file.setName(attachment.getFileName());
-				if (isImage(file.getName())) //immagine
-						doc.addImmagine(file);
-				else //file
-					doc.addFile(file);
 				
-				if (addAllegato)
-					doc.addAllegato(file.getName());	
-				return "";
+				// mbernardini 29/03/2019 : gestione di messaggi di interoperabilita' contenenti allegati danneggiati
+				boolean fileLoaded = false;
+				try {
+					file.setContentByProvider(new PartContentProvider(attachment));
+					fileLoaded = true;
+				}
+				catch(Exception e) {
+					logger.warn("[" + attachment.getFileName() + "] Unable to read file content, damaged file... " + e.getMessage(), e);
+				}
+				
+				if (fileLoaded) {
+					file.setName(attachment.getFileName());
+					if (isImage(file.getName())) //immagine
+							doc.addImmagine(file);
+					else //file
+						doc.addFile(file);
+					
+					if (addAllegato)
+						doc.addAllegato(file.getName());	
+					return "";
+				}
+				else {
+					// Possibile file corrotto, invio della notifica di eccezione
+					return String.format(DAMAGED_FILE_IN_SEGNATURA, documentoEl.attributeValue("nome"));					
+				}
 			}
 			else if (documentoEl.attributeValue("TipoRiferimento", "MIME").equals("MIME"))
 				return String.format(FILE_NOT_FOUND_IN_SEGNATURA, documentoEl.attributeValue("nome"));
