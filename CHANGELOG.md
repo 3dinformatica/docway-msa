@@ -7,6 +7,7 @@
 - Aggiornata la versione del broker per correzione su modulo di audit
 - Corretto bug in gestione del numero di protocollo (analisi del documentModel associato alla casella di posta)
 - Riconoscimento di file danneggiati all'interno di mail ricevute tramite interoperabilità: Viene inviata al mittente la notifica di eccezione.
+- Corretto l'aggancio di ricevute di accettazione al rif. esterno in caso di invio di interoperabilità a email ordinaria (NON PEC) (Task #17612) 
 
 ## [3.0.7] - 2019-03-26
 

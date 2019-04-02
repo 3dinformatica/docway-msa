@@ -1032,12 +1032,22 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
             Element rifEl = null;
             if (rifEstAddress != null && !rifEstAddress.isEmpty()) {
                 for (Element el:rifsL) {
+                	// mbernardini 02/04/2019 : occorre cercare il riferimento alla mail anche sugli indirizzi di mail ordinaria oltre che pec
+                	
+                	// Ricerca su caselle PEC del rif esterno
                 	Element emailCertificataEl = el.element("email_certificata");
-                	if (emailCertificataEl != null && emailCertificataEl.attributeValue("addr", "").equals(rifEstAddress)) {
+                	if (emailCertificataEl != null && emailCertificataEl.attributeValue("addr", "").equalsIgnoreCase(rifEstAddress))
                 		rifEl = el;
-                		if (numero != null && !numero.isEmpty() && rifEl.attributeValue("n_prot", "").isEmpty()) //si aggiunge il numero di protocollo al rif esterno se manca
-                			rifEl.addAttribute("n_prot", numero);
-                		break;
+                	
+                	// Ricerca su caselle ordinarie del rif esterno
+                	Element indirizzoEl = el.element("indirizzo");
+                	if (indirizzoEl != null && indirizzoEl.attributeValue("email", "").toLowerCase().contains(rifEstAddress.toLowerCase())) // potrebbero essere più indirizzi separati da punto e virgola
+                		rifEl = el;
+                	
+                	if (rifEl != null) {
+	                	if (numero != null && !numero.isEmpty() && rifEl.attributeValue("n_prot", "").isEmpty()) //si aggiunge il numero di protocollo al rif esterno se manca
+	            			rifEl.addAttribute("n_prot", numero);
+	            		break;
                 	}
                 }            	
             }
