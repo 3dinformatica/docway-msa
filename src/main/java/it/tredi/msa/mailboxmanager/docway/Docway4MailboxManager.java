@@ -1329,10 +1329,13 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			Node node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/Anagrafica/Denominazione");
 			String nome = (node == null) ? "" : node.getText();
 			if (nome.isEmpty()) {
+				// mbernardini 04/04/2019 : corretto bug in lettura del nome completo della persona riferita nella fattura
 				node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/Anagrafica/Cognome");
-				nome = (node == null) ? "" : node.getText();
+				if (node != null)
+					nome = node.getText();
 				node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/" + rifElemNameInFatturaPA + "/DatiAnagrafici/Anagrafica/Nome");
-				nome = (node == null) ? "" : " " + node.getText();
+				if (node != null)
+					nome = nome + " " + node.getText();
 				nome = nome.trim();
 			}
 			if (!nome.isEmpty())
