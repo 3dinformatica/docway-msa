@@ -3,12 +3,16 @@
 
 ## [3.0.8] - SNAPSHOT
 
-### Fixed
+### Changed
 - Aggiornata la versione del broker per correzione su modulo di audit
+
+### Fixed
 - Corretto bug in gestione del numero di protocollo (analisi del documentModel associato alla casella di posta)
 - Riconoscimento di file danneggiati all'interno di mail ricevute tramite interoperabilità: Viene inviata al mittente la notifica di eccezione.
 - Corretto l'aggancio di ricevute di accettazione al rif. esterno in caso di invio di interoperabilità a email ordinaria (NON PEC) (Task #17612)
-- Corretto bug in lettura del nome completo della persona riferita nella fattura (Task #17624) 
+- Corretto bug in lettura del nome completo della persona riferita nella fatturaPA (Task #17624)
+- Corretto bug in salvataggio EML di una notifica relativa ad una fatturaPA (errore nell'indicazione dell'estensione del file) (Task #17620)
+
 
 ## [3.0.7] - 2019-03-26
 

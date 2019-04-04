@@ -1389,7 +1389,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		try {
 			//upload file
 			byte []fileContent = (new MessageContentProvider(parsedMessage.getMessage(), false)).getContent();
-			String fileId = xwClient.addAttach(dcwParsedMessage.getFileNameNotificaFatturaPA(), fileContent, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
+			// mbernardini 04/04/2019 : aggiunta estensione eml alla notifica relativa alla fatturaPA (stiamo salvando l'intero messaggio e non solo il file XML)
+			String fileId = xwClient.addAttach(dcwParsedMessage.getFileNameNotificaFatturaPA()+".eml", fileContent, conf.getXwLockOpAttempts(), conf.getXwLockOpDelay());
 
 			Element fatturaPAEl = (Element)xmlDocument.selectSingleNode("//extra/fatturaPA");
 			NotificaItem notificaItem = new NotificaItem();
