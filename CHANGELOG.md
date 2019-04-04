@@ -1,7 +1,7 @@
 # Change Log
 
 
-## [3.0.8] - SNAPSHOT
+## [3.0.8] - 2019-04-04
 
 ### Changed
 - Aggiornata la versione del broker per correzione su modulo di audit
