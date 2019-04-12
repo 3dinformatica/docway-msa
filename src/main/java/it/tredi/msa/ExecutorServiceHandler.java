@@ -49,6 +49,7 @@ public class ExecutorServiceHandler implements Runnable {
         					MailboxManager mailboxManager = MailboxManagerFactory.createMailboxManager(mailboxConfiguration);
         					MailboxesManagersMap.getInstance().addManager(mailboxManager);
             				mailboxManager.getConfiguration().setDelay(mailboxManager.getConfiguration().getDelay() == -1? Services.getConfigurationService().getMSAConfiguration().getMailboxManagersDelay() : mailboxManager.getConfiguration().getDelay());
+            				mailboxManager.getConfiguration().setWorktimeMessagesDelay(Services.getConfigurationService().getMSAConfiguration().getMailboxManagersWorkTimeMailDelay());
             				executor.scheduleWithFixedDelay(mailboxManager, i++, mailboxManager.getConfiguration().getDelay(), TimeUnit.SECONDS);
         				}
     					else { //update existing configuration

@@ -10,9 +10,11 @@ public class MSAConfigurationReader {
 	private final static String NOTIFICATION_SENDER__PROPERTY = "notification.sender";
 	private final static String MAILBOXCONFIGURATION_READERS_PROPERTY = "mailboxconfiguration.readers";
 	private final static String MAILBOXMANAGERS_DELAY_PROPERTY = "mailboxmanagers.delay";
+	private final static String MAILBOXMANAGERS_WORK_TIME_MAIL_DELAY_PROPERTY = "mailboxmanagers.worktime.mail.delay";
 	private final static String MAILBOXMANAGERS_POOLSIZE_PROPERTY = "mailboxmanagers.poolsize";
 	private final static String MAILBOXMANAGERS_REFRESHTIME_PROPERTY = "mailboxmanagers.refresh.time";
 	private final static String MAILBOXMANAGERS_HOT_RELOADING_PROPERTY = "mailboxmanagers.hot-reloading";
+	
 	
 	// mbernardini 26/02/2019 : forzata l'univocita' degli indirizzi delle caselle di posta gestite da msa
 	//public final static String MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES_PROPERTY = "mailboxmanagers.allow-email-duplicates";
@@ -27,6 +29,7 @@ public class MSAConfigurationReader {
 
 		//default params
 		msaConfiguration.setMailboxManagersDelay(propertiesReader.getIntProperty(MAILBOXMANAGERS_DELAY_PROPERTY, 600));
+		msaConfiguration.setMailboxManagersWorkTimeMailDelay(propertiesReader.getIntProperty(MAILBOXMANAGERS_WORK_TIME_MAIL_DELAY_PROPERTY, 0));
 		msaConfiguration.setMailboxManagersPoolsize(propertiesReader.getIntProperty(MAILBOXMANAGERS_POOLSIZE_PROPERTY, 1));
 		msaConfiguration.setMailboxManagersRefreshTime(propertiesReader.getIntProperty(MAILBOXMANAGERS_REFRESHTIME_PROPERTY, 1));
 		

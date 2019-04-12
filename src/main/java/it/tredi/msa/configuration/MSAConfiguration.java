@@ -8,11 +8,18 @@ public class MSAConfiguration {
 	private ObjectFactoryConfiguration auditWriterConfiguration;
 	private ObjectFactoryConfiguration notificationSenderConfiguration;
 	private int mailboxManagersDelay;
+	
+	/**
+	 * Intervallo di tempo (ms.) tra 2 salvataggi di messaggi email durante l'orario di lavoro
+	 */
+	private int mailboxManagersWorkTimeMailDelay;
+	
 	private int mailboxManagersPoolsize;
 	private int mailboxManagersRefreshTime;
 	private boolean mailboxManagersHotReloading = false;
 	private boolean allowEmailDuplicates;
 	Object rawData;
+	
 	
 	public ObjectFactoryConfiguration[] getMailboxConfigurationReadersConfiguration() {
 		return mailboxConfigurationReadersConfiguration;
@@ -47,6 +54,13 @@ public class MSAConfiguration {
 		this.mailboxManagersDelay = mailboxManagersDelay;
 	}
 
+	public int getMailboxManagersWorkTimeMailDelay() {
+		return mailboxManagersWorkTimeMailDelay;
+	}
+
+	public void setMailboxManagersWorkTimeMailDelay(int mailboxManagersWorkTimeMailDelay) {
+		this.mailboxManagersWorkTimeMailDelay = mailboxManagersWorkTimeMailDelay;
+	}
 	
 	public int getMailboxManagersPoolsize() {
 		return mailboxManagersPoolsize;

@@ -2,6 +2,7 @@ package it.tredi.msa.mailboxmanager;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import javax.mail.Message;
@@ -321,10 +322,28 @@ public abstract class MailboxManager implements Runnable {
     	//TEMPLATE STEP - isMessageStorable
     	if (isMessageStorable(parsedMessage)) {
     		//TEMPLATE STEP - storeMessage
+    		
     		storeMessage(parsedMessage);
     		
     		//TEMPLATE STEP - messageStored
     		messageStored(parsedMessage);
+    		
+    		// mbernardini 12/04/2019 : aggiunta possibilita' di impostara un tempo di sleep dopo ogni salvataggio di documento in orario di lavoro
+    		if (configuration.getWorktimeMessagesDelay() > 0) {
+    		
+    			try {
+    				int hour = LocalDateTime.now().getHour();
+        			if (hour >= 8 && hour < 17) { // TODO andrebbe parametrizzata la definizione della fascia oraria lavorativa
+        				
+	    				if (logger.isDebugEnabled())
+	    		    		logger.debug("[" + configuration.getAddress() + "] sleep for " + configuration.getWorktimeMessagesDelay() + " ms...");
+	    				Thread.sleep(this.configuration.getWorktimeMessagesDelay());
+        			}
+    			}
+    			catch(Exception e) {
+    				logger.warn("[" + configuration.getAddress() + "] got exception on sleep... " + e.getMessage());
+    			}
+    		}
     	}
     	else {
     		//TEMPLATE STEP - skipMessage

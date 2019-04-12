@@ -32,6 +32,8 @@ public abstract class MailboxConfiguration {
 	boolean isPec;
 	
 	private int delay = -1; //delay (mailbox manager polling time)
+	private int worktimeMessagesDelay = 0; //intervallo fra 2 messaggi email processati sulla mailbox
+	
 	private StoredMessagePolicy storedMessagePolicy = StoredMessagePolicy.DELETE_FROM_FOLDER;
 	private String storedMessageFolderName;
 	
@@ -132,6 +134,14 @@ public abstract class MailboxConfiguration {
 
 	public void setDelay(int delay) {
 		this.delay = delay;
+	}
+	
+	public int getWorktimeMessagesDelay() {
+		return worktimeMessagesDelay;
+	}
+
+	public void setWorktimeMessagesDelay(int delay) {
+		this.worktimeMessagesDelay = delay;
 	}
 
 	public StoredMessagePolicy getStoredMessagePolicy() {

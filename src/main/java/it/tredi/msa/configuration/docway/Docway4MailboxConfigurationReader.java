@@ -215,6 +215,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
     	//delay
     	conf.setDelay(Services.getConfigurationService().getMSAConfiguration().getMailboxManagersDelay());
     	
+    	//messages delay
+    	conf.setWorktimeMessagesDelay(Services.getConfigurationService().getMSAConfiguration().getMailboxManagersWorkTimeMailDelay());
+    	
     	/* *************************** mailbox-in ****************************************** */
     	Element mailboxInEl = casellaEl.element("mailbox_in");
     	
