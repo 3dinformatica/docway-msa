@@ -135,9 +135,13 @@ public class Docway4NotificationEmailsUtils {
 		if (defURL1.length() > 0)
 			ret += "\n\n" + defURL1;
 		return ret;
-	}    
+	}
 
 	public static String getSubjectForEmail(String type, Document document) throws java.net.MalformedURLException {
+		return getSubjectForEmail(type, document, null);
+	}
+
+	public static String getSubjectForEmail(String type, Document document, String matricola) throws java.net.MalformedURLException {
 		String tipo_doc = document.getRootElement().attributeValue("tipo");
 
 		String mittOrDest = "";
@@ -148,7 +152,13 @@ public class Docway4NotificationEmailsUtils {
 				mittOrDest += ((Element) l.get(0)).getText();
 		}
 		String oggetto = document.getRootElement().elementText("oggetto");
-		String ret = "[" + type + "]" + getMittDestSubjectFor(mittOrDest) + ":" + getOggettoSubjectFor(oggetto);
+		String matricolaInfo = "";
+		if (matricola != null) {
+			// rimozione tutti_ per ruolo e ufficio
+			matricolaInfo = "[" + matricola.replace("tutti_", "") + "]";
+		}
+
+		String ret = "[" + type + "]" + matricolaInfo + getMittDestSubjectFor(mittOrDest) + ":" + getOggettoSubjectFor(oggetto);
 		return ret;
 	}   
 

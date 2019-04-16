@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import it.tredi.utils.properties.PropertiesReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
@@ -782,7 +783,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	private void sendNotificationEmail(MailSender mailSender, String senderAddress, String senderPersonal, String matricola, boolean isRPA, DocwayDocument doc, Document savedDocument, String body, String codAmmAooDestinatario, Set<String> notifiedAddresses) {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		try {
-			String subject = Docway4NotificationEmailsUtils.getSubjectForEmail(isRPA?"RPA":"CC", savedDocument);
+			boolean nrecordOnSubject = conf.isAddNrecordOnNotification();
+			String subject = Docway4NotificationEmailsUtils.getSubjectForEmail(isRPA?"RPA":"CC", savedDocument, nrecordOnSubject ? matricola : null);
 			String destEmail = getEmailWithMatricola(matricola, codAmmAooDestinatario);
 			String []destinatari = destEmail.split(",");
 			for (String dest:destinatari) {
@@ -1319,7 +1321,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	
 	/**
 	 * Aggiornamento del rif esterno prodotto tramite query su ACL con i dati estratti dalla fatturaPA
-	 * @param rif
+	 * @param rifEsterno
+	 * @param fatturaPADocument
 	 * @param rifElemNameInFatturaPA
 	 * @return
 	 */
