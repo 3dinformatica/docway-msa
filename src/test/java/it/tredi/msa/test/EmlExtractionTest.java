@@ -2,6 +2,7 @@ package it.tredi.msa.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.List;
@@ -123,6 +124,79 @@ public class EmlExtractionTest extends EmlReader {
 		
 		assertNotNull(fromDatiCert);
 		assertEquals("dp.Padova@pce.agenziaentrate.it", fromDatiCert);
+	}
+	
+	/**
+	 * Parsing di parti del messaggio incluse come SharedByteArrayInputStream
+	 * @throws Exception
+	 */
+	@Test
+	public void classCastExceptionExtraction() throws Exception {
+		String fileName = " java.lang.ClassCastException.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		ParsedMessage parsed = new ParsedMessage(readEmlFile(file));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		boolean filefound = false;
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments) {
+			System.out.println("\tattach name = " + name);
+			if (name.equals("Istituto Fiduciario Lombardo SpA.pdf"))
+				filefound = true;
+		}
+		
+		assertEquals(3, parsed.getAttachments().size());
+		assertTrue(filefound);
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("legal@pec.lacolombofinanziaria.com", fromDatiCert);
+	}
+	
+	/**
+	 * Estrazione dati da messaggio contenente molteplici istanze del file daticert.xml (inoltri vari di email)
+	 * @throws Exception
+	 */
+	@Test
+	public void nullPointerMultiDatiCert2Extraction() throws Exception {
+		String fileName = "nullPointer_multi_daticert_2.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		ParsedMessage parsed = new ParsedMessage(readEmlFile(file));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(15, parsed.getAttachments().size());
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("LOM.sospensioni.discarichi@pec.agenziariscossione.gov.it", fromDatiCert);
 	}
 	
 	/**

@@ -6,6 +6,11 @@
 - Aggiunta la possibilità di impostara un tempo di sleep dopo ogni salvataggio di documento in orario di lavoro (property _mailboxmanagers.worktime.mail.delay_)
 - Aggiunta dell'nrecord dell'assegnatatio alle email di notifica (property _docway4mailboxmanager.mail-sender.add-nrecord-on-notification_)
 
+### Fixed
+- Corretto il controllo su messageId del messaggio originale in caso di daticert multipli
+- Eliminazione di caratteri non validi su xml dai campi: oggetto, note, annotazioni
+
+
 ## [3.0.8] - 2019-04-04
 
 ### Changed
