@@ -172,8 +172,10 @@ public class ParsedMessage {
 										
 										// Verifico che effettivamente il daticert.xml sia quello del messaggio ricervuto (e non di un eventuale
 										// messaggio inoltrato incluso)
-										String identificativo = cleanMessageId(tmp.selectSingleNode("/postacert/dati/identificativo").getText());
-										if (identificativo.equals(this.getMessageId())) {
+										
+										// mbernardini 17/04/2019 : corretto il controllo su messageId del messaggio originale in caso di daticert multipli
+										String msgid = cleanMessageId(tmp.selectSingleNode("/postacert/dati/msgid").getText());
+										if (msgid.equals(cleanMessageId(this.parser.getXRiferimentoMessageID()))) {
 											datiCertDocument = tmp;
 											datiCertDocumentInCache = true;
 										}
