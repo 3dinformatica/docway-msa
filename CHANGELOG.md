@@ -1,7 +1,7 @@
 # Change Log
 
 
-## [3.0.9] - SNAPSHOT
+## [3.0.9] - 2019-04-18
 
 ### Changed
 - Aggiunta la possibilità di impostara un tempo di sleep dopo ogni salvataggio di documento in orario di lavoro (property _mailboxmanagers.worktime.mail.delay_)
