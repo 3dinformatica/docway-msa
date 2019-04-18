@@ -1,5 +1,6 @@
 # Change Log
 
+
 ## [3.0.9] - SNAPSHOT
 
 ### Changed
@@ -9,6 +10,7 @@
 ### Fixed
 - Corretto il controllo su messageId del messaggio originale in caso di daticert multipli
 - Eliminazione di caratteri non validi su xml dai campi: oggetto, note, annotazioni
+- Corretto possibile bug in salvataggio ricevute PEC orfane come doc non protocollato (caso di email salvate parzialmente o gia' presenti ma non eliminate dalla cartella inbox)
 
 
 ## [3.0.8] - 2019-04-04

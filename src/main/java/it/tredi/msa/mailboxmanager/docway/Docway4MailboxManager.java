@@ -106,6 +106,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		
+		// mbernardini 18/04/2019 : corretto bug nel salvataggio delle ricevute PEC orfane come doc non protocollati (caso di email salvate parzialmente o gia' presenti ma non eliminate dalla cartella inbox)
+		boolean isPecReceiptAsVarie = false;
+		
 		if (conf.isPec()) { //casella PEC
 			
 			if (dcwParsedMessage.isPecReceipt() || dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()) ||
@@ -155,8 +158,15 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 						this.physDocForAttachingFile = xwClient.getPhysdocByQueryResult(0, qr1);
 						return storeType;
 					}
-					else
+					else {
 						dcwParsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_ATTACHING_FILE, query));
+						
+						// mbernardini 18/04/2019 : anche su questa tipologia di notifiche deve essere verificata la configurazione
+						// di salvataggio come doc non protocollato
+						if (conf.isOrphanPecReceiptsAsVarie()) {
+							isPecReceiptAsVarie = true;
+						}
+					}
 				}
 				else if (dcwParsedMessage.isPecReceipt()) { //ricevuta PEC (non relativa a interopPA/fatturaPA)
 					if (conf.isIgnoreStandardOrphanPecReceipts()) {
@@ -166,7 +176,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					// mbernardini 21/01/2019 : se il salvataggio riguarda ricevute orfane potrebbe essere stato richiesto il salvataggio
 					// come documento non protocollato
 					else if (conf.isOrphanPecReceiptsAsVarie()) {
-						return StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE;
+						isPecReceiptAsVarie = true;
 					}
 				}
 			}
@@ -241,7 +251,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}
 		else {
 			//messageId not found
-			return StoreType.SAVE_NEW_DOCUMENT;
+			if (isPecReceiptAsVarie)
+				return StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE;
+			else
+				return StoreType.SAVE_NEW_DOCUMENT;
 		}
 	}  	
 	
