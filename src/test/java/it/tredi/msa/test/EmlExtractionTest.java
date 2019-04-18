@@ -275,4 +275,81 @@ public class EmlExtractionTest extends EmlReader {
 		assertEquals("riccardoguerra@pec.ordineavvocatigrosseto.com", fromDatiCert);
 	}
 	
+	/**
+	 * Estrazione dati da messaggio in caso di errori di encoding all'interno del file daticert.xml
+	 * @throws Exception
+	 */
+	@Test
+	public void daticertEncodingExceptionExtraction() throws Exception {
+		/*
+		String fileName = null;
+		File file = null;
+		ParsedMessage parsed = null;
+		List<String> attachments = null;
+		String fromDatiCert = null;
+		*/
+		
+		// CASO 1
+		String fileName = "daticertEncoding.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		ParsedMessage parsed = new ParsedMessage(readEmlFile(file, false));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(3, parsed.getAttachments().size());
+		
+		System.out.println("to addresses = " + parsed.getToAddressesAsString());
+		assertNotNull(parsed.getToAddressesAsString());
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("consulenza.legale@pec.bppb.it", fromDatiCert);
+		
+		// CASO 2
+		fileName = "daticertEncoding2.eml";
+		file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		parsed = new ParsedMessage(readEmlFile(file, false));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(3, parsed.getAttachments().size());
+		
+		System.out.println("to addresses = " + parsed.getToAddressesAsString());
+		assertNotNull(parsed.getToAddressesAsString());
+		
+		fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("pec@pec.easybc.it", fromDatiCert);
+	}
+	
 }

@@ -1,5 +1,10 @@
 # Change Log
 
+## [3.0.10] - SNAPSHOT
+
+### Fixed
+- Parsing in DOM di parti di messaggio contenenti caratteri non validi in XML
+
 
 ## [3.0.9] - 2019-04-18
 
