@@ -13,7 +13,7 @@ JAVA_COMMAND=/usr/bin/java
 # Massima dimensione della memoria heap per MSA
 MAXHEAP=-Xmx128m
 
-MSAPID=/tmp/msa.pid
+MSAPID_FILE=msa.pid
 
 NICE_LEVEL=10
 
@@ -27,6 +27,8 @@ jl=$inst/lib
 
 CLASSPATH="$inst/classes:$jl/*"
 
+MSAPID=$inst/$MSAPID_FILE
+
 # file di log in cui registrare gli errori di lancio del MSA
 LOG_FILE=$inst/logs/service.log
 
@@ -36,11 +38,26 @@ JAVA_FLAGS=""
 # --- NO MORE CHANGES AFTER THIS LINE ---
 
 getpid() {
+	# recupero PID da processi attivi
+	REALPID=`ps -ef | grep "$inst/lib"| grep -v grep | awk '{print $2}' | tr "\n" " "`
 	if [ -s $MSAPID ]; then
-		REALPID=`cat $MSAPID`
-	else
-		REALPID=`ps -ef | grep "msa/lib"| grep -v grep | awk '{print $2}' | tr "\n" " "`
+		# il file pid esiste
 		if [ -n "$REALPID" ]; then
+			# ho un PID nei processi, controllo che effettivamente corrispondano i valori
+			REALPID_FILE=`cat $MSAPID`	
+			if [ "$REALPID" -ne "$REALPID_FILE" ]; then
+				# se non corrispondono correggo il file pid
+				echo "$REALPID" > $MSAPID
+			fi
+		else
+			# non ho un PID nei processi, rimuovo il file
+			rm -f $MSAPID;
+		fi	
+	else
+		# il file pid NON esiste
+		
+		if [ -n "$REALPID" ]; then
+			# il PID trovato lo setto sul file pid
 			echo "$REALPID" > $MSAPID
 		fi
 	fi
