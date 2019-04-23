@@ -946,6 +946,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			Element docEl = xmlDocument.getRootElement();
 			Element rifIntEl = docEl.element("rif_interni");
 			
+			Element storiaEl = docEl.element("storia");
+			
 			//update document with new mailbox and CCs
 			Element archiviatoreEl = DocumentHelper.createElement("archiviatore");
 			docEl.add(archiviatoreEl);
@@ -958,6 +960,15 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				}
 				if (isNewRifInterno(rifInterno, rifIntEl)) {
 					rifIntEl.add(Docway4EntityToXmlUtils.rifInternoToXml(rifInterno));
+					
+					// mbernardini 23/04/2019 : in caso di aggiunta di rif interni ad un documento gia' registrato occorre aggiornare anche i dati relativi alla storia
+					// questo scenario si ottiene da un invio di un messaggio email a 2 distinte caselle di posta configurate su msa
+					StoriaItem storiaItem = StoriaItem.createFromRifInterno(rifInterno);
+					storiaItem.setOperatore(conf.getOperatore());
+					storiaItem.setData(currentDate);
+					storiaItem.setOra(currentDate);
+					storiaEl.add(Docway4EntityToXmlUtils.storiaItemToXml(storiaItem));
+					
 				}
 				else 
 					rifInterno.setNotify(false);

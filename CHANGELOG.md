@@ -7,6 +7,7 @@
 
 ### Fixed
 - Parsing in DOM di parti di messaggio contenenti caratteri non validi in XML
+- In caso di aggiunta di rif. interni ad un documento già registrato (singolo messaggio inviato a 2 mailbox configurate su MSA) occorre aggiornare anche i dati relativi alla storia
 
 
 ## [3.0.9] - 2019-04-18
