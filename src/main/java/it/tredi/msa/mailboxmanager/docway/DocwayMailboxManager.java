@@ -325,6 +325,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//recipientEmail
 		doc.setRecipientEmail(conf.getEmail());
 		
+		//sent date
+		doc.setSentDate(parsedMessage.getSentDate());
+		
 		//autore
 		if (doc.getTipo().equalsIgnoreCase(DocwayMailboxConfiguration.DOC_TIPO_VARIE))
 			doc.setAutore((parsedMessage.getFromPersonal() == null || parsedMessage.getFromPersonal().isEmpty())? parsedMessage.getFromAddress() : parsedMessage.getFromPersonal());
@@ -618,6 +621,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//recipientEmail
 		doc.setRecipientEmail(conf.getEmail());
+		
+		//sent date
+		doc.setSentDate(parsedMessage.getSentDate());
 		
 		//annullato
 		doc.setAnnullato(false);

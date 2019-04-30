@@ -2,6 +2,9 @@
 
 ## [3.0.10] - SNAPSHOT
 
+### Added
+- Aggiunta la data di invio del messaggio email al documento registrato
+
 ### Changed
 - Migliorato lo script bash di avvio del servizio su ambiente Linux (controllo di integrità fra PID del processo e file pid memorizzato)
 

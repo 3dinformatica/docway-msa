@@ -16,6 +16,7 @@ import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiRiepilogoItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
+import it.tredi.msa.mailboxmanager.utils.DateUtils;
 import it.tredi.utils.xml.XMLCleaner;
 
 /**
@@ -59,6 +60,8 @@ public class Docway4EntityToXmlUtils {
 		Element archiviatoreEl = DocumentHelper.createElement("archiviatore");
 		docEl.add(archiviatoreEl);
 		archiviatoreEl.addAttribute("recipientEmail", doc.getRecipientEmail());
+		// mbernardini 20/04/2019 : registrazione della data di invio del messaggio email
+		archiviatoreEl.addAttribute("sentDate", DateUtils.dateTimeToXwFormat(doc.getSentDate()));
 		archiviatoreEl.addAttribute("completed", "no"); //set partial status (not completes)
 		
 		//autore

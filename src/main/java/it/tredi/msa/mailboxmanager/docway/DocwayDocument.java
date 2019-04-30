@@ -1,6 +1,7 @@
 package it.tredi.msa.mailboxmanager.docway;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
@@ -24,6 +25,8 @@ public class DocwayDocument {
 	private boolean annullato;
 	private String messageId;
 	private String recipientEmail;
+	// mbernardini 20/04/2019 : registrazione della data di invio del messaggio email
+	private Date sentDate;
 	private String classif;
 	private String classifCod;
 	private String autore;
@@ -154,6 +157,14 @@ public class DocwayDocument {
 
 	public void setRecipientEmail(String recipientEmail) {
 		this.recipientEmail = recipientEmail;
+	}
+	
+	public Date getSentDate() {
+		return sentDate;
+	}
+
+	public void setSentDate(Date sentDate) {
+		this.sentDate = sentDate;
 	}
 
 	public String getClassif() {

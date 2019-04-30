@@ -30,6 +30,7 @@ import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
+import it.tredi.msa.mailboxmanager.utils.DateUtils;
 import it.tredi.msa.notification.MailNotificationSender;
 import it.tredi.msa.notification.NotificationSender;
 
@@ -952,6 +953,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			Element archiviatoreEl = DocumentHelper.createElement("archiviatore");
 			docEl.add(archiviatoreEl);
 			archiviatoreEl.addAttribute("recipientEmail", doc.getRecipientEmail());
+			// mbernardini 20/04/2019 : registrazione della data di invio del messaggio email
+			archiviatoreEl.addAttribute("sentDate", DateUtils.dateTimeToXwFormat(doc.getSentDate()));
 			for (RifInterno rifInterno:doc.getRifInterni()) {
 				//RPA deve essere trasformato in CC con diritto di intervento
 				if (rifInterno.getDiritto().equals("RPA")) {
