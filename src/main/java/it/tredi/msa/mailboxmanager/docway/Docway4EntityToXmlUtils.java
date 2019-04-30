@@ -61,7 +61,8 @@ public class Docway4EntityToXmlUtils {
 		docEl.add(archiviatoreEl);
 		archiviatoreEl.addAttribute("recipientEmail", doc.getRecipientEmail());
 		// mbernardini 20/04/2019 : registrazione della data di invio del messaggio email
-		archiviatoreEl.addAttribute("sentDate", DateUtils.dateTimeToXwFormat(doc.getSentDate()));
+		archiviatoreEl.addAttribute("sentDate", DateUtils.dateToXwFormat(doc.getSentDate()));
+		archiviatoreEl.addAttribute("sentTime", DateUtils.timeToXwFormat(doc.getSentDate()));
 		archiviatoreEl.addAttribute("completed", "no"); //set partial status (not completes)
 		
 		//autore

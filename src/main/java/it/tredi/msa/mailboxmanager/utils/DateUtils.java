@@ -14,22 +14,47 @@ public class DateUtils {
 	private static final Logger logger = LogManager.getLogger(DateUtils.class.getName());
 	
 	/**
-	 * Conversione di una data e ora in formato eXtraWay (yyyyMMddHHmmss)
+	 * Conversione di una data e ora in formato data di eXtraWay (yyyyMMdd)
 	 * @param date
 	 * @return
 	 */
-	public static String dateTimeToXwFormat(Date date) {
+	public static String dateToXwFormat(Date date) {
 		String xwdate = "";
 		if (date != null) {
 			try {
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 				xwdate = sdf.format(date);
 			}
 			catch(Exception e) {
-				logger.warn("DateUtils.dateTimeToXwFormat(): Unable to parse date in xw format... " + e.getMessage(), e);
+				logger.warn("DateUtils.dateToXwFormat(): Unable to parse datetime in xw date format... " + e.getMessage(), e);
 			}
 		}
 		return xwdate;
+	}
+	
+	/**
+	 * Conversione di una data e ora in formato ora di eXtraWay (HHmmss)
+	 * @param date
+	 * @return
+	 */
+	public static String timeToXwFormat(Date date) {
+		String xwtime = "";
+		if (date != null) {
+			try {
+				SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
+				xwtime = sdf.format(date);
+			}
+			catch(Exception e) {
+				logger.warn("DateUtils.timeToXwFormat(): Unable to parse datetime in xw time format... " + e.getMessage(), e);
+			}
+		}
+		return xwtime;
+	}
+	
+	public static void main(String[] args) {
+		Date now = new Date();
+		System.out.println(dateToXwFormat(now));
+		System.out.println(timeToXwFormat(now));
 	}
 	
 }

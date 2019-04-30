@@ -954,7 +954,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			docEl.add(archiviatoreEl);
 			archiviatoreEl.addAttribute("recipientEmail", doc.getRecipientEmail());
 			// mbernardini 20/04/2019 : registrazione della data di invio del messaggio email
-			archiviatoreEl.addAttribute("sentDate", DateUtils.dateTimeToXwFormat(doc.getSentDate()));
+			archiviatoreEl.addAttribute("sentDate", DateUtils.dateToXwFormat(doc.getSentDate()));
+			archiviatoreEl.addAttribute("sentTime", DateUtils.timeToXwFormat(doc.getSentDate()));
 			for (RifInterno rifInterno:doc.getRifInterni()) {
 				//RPA deve essere trasformato in CC con diritto di intervento
 				if (rifInterno.getDiritto().equals("RPA")) {
