@@ -1,7 +1,10 @@
 package it.tredi.msa;
 
+import javax.annotation.PreDestroy;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -69,11 +72,22 @@ public class MsaLauncher implements CommandLineRunner {
 	 * Metodo chiamato per arrestare il servizio
 	 */
 	public static void stop(String[] args) {
-		logger.info("Msa.stop(): exit method now call System.exit(0)");
-		if (msa != null)
-			msa.shutdown();
 		System.exit(0);
 	}
 
+	/**
+	 * Chiusura dell'applicazione
+	 */
+	@PreDestroy
+	public void onExit() {
+		logger.info("onExit(): exit method now call System.exit(0)");
+		if (msa != null)
+			msa.shutdown();
+		logger.info("onExit(): STOP FROM THE LIFECYCLE!");
+		
+		//call log4j2 shutdown manullay (see log4l2.xml -> shutdownHook="disable")
+		LoggerContext context = (LoggerContext)LogManager.getContext(false);
+		context.stop();
+	}
 
 }
