@@ -60,9 +60,6 @@ public abstract class MailboxManager implements Runnable {
 	private final static String PARSE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante il parsinge di un messaggio di posta [%s].\nMessage Type: %s\nConsultare il log per maggiori dettagli.\n\n%s";
 	private final static String HANDLE_ERROR_ERROR_MESSAGE = "Errore imprevisto durante la gestione di un errore in fase di archiviazione di un messaggio di posta\nConsultare il log per maggiori dettagli.\n\n%s";
 	
-//TODO - leggere da conf	
-	private final static int MAX_PARSER_THREADS = 10;
-	
 	public MailboxConfiguration getConfiguration() {
 		return configuration;
 	}
@@ -189,11 +186,15 @@ public abstract class MailboxManager implements Runnable {
         		logger.info("[" + configuration.getAddress() + "] FOUND " + messages.length + " MESSAGES");
         	auditMailboxRun.setMessageCount(messages.length);
         	
+        	// controllo su attivazione del parsing dei messaggi tramite thread paralleli
+        	int maxParserThreads = Services.getConfigurationService().getMSAConfiguration().getMailboxManagersParseThreadPoolsize();
+        	int parserThreadsActivationThreshold = Services.getConfigurationService().getMSAConfiguration().getMailboxManagersParseThreadActivationThreshold();
+        	if (messages.length < parserThreadsActivationThreshold)
+        		maxParserThreads = 1;
         	
         	List<MessageParserThreadWorkObj> parserWorkList = new ArrayList<>();
-        	int parserWorkListSize = Math.min(MAX_PARSER_THREADS, messages.length);
+        	int parserWorkListSize = Math.min(maxParserThreads, messages.length);
 
-        	int i=0;
         	int index = 0;
         	for (Message message:messages) { //for each email message
         		if (shutdown)
@@ -201,9 +202,9 @@ public abstract class MailboxManager implements Runnable {
         		
         		index++;
         		
-        		if  (i < parserWorkListSize) {
+        		if  (parserWorkList.size() < parserWorkListSize) {
         			parserWorkList.add(new MessageParserThreadWorkObj(index, message, messages.length, configuration.getAddress()));
-        			if  (i == parserWorkListSize - 1) {
+        			if  (parserWorkList.size() == parserWorkListSize) {
         				//start threads        	
         				if (logger.isInfoEnabled())
         					logger.info("[" + configuration.getAddress() + "] start (" + parserWorkListSize + ") message parser thread");
@@ -241,8 +242,12 @@ public abstract class MailboxManager implements Runnable {
             	            		//TEMPLATE STEP - processMessage
             	        			processMessage(parsedMessage);        	        				
         	        			}
-        	        			else { //messageParserThreadWorkObj.isERROR()
+        	        			else if (messageParserThreadWorkObj.isERROR()) {
         	        				handleError(messageParserThreadWorkObj.getException(), currentMessage);
+        	        			}
+        	        			else { // stato incompleto
+        	        				if (logger.isWarnEnabled())
+            	            			logger.warn("[" + configuration.getAddress() + "] UNKNOWN STATUS for message (" + messageParserThreadWorkObj.getMessageIndex() + "/" + messages.length + "): " + messageParserThreadWorkObj.getType());
         	        			}
 
         	        		}
@@ -252,8 +257,7 @@ public abstract class MailboxManager implements Runnable {
         	        		}     					
         				}        				
         				
-        				i = 0;
-        				parserWorkListSize = Math.min(MAX_PARSER_THREADS, messages.length - index);
+        				parserWorkListSize = Math.min(maxParserThreads, messages.length - index);
         				parserWorkList.clear();
         			}
         		}

@@ -20,6 +20,8 @@ public class MSAConfiguration {
 	private boolean allowEmailDuplicates;
 	Object rawData;
 	
+	private int mailboxManagersParseThreadPoolsize;
+	private int mailboxManagersParseThreadActivationThreshold;
 	
 	public ObjectFactoryConfiguration[] getMailboxConfigurationReadersConfiguration() {
 		return mailboxConfigurationReadersConfiguration;
@@ -100,6 +102,22 @@ public class MSAConfiguration {
 
 	public void setRawData(Object rawData) {
 		this.rawData = rawData;
+	}
+	
+	public int getMailboxManagersParseThreadPoolsize() {
+		return mailboxManagersParseThreadPoolsize;
+	}
+
+	public void setMailboxManagersParseThreadPoolsize(int mailboxManagersParseThreadPoolsize) {
+		this.mailboxManagersParseThreadPoolsize = mailboxManagersParseThreadPoolsize;
+	}
+
+	public int getMailboxManagersParseThreadActivationThreshold() {
+		return mailboxManagersParseThreadActivationThreshold;
+	}
+
+	public void setMailboxManagersParseThreadActivationThreshold(int mailboxManagersParseThreadActivationThreshold) {
+		this.mailboxManagersParseThreadActivationThreshold = mailboxManagersParseThreadActivationThreshold;
 	}
 	
 }

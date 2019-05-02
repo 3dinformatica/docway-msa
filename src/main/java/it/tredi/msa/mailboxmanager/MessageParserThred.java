@@ -25,13 +25,13 @@ public class MessageParserThred extends Thread {
 			if (logger.isInfoEnabled())
 				logger.info("[" + toDo.getMailboxAddress() + "] parsing message (" + toDo.getMessageIndex()  + "/" + toDo.getMessageCount() + ")...");
 			
-    		DocwayParsedMessage parsedMessage = new DocwayParsedMessage(toDo.getMessage());
+			DocwayParsedMessage parsedMessage = new DocwayParsedMessage(toDo.getMessage());
     		toDo.setDONE(parsedMessage);
     		
     		if (logger.isInfoEnabled())
     			logger.info("[" + toDo.getMailboxAddress() + "] message (" + toDo.getMessageIndex() + "/" + toDo.getMessageCount() + ") [" + parsedMessage.getMessageId() + "]");
     		
-//TODO - vedere se occorre gestire timeout    		
+    		// TODO - vedere se occorre gestire timeout    		
     		    		
     	}
     	catch (Exception e) {

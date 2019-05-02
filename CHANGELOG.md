@@ -4,9 +4,11 @@
 
 ### Added
 - Aggiunta la data di invio del messaggio email al documento registrato
+- Parsing parallelo (a blocchi) di messaggi contenuti in una casella di posta (properties _mailboxmanagers.parse-thread.poolsize_ e _mailboxmanagers.parse-thread.activation-threshold_)
 
 ### Changed
 - Migliorato lo script bash di avvio del servizio su ambiente Linux (controllo di integrità fra PID del processo e file pid memorizzato)
+- Chiusura parallela di tutti i thread di scaricamento email in fase di shutdown del processo msa
 
 ### Fixed
 - Parsing in DOM di parti di messaggio contenenti caratteri non validi in XML
