@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.LoggerContext;
 
 /**
  * Classe di definizio e avvio di tutti i job di gestione delle caselle di posta (istanziata da classe Launcher). Si occupa
@@ -96,10 +95,6 @@ public class Msa {
 
 		if (logger.isInfoEnabled())
 			logger.info("shutdown() successfully completed");
-		
-		//call log4j2 shutdown manullay (see log4l2.xml -> shutdownHook="disable")
-		LoggerContext context = (LoggerContext)LogManager.getContext(false);
-		context.stop();
 	}
 
 }
