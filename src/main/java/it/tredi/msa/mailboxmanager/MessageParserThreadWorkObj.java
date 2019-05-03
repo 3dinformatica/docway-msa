@@ -60,6 +60,10 @@ public class MessageParserThreadWorkObj {
 		this.type = MessageParserRetObjType.ERROR;
 		this.exception = e;
 	}
+	
+	public void setPROCESSED() {
+		this.type = MessageParserRetObjType.PROCESSED;
+	}
 
 	public boolean isDONE() {
 		return type == MessageParserRetObjType.DONE;
@@ -73,5 +77,6 @@ public class MessageParserThreadWorkObj {
 enum MessageParserRetObjType {
 	TODO,
 	DONE,
-	ERROR;
+	ERROR,
+	PROCESSED;
 }
