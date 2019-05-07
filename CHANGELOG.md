@@ -15,6 +15,7 @@
 - Parsing in DOM di parti di messaggio contenenti caratteri non validi in XML
 - In caso di aggiunta di rif. interni ad un documento già registrato (singolo messaggio inviato a 2 mailbox configurate su MSA) occorre aggiornare anche i dati relativi alla storia
 - Data e Ora di invio del messaggio email separata in 2 attributi su XML per problema di chiavi su eXtraWay
+- Trim su email lette da file di interoperabilità per problemi nell'individuazione del rif. esterno in aggancio di notifiche (Task #17771)
 
 
 ## [3.0.9] - 2019-04-18

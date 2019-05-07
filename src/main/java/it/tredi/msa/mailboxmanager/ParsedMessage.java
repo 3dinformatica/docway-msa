@@ -245,17 +245,17 @@ public class ParsedMessage {
 	public String getRealToAddressFromDatiCertPec() throws Exception {
 		List<Element> l = (List<Element>)getDatiCertDocument().selectNodes("/postacert/intestazione/destinatari");
 		if (l.size() == 1)
-			return l.get(0).getText();
+			return l.get(0).getTextTrim(); // mbernardini 07/05/2019 : eliminazione di eventuali spazi prima e dopo l'indirizzo
 		Element el = (Element)getDatiCertDocument().selectSingleNode("/postacert/dati/consegna");
 		if (el != null)
-			return el.getText();
+			return el.getTextTrim(); // mbernardini 07/05/2019 : eliminazione di eventuali spazi prima e dopo l'indirizzo
 		return null;
 	}
 
 	public String getMittenteAddressFromDatiCertPec() throws Exception {
 		Element el = (Element)getDatiCertDocument().selectSingleNode("/postacert/intestazione/mittente");
 		if (el != null)
-			return el.getText();
+			return el.getTextTrim(); // mbernardini 07/05/2019 : eliminazione di eventuali spazi prima e dopo l'indirizzo
 		return null;
 	}	
 	
