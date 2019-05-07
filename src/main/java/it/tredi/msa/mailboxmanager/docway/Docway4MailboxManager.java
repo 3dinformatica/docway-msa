@@ -1063,14 +1063,16 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                 for (Element el:rifsL) {
                 	// mbernardini 02/04/2019 : occorre cercare il riferimento alla mail anche sugli indirizzi di mail ordinaria oltre che pec
                 	
+                	rifEstAddress = rifEstAddress.trim();
+                	
                 	// Ricerca su caselle PEC del rif esterno
                 	Element emailCertificataEl = el.element("email_certificata");
-                	if (emailCertificataEl != null && emailCertificataEl.attributeValue("addr", "").equalsIgnoreCase(rifEstAddress))
+                	if (emailCertificataEl != null && emailCertificataEl.attributeValue("addr", "").trim().equalsIgnoreCase(rifEstAddress))
                 		rifEl = el;
                 	
                 	// Ricerca su caselle ordinarie del rif esterno
                 	Element indirizzoEl = el.element("indirizzo");
-                	if (indirizzoEl != null && indirizzoEl.attributeValue("email", "").toLowerCase().contains(rifEstAddress.toLowerCase())) // potrebbero essere più indirizzi separati da punto e virgola
+                	if (indirizzoEl != null && indirizzoEl.attributeValue("email", "").trim().toLowerCase().contains(rifEstAddress.toLowerCase())) // potrebbero essere più indirizzi separati da punto e virgola
                 		rifEl = el;
                 	
                 	if (rifEl != null) {
