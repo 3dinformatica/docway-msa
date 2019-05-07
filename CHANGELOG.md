@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.0.10] - SNAPSHOT
+## [3.0.10] - 2019-05-07
 
 ### Added
 - Aggiunta la data di invio del messaggio email al documento registrato
