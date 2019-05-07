@@ -9,6 +9,7 @@
 ### Changed
 - Migliorato lo script bash di avvio del servizio su ambiente Linux (controllo di integrità fra PID del processo e file pid memorizzato)
 - Chiusura parallela di tutti i thread di scaricamento email in fase di shutdown del processo msa
+- Identificazione alernativa del rif esterno al quale agganciare la notifica di interoperabilità (es. analisi dell'oggetto del messaggio)
 
 ### Fixed
 - Parsing in DOM di parti di messaggio contenenti caratteri non validi in XML

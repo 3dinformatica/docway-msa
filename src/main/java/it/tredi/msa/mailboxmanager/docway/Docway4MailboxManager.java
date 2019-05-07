@@ -1080,6 +1080,43 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                 	}
                 }            	
             }
+            
+            // mbernardini 07/05/2019 : identificazioni alernative del rif esterno al quale agganciare la notifica
+            if (rifEl == null && parsedMessage instanceof DocwayParsedMessage) {
+            	
+            	// Nel caso sia presente un solo rif esterno la notifica deve per forza fare riferimento a questo
+            	if (rifsL.size() == 1)
+            		rifEl = rifsL.get(0);
+            	
+            	// Tentativo di identificazione del rif tramite analisi dell'oggetto (individuazione della posizione del rif esterno)
+            	if (rifEl == null && ((DocwayParsedMessage) parsedMessage).isPecReceiptForInteropPAbySubject()) {
+            		String subject = parsedMessage.getSubject();
+            		if (subject != null) {
+            			subject = subject.trim();
+            			
+            			int index = subject.indexOf("(");
+                        int index1 = subject.indexOf(")");
+                        if (index != -1 && index1 != -1 && index < index1) {
+	                        String indexValue = subject.substring(index+1, index1);
+	                		if (!indexValue.equals("*")) {
+	                			int rifPosition = -1;
+	                			try {
+	                				rifPosition = Integer.parseInt(indexValue);
+	                			}
+	                			catch (NumberFormatException e) {
+	                				logger.warn("[" + conf.getAddress() + "]. Got exception while parsing recipient index number from subject. ", e);
+								}
+	                			if (rifPosition >= 0 && rifPosition < rifsL.size()) {
+	                				if (logger.isDebugEnabled())
+	                					logger.debug("[" + conf.getAddress() + "] Assign interop file by rif. position (from subject)... position = " + rifPosition);
+	                				
+	                				rifEl = rifsL.get(rifPosition);
+	                			}
+	                		}
+                        }
+            		}
+            	}
+            }
 
             if (rifEl != null) {
             	rifEl.add(Docway4EntityToXmlUtils.interoperabilitaItemToXml(interopItem));
