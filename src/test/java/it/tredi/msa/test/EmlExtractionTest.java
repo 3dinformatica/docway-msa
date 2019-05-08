@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -350,6 +351,50 @@ public class EmlExtractionTest extends EmlReader {
 		
 		assertNotNull(fromDatiCert);
 		assertEquals("pec@pec.easybc.it", fromDatiCert);
+	}
+	
+	/**
+	 * Estrazione dati da messaggio in caso di eccezione di encoding sul 
+	 * contenuto: java.io.UnsupportedEncodingException: utf-7
+	 * @throws Exception
+	 */
+	@Test
+	@Ignore
+	public void utf7ErrorExtraction() throws Exception {
+		String fileName = "utf7.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		ParsedMessage parsed = new ParsedMessage(readEmlFile(file, false));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(3, parsed.getAttachments().size());
+		
+		System.out.println("to addresses = " + parsed.getToAddressesAsString());
+		assertNotNull(parsed.getToAddressesAsString());
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("studiodurand@legalmail.it", fromDatiCert);
+		
+		String html = parsed.getHtmlParts();
+		System.out.println(html);
+		assertNotNull(html);
+		assertTrue(html.trim().startsWith("<HTML><HEAD><TITLE>POSTA CERTIFICATA: definizione TE4I SRL  08534231009</TITLE></HEAD>"));
 	}
 	
 }

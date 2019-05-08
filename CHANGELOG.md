@@ -2,6 +2,9 @@
 
 ## [3.0.11] - SNAPSHOT
 
+### Added
+- UnitTest su messaggi con parti UTF-7 (Task #17826). Soluzione: https://www.bottaioli.it/internet/java-io-unsupportedencodingexception-unicode-1-1-utf-7-solved/
+
 ### Changed
 - Parametrizzato il numero di tentativi di connessione ad una casella di posta (properties _docway4mailboxmanager.mail-reader.connection-attempts_)
 
