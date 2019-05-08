@@ -61,6 +61,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_MIME_ADDRESS_STRICT = "docway4mailboxmanager.mail-reader.mail-mime-address-strict";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_MIME_ALLOW_UTF8 = "docway4mailboxmanager.mail-reader.mail-mime-allowutf8";
+	
+	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_ATTEMPTS = "docway4mailboxmanager.mail-reader.connection-attempts";
 
 	private String host;
 	private int port;
@@ -391,7 +393,10 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		// mbernardini 29/01/2019 : parametri aggiuntivi per javamail di configurazione del parsing dell'header del messaggio
 		conf.setMailMimeAddressStrict(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_MIME_ADDRESS_STRICT, true));
 		conf.setMailMimeAddressStrict(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_MIME_ALLOW_UTF8, false));
-
+		
+		// mbernardini 08/05/2019 : recupero del numero di tentativi di connessione alla casella di posta
+		conf.setMailboxConnectionAttempts(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_ATTEMPTS, 3));
+		
 		return conf;
 	}
 

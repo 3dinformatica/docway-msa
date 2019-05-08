@@ -54,7 +54,6 @@ public abstract class MailboxManager implements Runnable {
 	 */
 	private AuditMailboxRunRepository auditMailboxRunRepository;
 	
-	private final static int MAILREADER_CONNECTION_ATTEMPTS = 3;
 	private final static String PROCESS_MAILBOX_ERROR_MESSAGE = "Errore imprevisto durante le gestione della casella di posta [%s].\nControllare la configurazione [%s://%s:%s][User:%s]\nConsultare il log per maggiori dettagli.\n\n%s";
 	private final static String STORE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante l'archiviazione del messaggio di posta [%s].\nMessage Id: %s\nSent Date: %s\nSubject: %s\nConsultare il log per maggiori dettagli.\n\n%s";
 	private final static String PARSE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante il parsinge di un messaggio di posta [%s].\nMessage Type: %s\nConsultare il log per maggiori dettagli.\n\n%s";
@@ -161,7 +160,7 @@ public abstract class MailboxManager implements Runnable {
     		
         	//connection attempts
         	Message[] messages = null;
-        	for (int attemptIndex = 1; attemptIndex <= MAILREADER_CONNECTION_ATTEMPTS; attemptIndex++) {
+        	for (int attemptIndex = 1; attemptIndex <= configuration.getMailboxConnectionAttempts(); attemptIndex++) {
             	try {
             		//TEMPLATE STEP - openSession
             		openSession();	
@@ -175,8 +174,9 @@ public abstract class MailboxManager implements Runnable {
             	catch (Exception e) {
             		logger.error("[" + configuration.getAddress() + "] got exception... " + e.getMessage(), e);
             		if (logger.isDebugEnabled())
-            			logger.debug("[" + configuration.getAddress() + "] connection failed: (" + attemptIndex + "/" +MAILREADER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
-            		if (attemptIndex == MAILREADER_CONNECTION_ATTEMPTS)
+            			logger.debug("[" + configuration.getAddress() + "] connection failed: (" + attemptIndex + "/" + configuration.getMailboxConnectionAttempts() + ") attempt. Trying again (1) sec.");
+            		
+            		if (attemptIndex == configuration.getMailboxConnectionAttempts())
             			throw e;
             		Thread.sleep(1000); //1 sec delay
             	}    		

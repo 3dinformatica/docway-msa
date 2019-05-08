@@ -29,6 +29,11 @@ public abstract class MailboxConfiguration {
 	// if the mail server also supports UTF-8. 
 	private boolean mailMimeAllowutf8 = false;
 	
+	// Numero di tentativi di connessione alla mailbox per l'elaborazione dei messaggi
+	private int mailboxConnectionAttempts = 0;
+	
+	private final int DEFAULT_MAILBOX_CONNECTION_ATTEMPTS = 3;
+	
 	boolean isPec;
 	
 	private int delay = -1; //delay (mailbox manager polling time)
@@ -182,6 +187,14 @@ public abstract class MailboxConfiguration {
 
 	public void setMailMimeAllowutf8(boolean mailMimeAllowutf8) {
 		this.mailMimeAllowutf8 = mailMimeAllowutf8;
+	}
+	
+	public int getMailboxConnectionAttempts() {
+		return (mailboxConnectionAttempts <= 0) ? DEFAULT_MAILBOX_CONNECTION_ATTEMPTS : mailboxConnectionAttempts;
+	}
+
+	public void setMailboxConnectionAttempts(int mailboxConnectionAttempts) {
+		this.mailboxConnectionAttempts = mailboxConnectionAttempts;
 	}
 	
 }
