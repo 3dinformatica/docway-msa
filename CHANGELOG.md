@@ -7,6 +7,7 @@
 
 ### Changed
 - Parametrizzato il numero di tentativi di connessione ad una casella di posta (properties _docway4mailboxmanager.mail-reader.connection-attempts_)
+- Eliminate eventuali DOCTYPE (DTD) dai documenti XML relativi all'interoperabilità (problemi di parsing sui file di notifica) (Task #17796)
 
 
 ## [3.0.10] - 2019-05-07

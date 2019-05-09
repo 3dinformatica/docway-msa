@@ -15,6 +15,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ResourceUtils;
 
 import it.tredi.msa.mailboxmanager.ParsedMessage;
+import it.tredi.msa.mailboxmanager.docway.DocwayParsedMessage;
 import it.tredi.msa.test.conf.MsaTesterApplication;
 
 /**
@@ -359,7 +360,7 @@ public class EmlExtractionTest extends EmlReader {
 	 * @throws Exception
 	 */
 	@Test
-	@Ignore
+	@Ignore // Riabilitare solo dopo la configurazione indicata a questo url: https://www.bottaioli.it/internet/java-io-unsupportedencodingexception-unicode-1-1-utf-7-solved/
 	public void utf7ErrorExtraction() throws Exception {
 		String fileName = "utf7.eml";
 		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
@@ -395,6 +396,48 @@ public class EmlExtractionTest extends EmlReader {
 		System.out.println(html);
 		assertNotNull(html);
 		assertTrue(html.trim().startsWith("<HTML><HEAD><TITLE>POSTA CERTIFICATA: definizione TE4I SRL  08534231009</TITLE></HEAD>"));
+	}
+	
+	/**
+	 * Errore durante il parsing del file Eccezione.xml allegato al messaggio
+	 * @throws Exception
+	 */
+	@Test
+	public void eccezioneXmlParsingExceptionExtraction() throws Exception {
+		String fileName = "erroreParsingEccezioneXML.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file, false));
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		System.out.println("PEC message = " + parsed.isPecMessage());
+		System.out.println("PEC receipt = " + parsed.isPecReceipt());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(3, parsed.getAttachments().size());
+		
+		System.out.println("to addresses = " + parsed.getToAddressesAsString());
+		assertNotNull(parsed.getToAddressesAsString());
+		
+		String fromDatiCert = parsed.getMittenteAddressFromDatiCertPec();
+		System.out.println("from dati cert = " + fromDatiCert);
+		
+		assertNotNull(fromDatiCert);
+		assertEquals("protocollo@pec.comune.vignate.mi.it", fromDatiCert);
+		
+		assertTrue(parsed.isNotificaEccezioneInteropPAMessage("ADER", "ISC"));
 	}
 	
 }
