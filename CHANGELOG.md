@@ -1,5 +1,15 @@
 # Change Log
 
+## [3.0.12] - SNAPSHOT
+
+### Changed
+- Parsing parallelo di un blocco di messaggi (pool di threads di parsing) con avvio del salvataggio dei documenti appena disponibile il primo messaggio parsato
+
+### Fidxed
+- "Corretta" (usato un trucco per ingannare Spring) per chiudere la connessione a MongoDB solo al termine della chiusura di tutti i thread di elaborazione delle mailbox
+- Identificazioni alernative del rif esterno al quale agganciare una notifica PEC 
+
+
 ## [3.0.11] - 2019-05-08
 
 ### Added
@@ -19,6 +29,7 @@
 ### Changed
 - Migliorato lo script bash di avvio del servizio su ambiente Linux (controllo di integrità fra PID del processo e file pid memorizzato)
 - Chiusura parallela di tutti i thread di scaricamento email in fase di shutdown del processo msa
+- Identificazione alernativa del rif esterno al quale agganciare la notifica di interoperabilità (es. analisi dell'oggetto del messaggio)
 
 ### Fixed
 - Parsing in DOM di parti di messaggio contenenti caratteri non validi in XML
