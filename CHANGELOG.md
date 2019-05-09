@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.0.11] - SNAPSHOT
+## [3.0.11] - 2019-05-08
 
 ### Added
 - UnitTest su messaggi con parti UTF-7 (Task #17826). Soluzione: https://www.bottaioli.it/internet/java-io-unsupportedencodingexception-unicode-1-1-utf-7-solved/
