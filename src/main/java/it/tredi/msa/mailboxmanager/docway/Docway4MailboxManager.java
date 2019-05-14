@@ -689,7 +689,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		if (conf.isSmistamentoFatturePA() && parsedMessage instanceof DocwayParsedMessage) {
 			// lettura dell'indirizzo email del destinatario dal file XML della fattura
 			DocwayParsedMessage dwParsedMessage = (DocwayParsedMessage) parsedMessage;
-			if (dwParsedMessage.isPecMessage() && dwParsedMessage.getFatturaPADocument() != null) {
+			if (dwParsedMessage.isFatturaPAMessage(conf.getSdiDomainAddress())) {
 				String fatturaPaEmailTo = FatturaPAUtils.getPECDestinatarioFromFatturaPA(dwParsedMessage.getFatturaPADocument());
 				if (fatturaPaEmailTo != null && !fatturaPaEmailTo.isEmpty()) {
 					if (logger.isDebugEnabled())
