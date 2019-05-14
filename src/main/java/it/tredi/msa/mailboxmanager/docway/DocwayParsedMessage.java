@@ -317,8 +317,19 @@ public class DocwayParsedMessage extends ParsedMessage {
 		String query = "";
 		if (this.interopPaDocument != null) {
 			Element identificatoreEl = (Element)this.interopPaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore");
-			query = "[/doc/rif_esterni/rif/@n_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") +
-					identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";
+			
+			// mbernardini 14/05/2019 : costruzione della query solo nel caso in cui tutti i campi di segnatura siano regolarmente valorizzati
+			String dataRegistrazione = identificatoreEl.elementText("DataRegistrazione");
+			String codiceAmm = identificatoreEl.elementText("CodiceAmministrazione");
+			String codiceAoo = identificatoreEl.elementText("CodiceAOO");
+			String numeroRegistrazione = identificatoreEl.elementText("NumeroRegistrazione");
+			if (dataRegistrazione != null && dataRegistrazione.length() > 4 
+					&& codiceAmm != null && !codiceAmm.isEmpty()
+					&& codiceAoo != null && !codiceAoo.isEmpty()
+					&& numeroRegistrazione != null && !numeroRegistrazione.isEmpty()) {
+				
+				query = "[/doc/rif_esterni/rif/@n_prot]=\"" + dataRegistrazione.substring(0, 4) + "-" + codiceAmm + codiceAoo + "-" + numeroRegistrazione + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";
+			}
 		}
 		return query;
 	}

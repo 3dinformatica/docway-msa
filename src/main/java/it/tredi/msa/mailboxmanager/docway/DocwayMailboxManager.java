@@ -549,26 +549,23 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		}
 		
 		//CodiceAmministrazione
+		// mbernardini 14/05/2019 : Reso piu' flessibile il formato del codice amministrazione in intestazione delle segnatura da normativa del 2013.
+		// Il codice e’ dato dal valore assegnato automaticamente all’Amministrazione dall’IPA in fase di accreditamento
 		String codiceAmministrazione = "[N/D]";
-		try {
-			codiceAmministrazione = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAmministrazione").getText();
-			
-			Pattern pattern = Pattern.compile("([A-Z]|[a-z]|[0-9]|-){1,16}");
-			Matcher matcher = pattern.matcher(codiceAmministrazione);
-			if (!matcher.matches())
-				motivazioneNotificaEccezione += "Valore campo 'CodiceAmministrazione' in formato scorretto: " + codiceAmministrazione + ".\n";
-
-		}
-		catch (Exception e) {
+		Element nodeCodAmministrazione = (Element) segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAmministrazione");
+		if (nodeCodAmministrazione != null && nodeCodAmministrazione.getTextTrim() != null && !nodeCodAmministrazione.getTextTrim().isEmpty())
+			codiceAmministrazione = nodeCodAmministrazione.getTextTrim();
+		else
 			motivazioneNotificaEccezione += String.format(SEGNATURA_NULL_EMPTY_FIELD, "CodiceAmministrazione");
-		}
-		
+			
 		//CodiceAOO
 		String codiceAOO = "[N/D]";
 		try {
 			codiceAOO = segnaturaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore/CodiceAOO").getText();
 			
-			Pattern pattern = Pattern.compile("([A-Z]|[a-z]|[0-9]|-){1,16}");
+			// mbernardini 14/05/2019 : Corretto il formato del codice AOO per compatibilita' con normativa
+			//Pattern pattern = Pattern.compile("([A-Z]|[a-z]|[0-9]|-){1,16}");
+			Pattern pattern = Pattern.compile("([A-Z]|[a-z]|[0-9]|-|_|\\.){1,16}");
 			Matcher matcher = pattern.matcher(codiceAOO);
 			if (!matcher.matches())
 				motivazioneNotificaEccezione += "Valore campo 'CodiceAOO' in formato scorretto: " + codiceAOO + ".\n";

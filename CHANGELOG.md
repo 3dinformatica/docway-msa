@@ -4,11 +4,13 @@
 
 ### Changed
 - Parsing parallelo di un blocco di messaggi (pool di threads di parsing) con avvio del salvataggio dei documenti appena disponibile il primo messaggio parsato
+- Adeguamento normativo al parsing dei dati di segnatura (codAmm e codAoo, normativa del 2013)
 
-### Fidxed
+### Fixed
 - "Corretta" (usato un trucco per ingannare Spring) per chiudere la connessione a MongoDB solo al termine della chiusura di tutti i thread di elaborazione delle mailbox
 - Identificazioni alernative del rif esterno al quale agganciare una notifica PEC 
 - In fase di notifica di errori via email, verificata l'effettiva presenza di indirizzi di destinatari (amministratori di msa) prima di procedere con l'invio vero e proprio
+
 
 ## [3.0.11] - 2019-05-08
 

@@ -186,7 +186,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				QueryResult qr = xwClient.search(query);
 				if (qr.elements == 0) { //2nd try: potrebbe essere la stessa segnatura su messaggi diversi
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPASegnatura(conf.getCodAmm(), conf.getCodAoo());
-					qr = xwClient.search(query);
+					if (query != null && !query.isEmpty())
+						qr = xwClient.search(query);
 				}
 
 				if (qr.elements > 0) { //messageId found
