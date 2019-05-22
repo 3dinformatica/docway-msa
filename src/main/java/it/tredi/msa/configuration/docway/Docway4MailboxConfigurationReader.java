@@ -40,7 +40,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_SOCKET_TIMEOUT = "docway4mailboxmanager.mail-reader.socket-timeout";
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_TIMEOUT = "docway4mailboxmanager.mail-reader.connection-timeout";
 	public final static String DOCWAY4MAILBOXMANAGER_NOTIFICATION_EMAILS = "docway4mailboxmanager.notification-emails.enable";
-	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_ADD_NRECORD_ON_NOTIFICATION = "docway4mailboxmanager.mail-sender.add-nrecord-on-notification";
+	public final static String DOCWAY4MAILBOXMANAGER_MAIL_SENDER_ADD_MATRICOLA_ON_NOTIFICATION = "docway4mailboxmanager.mail-sender.add-matricola-on-notification";
 	public final static String DOCWAY4MAILBOXMANAGER_CREATE_SINGLE_DOC_BY_MESSAGE_ID = "docway4mailboxmanager.create-single-doc-by-message-id";
 	public final static String DOCWAY4MAILBOXMANAGER_INTEROP_PA_PROTOCOLLA_SEGNATURA = "docway4mailboxmanager.interop-pa.protocolla-segnatura.enable";
 	public final static String DOCWAY4MAILBOXMANAGER_INTEROP_PA_MEZZO_TRAMISSIONE_SEGNATURA = "docway4mailboxmanager.interop-pa.mezzo-trasmissione-segnatura";
@@ -362,7 +362,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		conf.setMailserverSocketTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_SOCKET_TIMEOUT, -1));
 		conf.setMailserverConnectionTimeout(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_TIMEOUT, -1));
 		conf.setNotificationEnabled(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_NOTIFICATION_EMAILS, false));
-		conf.setAddNrecordOnNotification(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_MAIL_SENDER_ADD_NRECORD_ON_NOTIFICATION, false));
+		conf.setAddMatricolaOnNotification(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_MAIL_SENDER_ADD_MATRICOLA_ON_NOTIFICATION, false));
 		conf.setCreateSingleDocByMessageId(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_CREATE_SINGLE_DOC_BY_MESSAGE_ID, false));
 		conf.setProtocollaSegnatura(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_INTEROP_PA_PROTOCOLLA_SEGNATURA, false));
 		conf.setMezzoTrasmissioneSegnatura(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_INTEROP_PA_MEZZO_TRAMISSIONE_SEGNATURA, ""));

@@ -4,7 +4,7 @@
 
 ### Changed
 - Aggiunta la possibilità di impostara un tempo di sleep dopo ogni salvataggio di documento in orario di lavoro (property _mailboxmanagers.worktime.mail.delay_)
-- Aggiunta dell'nrecord dell'assegnatatio alle email di notifica (property _docway4mailboxmanager.mail-sender.add-nrecord-on-notification_)
+- Aggiunta dell'nrecord dell'assegnatatio alle email di notifica (property _docway4mailboxmanager.mail-sender.add-matricola-on-notification_)
 
 ## [3.0.8] - 2019-04-04
 

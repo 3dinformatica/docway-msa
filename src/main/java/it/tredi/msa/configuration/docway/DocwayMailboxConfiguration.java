@@ -61,7 +61,7 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private String notificationAppHost;
 	private String notificationAppHost1;
 	private boolean notificationEnabled;
-	private boolean addNrecordOnNotification;
+	private boolean addMatricolaOnNotification;
 	
 	//creazione di un singolo documento per messageId
 	private boolean createSingleDocByMessageId;
@@ -354,12 +354,12 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 		this.notificationEnabled = notificationEnabled;
 	}
 
-	public boolean isAddNrecordOnNotification() {
-		return addNrecordOnNotification;
+	public boolean isAddMatricolaOnNotification() {
+		return addMatricolaOnNotification;
 	}
 
-	public void setAddNrecordOnNotification(boolean addNrecordOnNotification) {
-		this.addNrecordOnNotification = addNrecordOnNotification;
+	public void setAddMatricolaOnNotification(boolean addMatricolaOnNotification) {
+		this.addMatricolaOnNotification = addMatricolaOnNotification;
 	}
 
 	public boolean isCreateSingleDocByMessageId() {
