@@ -30,6 +30,7 @@ import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
+import it.tredi.msa.mailboxmanager.utils.DateUtils;
 import it.tredi.msa.notification.MailNotificationSender;
 import it.tredi.msa.notification.NotificationSender;
 
@@ -106,6 +107,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		
+		// mbernardini 18/04/2019 : corretto bug nel salvataggio delle ricevute PEC orfane come doc non protocollati (caso di email salvate parzialmente o gia' presenti ma non eliminate dalla cartella inbox)
+		boolean isPecReceiptAsVarie = false;
+		
 		if (conf.isPec()) { //casella PEC
 			
 			if (dcwParsedMessage.isPecReceipt() || dcwParsedMessage.isNotificaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA()) ||
@@ -155,8 +159,15 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 						this.physDocForAttachingFile = xwClient.getPhysdocByQueryResult(0, qr1);
 						return storeType;
 					}
-					else
+					else {
 						dcwParsedMessage.addRelevantMessage(String.format(DOC_NOT_FOUND_FOR_ATTACHING_FILE, query));
+						
+						// mbernardini 18/04/2019 : anche su questa tipologia di notifiche deve essere verificata la configurazione
+						// di salvataggio come doc non protocollato
+						if (conf.isOrphanPecReceiptsAsVarie()) {
+							isPecReceiptAsVarie = true;
+						}
+					}
 				}
 				else if (dcwParsedMessage.isPecReceipt()) { //ricevuta PEC (non relativa a interopPA/fatturaPA)
 					if (conf.isIgnoreStandardOrphanPecReceipts()) {
@@ -166,7 +177,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					// mbernardini 21/01/2019 : se il salvataggio riguarda ricevute orfane potrebbe essere stato richiesto il salvataggio
 					// come documento non protocollato
 					else if (conf.isOrphanPecReceiptsAsVarie()) {
-						return StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE;
+						isPecReceiptAsVarie = true;
 					}
 				}
 			}
@@ -175,7 +186,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				QueryResult qr = xwClient.search(query);
 				if (qr.elements == 0) { //2nd try: potrebbe essere la stessa segnatura su messaggi diversi
 					query = dcwParsedMessage.buildQueryForDocway4DocumentFromInteropPASegnatura(conf.getCodAmm(), conf.getCodAoo());
-					qr = xwClient.search(query);
+					if (query != null && !query.isEmpty())
+						qr = xwClient.search(query);
 				}
 
 				if (qr.elements > 0) { //messageId found
@@ -241,7 +253,10 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		}
 		else {
 			//messageId not found
-			return StoreType.SAVE_NEW_DOCUMENT;
+			if (isPecReceiptAsVarie)
+				return StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE;
+			else
+				return StoreType.SAVE_NEW_DOCUMENT;
 		}
 	}  	
 	
@@ -674,7 +689,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		if (conf.isSmistamentoFatturePA() && parsedMessage instanceof DocwayParsedMessage) {
 			// lettura dell'indirizzo email del destinatario dal file XML della fattura
 			DocwayParsedMessage dwParsedMessage = (DocwayParsedMessage) parsedMessage;
-			if (dwParsedMessage.isPecMessage() && dwParsedMessage.getFatturaPADocument() != null) {
+			if (dwParsedMessage.isFatturaPAMessage(conf.getSdiDomainAddress())) {
 				String fatturaPaEmailTo = FatturaPAUtils.getPECDestinatarioFromFatturaPA(dwParsedMessage.getFatturaPADocument());
 				if (fatturaPaEmailTo != null && !fatturaPaEmailTo.isEmpty()) {
 					if (logger.isDebugEnabled())
@@ -933,10 +948,15 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			Element docEl = xmlDocument.getRootElement();
 			Element rifIntEl = docEl.element("rif_interni");
 			
+			Element storiaEl = docEl.element("storia");
+			
 			//update document with new mailbox and CCs
 			Element archiviatoreEl = DocumentHelper.createElement("archiviatore");
 			docEl.add(archiviatoreEl);
 			archiviatoreEl.addAttribute("recipientEmail", doc.getRecipientEmail());
+			// mbernardini 20/04/2019 : registrazione della data di invio del messaggio email
+			archiviatoreEl.addAttribute("sentDate", DateUtils.dateToXwFormat(doc.getSentDate()));
+			archiviatoreEl.addAttribute("sentTime", DateUtils.timeToXwFormat(doc.getSentDate()));
 			for (RifInterno rifInterno:doc.getRifInterni()) {
 				//RPA deve essere trasformato in CC con diritto di intervento
 				if (rifInterno.getDiritto().equals("RPA")) {
@@ -945,6 +965,15 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				}
 				if (isNewRifInterno(rifInterno, rifIntEl)) {
 					rifIntEl.add(Docway4EntityToXmlUtils.rifInternoToXml(rifInterno));
+					
+					// mbernardini 23/04/2019 : in caso di aggiunta di rif interni ad un documento gia' registrato occorre aggiornare anche i dati relativi alla storia
+					// questo scenario si ottiene da un invio di un messaggio email a 2 distinte caselle di posta configurate su msa
+					StoriaItem storiaItem = StoriaItem.createFromRifInterno(rifInterno);
+					storiaItem.setOperatore(conf.getOperatore());
+					storiaItem.setData(currentDate);
+					storiaItem.setOra(currentDate);
+					storiaEl.add(Docway4EntityToXmlUtils.storiaItemToXml(storiaItem));
+					
 				}
 				else 
 					rifInterno.setNotify(false);
@@ -1035,14 +1064,16 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
                 for (Element el:rifsL) {
                 	// mbernardini 02/04/2019 : occorre cercare il riferimento alla mail anche sugli indirizzi di mail ordinaria oltre che pec
                 	
+                	rifEstAddress = rifEstAddress.trim();
+                	
                 	// Ricerca su caselle PEC del rif esterno
                 	Element emailCertificataEl = el.element("email_certificata");
-                	if (emailCertificataEl != null && emailCertificataEl.attributeValue("addr", "").equalsIgnoreCase(rifEstAddress))
+                	if (emailCertificataEl != null && emailCertificataEl.attributeValue("addr", "").trim().equalsIgnoreCase(rifEstAddress))
                 		rifEl = el;
                 	
                 	// Ricerca su caselle ordinarie del rif esterno
                 	Element indirizzoEl = el.element("indirizzo");
-                	if (indirizzoEl != null && indirizzoEl.attributeValue("email", "").toLowerCase().contains(rifEstAddress.toLowerCase())) // potrebbero essere più indirizzi separati da punto e virgola
+                	if (indirizzoEl != null && indirizzoEl.attributeValue("email", "").trim().toLowerCase().contains(rifEstAddress.toLowerCase())) // potrebbero essere più indirizzi separati da punto e virgola
                 		rifEl = el;
                 	
                 	if (rifEl != null) {
@@ -1051,6 +1082,43 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	            		break;
                 	}
                 }            	
+            }
+            
+            // mbernardini 07/05/2019 : identificazioni alernative del rif esterno al quale agganciare la notifica
+            if (rifEl == null && parsedMessage instanceof DocwayParsedMessage) {
+            	
+            	// Nel caso sia presente un solo rif esterno la notifica deve per forza fare riferimento a questo
+            	if (rifsL.size() == 1)
+            		rifEl = rifsL.get(0);
+            	
+            	// Tentativo di identificazione del rif tramite analisi dell'oggetto (individuazione della posizione del rif esterno)
+            	if (rifEl == null && ((DocwayParsedMessage) parsedMessage).isPecReceiptForInteropPAbySubject()) {
+            		String subject = parsedMessage.getSubject();
+            		if (subject != null) {
+            			subject = subject.trim();
+            			
+            			int index = subject.indexOf("(");
+                        int index1 = subject.indexOf(")");
+                        if (index != -1 && index1 != -1 && index < index1) {
+	                        String indexValue = subject.substring(index+1, index1);
+	                		if (!indexValue.equals("*")) {
+	                			int rifPosition = -1;
+	                			try {
+	                				rifPosition = Integer.parseInt(indexValue);
+	                			}
+	                			catch (NumberFormatException e) {
+	                				logger.warn("[" + conf.getAddress() + "]. Got exception while parsing recipient index number from subject. ", e);
+								}
+	                			if (rifPosition >= 0 && rifPosition < rifsL.size()) {
+	                				if (logger.isDebugEnabled())
+	                					logger.debug("[" + conf.getAddress() + "] Assign interop file by rif. position (from subject)... position = " + rifPosition);
+	                				
+	                				rifEl = rifsL.get(rifPosition);
+	                			}
+	                		}
+                        }
+            		}
+            	}
             }
 
             if (rifEl != null) {

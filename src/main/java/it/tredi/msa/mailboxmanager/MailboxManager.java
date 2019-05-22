@@ -3,7 +3,10 @@ package it.tredi.msa.mailboxmanager;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import javax.mail.Message;
 
@@ -51,10 +54,9 @@ public abstract class MailboxManager implements Runnable {
 	 */
 	private AuditMailboxRunRepository auditMailboxRunRepository;
 	
-	private final static int MAILREADER_CONNECTION_ATTEMPTS = 3;
 	private final static String PROCESS_MAILBOX_ERROR_MESSAGE = "Errore imprevisto durante le gestione della casella di posta [%s].\nControllare la configurazione [%s://%s:%s][User:%s]\nConsultare il log per maggiori dettagli.\n\n%s";
 	private final static String STORE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante l'archiviazione del messaggio di posta [%s].\nMessage Id: %s\nSent Date: %s\nSubject: %s\nConsultare il log per maggiori dettagli.\n\n%s";
-	private final static String PARSE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante il parsinge di un messaggio di posta [%s].\nMessage Type: %s\nConsultare il log per maggiori dettagli.\n\n%s";
+	private final static String PARSE_MESSAGE_ERROR_MESSAGE = "Errore imprevisto durante il parsing di un messaggio di posta [%s].\nMessage Type: %s\nConsultare il log per maggiori dettagli.\n\n%s";
 	private final static String HANDLE_ERROR_ERROR_MESSAGE = "Errore imprevisto durante la gestione di un errore in fase di archiviazione di un messaggio di posta\nConsultare il log per maggiori dettagli.\n\n%s";
 	
 	public MailboxConfiguration getConfiguration() {
@@ -158,7 +160,7 @@ public abstract class MailboxManager implements Runnable {
     		
         	//connection attempts
         	Message[] messages = null;
-        	for (int attemptIndex = 1; attemptIndex <= MAILREADER_CONNECTION_ATTEMPTS; attemptIndex++) {
+        	for (int attemptIndex = 1; attemptIndex <= configuration.getMailboxConnectionAttempts(); attemptIndex++) {
             	try {
             		//TEMPLATE STEP - openSession
             		openSession();	
@@ -172,8 +174,9 @@ public abstract class MailboxManager implements Runnable {
             	catch (Exception e) {
             		logger.error("[" + configuration.getAddress() + "] got exception... " + e.getMessage(), e);
             		if (logger.isDebugEnabled())
-            			logger.debug("[" + configuration.getAddress() + "] connection failed: (" + attemptIndex + "/" +MAILREADER_CONNECTION_ATTEMPTS + ") attempt. Trying again (1) sec.");
-            		if (attemptIndex == MAILREADER_CONNECTION_ATTEMPTS)
+            			logger.debug("[" + configuration.getAddress() + "] connection failed: (" + attemptIndex + "/" + configuration.getMailboxConnectionAttempts() + ") attempt. Trying again (1) sec.");
+            		
+            		if (attemptIndex == configuration.getMailboxConnectionAttempts())
             			throw e;
             		Thread.sleep(1000); //1 sec delay
             	}    		
@@ -183,40 +186,95 @@ public abstract class MailboxManager implements Runnable {
         		logger.info("[" + configuration.getAddress() + "] FOUND " + messages.length + " MESSAGES");
         	auditMailboxRun.setMessageCount(messages.length);
         	
-        	int i=0;
+        	// controllo su attivazione del parsing dei messaggi tramite thread paralleli
+        	int maxParserThreads = Services.getConfigurationService().getMSAConfiguration().getMailboxManagersParseThreadPoolsize();
+        	int parserThreadsActivationThreshold = Services.getConfigurationService().getMSAConfiguration().getMailboxManagersParseThreadActivationThreshold();
+        	if (messages.length < parserThreadsActivationThreshold)
+        		maxParserThreads = 1;
+        	
+        	List<MessageParserThreadWorkObj> parserWorkList = new ArrayList<>();
+        	int parserWorkListSize = Math.min(maxParserThreads, messages.length);
+
+        	int index = 0;
         	for (Message message:messages) { //for each email message
         		if (shutdown)
         			return;
         		
-        		// mbernardini 23/01/2019 : spostato incremento di i perche' in fondo non gestito se messaggio skippato (continue 
-        		// dentro a for, andrebbe evitato per maggiore leggibilita')
-        		i++;
+        		index++;
         		
-        		ParsedMessage parsedMessage = null;
-        		try {
-            		//TEMPLATE STEP - parsedMessage
-        			if (logger.isInfoEnabled())
-        				logger.info("[" + configuration.getAddress() + "] parsing message (" + i + "/" + messages.length + ")...");
-            		parsedMessage = parseMessage(message);
+        		if (maxParserThreads == 1) {
+        			// DOWNLOAD E PARSING SEQUENZIALE DEI MESSAGGI (NESSUN THREAD ISTANZIATO)
         			
-            		if (logger.isInfoEnabled())
-            			logger.info("[" + configuration.getAddress() + "] message (" + i + "/" + messages.length + ") [" + parsedMessage.getMessageId() + "]");
-            		
-            		if (Services.getAuditService().auditMessageInErrorFound(configuration, parsedMessage.getMessageId())) { //message found in error in audit
-            			auditMailboxRun.incrementErrorCount();
-            			logger.info("[" + configuration.getAddress() + "] message skipped [" + parsedMessage.getMessageId() + "]. Message already found in audit in [ERROR] state");
-            			continue; //skip to next message
-            		}
-            		
-            		//TEMPLATE STEP - processMessage
-        			processMessage(parsedMessage);
+        			ParsedMessage parsedMessage = null;
+            		try {
+                		//TEMPLATE STEP - parsedMessage
+            			if (logger.isInfoEnabled())
+            				logger.info("[" + configuration.getAddress() + "] parsing message (" + index + "/" + messages.length + ")...");
+                		parsedMessage = parseMessage(message);
+            			
+                		if (logger.isInfoEnabled())
+                			logger.info("[" + configuration.getAddress() + "] message (" + index + "/" + messages.length + ") [" + parsedMessage.getMessageId() + "]");
+                		
+                		if (Services.getAuditService().auditMessageInErrorFound(configuration, parsedMessage.getMessageId())) { //message found in error in audit
+                			auditMailboxRun.incrementErrorCount();
+                			logger.info("[" + configuration.getAddress() + "] message skipped [" + parsedMessage.getMessageId() + "]. Message already found in audit in [ERROR] state");
+                			continue; //skip to next message
+                		}
+                		
+                		//TEMPLATE STEP - processMessage
+            			processMessage(parsedMessage);
 
+            		}
+            		catch (Exception e) {
+            			//TEMPLATE STEP - handleError
+            			handleError(e, parsedMessage==null? message : parsedMessage);
+            		}
+        			
         		}
-        		catch (Exception e) {
-        			//TEMPLATE STEP - handleError
-        			handleError(e, parsedMessage==null? message : parsedMessage);
+        		else {
+        			// PARSING PARALLELO DEI MESSAGGI (POOL DI THREADS DI PARSING)
+	        		
+	        		if  (parserWorkList.size() < parserWorkListSize) {
+	        			parserWorkList.add(new MessageParserThreadWorkObj(index, message, messages.length, configuration.getAddress()));
+	        			if  (parserWorkList.size() == parserWorkListSize) {
+	        				//start threads        	
+	        				if (logger.isInfoEnabled())
+	        					logger.info("[" + configuration.getAddress() + "] start (" + parserWorkListSize + ") message parser thread");
+	        				
+	        				CountDownLatch latch = new CountDownLatch(parserWorkListSize);
+	        				for (int wlIndex=0; wlIndex < parserWorkList.size(); wlIndex++) {
+	        					MessageParserThred parserThread = new MessageParserThred(latch, parserWorkList.get(wlIndex));
+	        					parserThread.start();
+	        				}
+	        				
+	        				if (logger.isInfoEnabled())
+	        					logger.info("[" + configuration.getAddress() + "] search for threads completition...");
+	        				while (latch.getCount() > 0) {
+								// Archiviazione dei primi messaggi parsati
+	        					boolean processed = this.processParsedMessagesByThreads(parserWorkList, messages.length);
+	        					if (!processed) {
+	        						try {
+	        							Thread.sleep(500);
+	        						}
+	        						catch (Exception e) {
+										logger.error("[" + configuration.getAddress() + "] got exception on saving sleep... " + e.getMessage());
+									}
+	        					}
+							}
+	        				
+	        				if (logger.isInfoEnabled())
+	        					logger.info("[" + configuration.getAddress() + "] parsing completed! save residue parsed messages...");
+	        				// Eventuale archiviazione dei messaggi parsati residui
+	        				this.processParsedMessagesByThreads(parserWorkList, messages.length);
+	        				
+	        				parserWorkListSize = Math.min(maxParserThreads, messages.length - index);
+	        				parserWorkList.clear();
+	        			}
+	        		}
+	        		
         		}
         	}
+       
     	}
     	catch (Throwable t) {
     		//TEMPLATE STEP - handleError
@@ -230,6 +288,61 @@ public abstract class MailboxManager implements Runnable {
         	if (logger.isDebugEnabled())
         		logger.debug("[" + configuration.getAddress() + "] processMailbox() done");
     	}
+    }
+    
+    /**
+     * Elaborazione (conversione del parsed message in documento e salvataggio) dei messaggi di posta parsati tramite thread paralleli. Viene
+     * tornato un booleano che indica se sono stati elaborati messaggi.
+     * @param parserWorkList Lista di lavori pendenti
+     * @param messagesCount Messaggi totali individuati nella casella di posta
+     * @return TRUE se almeno un messaggio risultava parsato ed e' stato elaborato, FALSE altrimenti (messaggi ancora fermi sui thread di parsing)
+     */
+    private boolean processParsedMessagesByThreads(List<MessageParserThreadWorkObj> parserWorkList, long messagesCount) {
+    	boolean done = false;
+    	for (MessageParserThreadWorkObj messageParserThreadWorkObj : parserWorkList) {
+			ParsedMessage parsedMessage = null;
+			Message currentMessage = messageParserThreadWorkObj.getMessage();
+    		try {
+    			if (messageParserThreadWorkObj.isDONE()) {
+    				parsedMessage = messageParserThreadWorkObj.getParsedMessage();
+    						
+            		if (logger.isInfoEnabled())
+            			logger.info("[" + configuration.getAddress() + "] message (" + messageParserThreadWorkObj.getMessageIndex() + "/" + messagesCount + ") [" + parsedMessage.getMessageId() + "]");
+            		
+            		if (Services.getAuditService().auditMessageInErrorFound(configuration, parsedMessage.getMessageId())) { //message found in error in audit
+            			auditMailboxRun.incrementErrorCount();
+            			logger.info("[" + configuration.getAddress() + "] message skipped [" + parsedMessage.getMessageId() + "]. Message already found in audit in [ERROR] state");
+            			continue; //skip to next message
+            		}
+            		
+            		//TEMPLATE STEP - processMessage
+        			processMessage(parsedMessage); 
+        			
+        			messageParserThreadWorkObj.setPROCESSED();
+        			done = true;
+    			}
+    			else if (messageParserThreadWorkObj.isERROR()) {
+    				handleError(messageParserThreadWorkObj.getException(), currentMessage);
+    				
+    				messageParserThreadWorkObj.setPROCESSED();
+    				done = true;
+    			}
+    			// TODO non si dovrebbe mai verificare il caso sotto, ma vediamo se e' il caso di gestirlo e come
+    			//else { // stato incompleto
+    			//	if (logger.isWarnEnabled())
+            	//		logger.warn("[" + configuration.getAddress() + "] UNKNOWN STATUS for message (" + messageParserThreadWorkObj.getMessageIndex() + "/" + messagesCount + "): " + messageParserThreadWorkObj.getType());
+    			//}
+
+    		}
+    		catch (Exception e) {
+    			//TEMPLATE STEP - handleError
+    			handleError(e, parsedMessage==null? currentMessage : parsedMessage);
+    			
+    			messageParserThreadWorkObj.setPROCESSED();
+				done = true;
+    		}     					
+		}
+    	return done;
     }
     
     /**

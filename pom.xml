@@ -4,7 +4,7 @@
 
 	<groupId>it.tredi</groupId>
 	<artifactId>msa</artifactId>
-	<version>3.0.9-SNAPSHOT</version>
+	<version>3.0.12-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>msa</name>
 
@@ -47,7 +47,7 @@
 		<dependency>
   			<groupId>it.tredi</groupId>
   			<artifactId>mail</artifactId>
-  			<version>1.0.8</version>
+  			<version>1.0.9</version>
 		</dependency>
 		<dependency>
 			<groupId>it.tredi</groupId>
@@ -64,17 +64,22 @@
 		    <artifactId>bcmail-jdk16</artifactId>
 		    <version>1.46</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>it.tredi</groupId>
+			<artifactId>utils-encoding</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+		<dependency>
+            <groupId>it.tredi</groupId>
+            <artifactId>msa-repository</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>it.tredi</groupId>
-            <artifactId>msa-repository</artifactId>
-            <version>1.0.1</version>
-        </dependency>
     </dependencies>
 	
 	<build>

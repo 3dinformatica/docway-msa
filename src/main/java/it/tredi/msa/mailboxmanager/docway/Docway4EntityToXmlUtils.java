@@ -16,6 +16,8 @@ import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiRiepilogoItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
+import it.tredi.msa.mailboxmanager.utils.DateUtils;
+import it.tredi.utils.xml.XMLCleaner;
 
 /**
  * Conversione dell'oggetto di model del documento in doc XML per DocWay4
@@ -58,6 +60,9 @@ public class Docway4EntityToXmlUtils {
 		Element archiviatoreEl = DocumentHelper.createElement("archiviatore");
 		docEl.add(archiviatoreEl);
 		archiviatoreEl.addAttribute("recipientEmail", doc.getRecipientEmail());
+		// mbernardini 20/04/2019 : registrazione della data di invio del messaggio email
+		archiviatoreEl.addAttribute("sentDate", DateUtils.dateToXwFormat(doc.getSentDate()));
+		archiviatoreEl.addAttribute("sentTime", DateUtils.timeToXwFormat(doc.getSentDate()));
 		archiviatoreEl.addAttribute("completed", "no"); //set partial status (not completes)
 		
 		//autore
@@ -97,7 +102,9 @@ public class Docway4EntityToXmlUtils {
 		String oggetto = doc.getOggetto();
 		oggetto = oggetto.replaceAll(Pattern.quote("|"), "-"); //il pipe disturba i titoli di extraway
 		oggetto = oggetto.replaceAll(Pattern.quote("\""), ""); //anche le virgolette disturbano il funzionamento
-		oggettoEl.setText(oggetto);
+		
+		// mbernardini 18/04/2019 : eliminazione di caratteri non validi su xml dal campo oggetto
+		oggettoEl.setText(XMLCleaner.removeInvalidXML10Chars(oggetto));
 
 		//voce_indice
 		if (doc.getVoceIndice() != null && !doc.getVoceIndice().isEmpty()) {
@@ -136,7 +143,9 @@ public class Docway4EntityToXmlUtils {
 			Element noteEl = DocumentHelper.createElement("note");
 			docEl.add(noteEl);
 			noteEl.addAttribute("xml:space", "preserve");
-			noteEl.setText(doc.getNote());			
+			
+			// mbernardini 18/04/2019 : eliminazione di caratteri non validi su xml dal campo note
+			noteEl.setText(XMLCleaner.removeInvalidXML10Chars(doc.getNote()));			
 		}
 		
 		//repertorio
@@ -326,7 +335,10 @@ public class Docway4EntityToXmlUtils {
 			postitEl.addAttribute("cod_operatore", postit.getCodOperatore());
 		postitEl.addAttribute("data", postit.getData());
 		postitEl.addAttribute("ora", postit.getOra());
-		postitEl.setText(postit.getText());
+		
+		// mbernardini 18/04/2019 : eliminazione di caratteri non validi su xml dal campo annotazione
+		postitEl.setText(XMLCleaner.removeInvalidXML10Chars(postit.getText()));
+		
 		return postitEl;
 	}
 	

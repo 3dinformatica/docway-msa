@@ -2,6 +2,8 @@ package it.tredi.msa;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -108,15 +110,20 @@ public class ExecutorServiceHandler implements Runnable {
 		if (logger.isInfoEnabled())
 			logger.info("Shutting down mailbox managers: [" + keySetToString(MailboxesManagersMap.getInstance().getMap().keySet()) + "]");
     	
-    	for (String emailAddress:MailboxesManagersMap.getInstance().getMap().keySet()) {
-    		try {
-    			MailboxesManagersMap.getInstance().getManager(emailAddress).shutdown();	
-    		}
-			catch (Exception e) {
-				logger.warn("Shutdown failed: " + emailAddress, e);
-			}
+		ExecutorService shutdownExecutoreService = Executors.newFixedThreadPool(MailboxesManagersMap.getInstance().getMap().keySet().size()) ;
+	    
+	    for (String emailAddress:MailboxesManagersMap.getInstance().getMap().keySet()) {
+    		shutdownExecutoreService.submit(MailboxesManagersMap.getInstance().getManager(emailAddress)::shutdown);
     	}
-    	
+	    
+	    shutdownExecutoreService.shutdown();
+	    try {
+			shutdownExecutoreService.awaitTermination(1, TimeUnit.MINUTES);
+		} 
+	    catch (InterruptedException e) {
+			logger.error("Got exception on ShutdownExecutor await termination... " + e.getMessage(), e);
+		}
+	        	
 		Thread.currentThread().interrupt();
     }
     

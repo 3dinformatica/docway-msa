@@ -12,9 +12,12 @@ import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.cms.CMSProcessableByteArray;
 import org.bouncycastle.cms.CMSSignedData;
 import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import it.tredi.mail.entity.MailAttach;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
@@ -26,6 +29,10 @@ import it.tredi.utils.bom.UnicodeBOMInputStream;
  * del messaggio email come documento di DocWay
  */
 public class DocwayParsedMessage extends ParsedMessage {
+	
+	private static final Logger logger = LoggerFactory.getLogger(DocwayParsedMessage.class);
+	
+	private final String DOCTYPE_ELEMENT_PREFIX = "<!DOCTYPE";
 	
 	//interopPA
 	private Document segnaturaInteropPADocument;
@@ -175,13 +182,18 @@ public class DocwayParsedMessage extends ParsedMessage {
 			if (partsL.size() == 1) {
 				byte []b = (new PartContentProvider(partsL.get(0))).getContent();
 				try {
-					document = DocumentHelper.parseText(new String(b));
+					// mbernardini 09/05/2019 : problema nel parsing di file di interoperabilita' con indicazione del file DTD (ovviamente non presente
+		            // nella mail)
+		            //document = DocumentHelper.parseText(new String(b));
+					document = getDocument(new String(b));
 					if (!document.getRootElement().getName().equals(rootElName)) {
 						super.addRelevantMessage(String.format(INTEROP_PA_XML_FILE_ROOT_MISMATCH_MESSAGE, fileName, rootElName));
 						document = null;
 					}
 				}
 				catch (Exception e) {
+					logger.error("DocwayParsedMessage: Unable to parse " + fileName + "... " + e.getMessage(), e);
+					
 					super.addRelevantMessage(String.format(INTEROP_PA_XML_FILE_PARSING_ERROR_MESSAGE, fileName));
 					document = null;
 				}
@@ -190,6 +202,8 @@ public class DocwayParsedMessage extends ParsedMessage {
 				super.addRelevantMessage(String.format(MORE_INTEROP_PA_XML_FILE_FOUND_MESSAGE, partsL.size(), fileName));
 		}
 		catch (Exception e) {
+			logger.error("DocwayParsedMessage: Got exception on " + fileName + " parsing... " + e.getMessage(), e);
+			
 			document = null;
 		}
 		if (document != null)
@@ -228,6 +242,8 @@ public class DocwayParsedMessage extends ParsedMessage {
 			}
 		}
 		catch (Exception e) {
+			logger.error("DocwayParsedMessage: Unable to parse " + fileName + "... " + e.getMessage(), e);
+			
 			super.addRelevantMessage(String.format(INTEROP_PA_XML_FILE_PARSING_ERROR_MESSAGE, fileName));
 			return false;
 		}
@@ -248,6 +264,8 @@ public class DocwayParsedMessage extends ParsedMessage {
 					return true;
 				}
 				catch (Exception e) {
+					logger.error("DocwayParsedMessage: Unable to parse Segnatura.xml... " + e.getMessage(), e);
+					
 					super.addRelevantMessage(String.format(INTEROP_PA_XML_FILE_PARSING_ERROR_MESSAGE, "Segnatura.xml"));
 					return false;
 				}				
@@ -299,8 +317,19 @@ public class DocwayParsedMessage extends ParsedMessage {
 		String query = "";
 		if (this.interopPaDocument != null) {
 			Element identificatoreEl = (Element)this.interopPaDocument.selectSingleNode("/Segnatura/Intestazione/Identificatore");
-			query = "[/doc/rif_esterni/rif/@n_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") +
-					identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";
+			
+			// mbernardini 14/05/2019 : costruzione della query solo nel caso in cui tutti i campi di segnatura siano regolarmente valorizzati
+			String dataRegistrazione = identificatoreEl.elementText("DataRegistrazione");
+			String codiceAmm = identificatoreEl.elementText("CodiceAmministrazione");
+			String codiceAoo = identificatoreEl.elementText("CodiceAOO");
+			String numeroRegistrazione = identificatoreEl.elementText("NumeroRegistrazione");
+			if (dataRegistrazione != null && dataRegistrazione.length() > 4 
+					&& codiceAmm != null && !codiceAmm.isEmpty()
+					&& codiceAoo != null && !codiceAoo.isEmpty()
+					&& numeroRegistrazione != null && !numeroRegistrazione.isEmpty()) {
+				
+				query = "[/doc/rif_esterni/rif/@n_prot]=\"" + dataRegistrazione.substring(0, 4) + "-" + codiceAmm + codiceAoo + "-" + numeroRegistrazione + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";
+			}
 		}
 		return query;
 	}
@@ -407,6 +436,39 @@ public class DocwayParsedMessage extends ParsedMessage {
 		is.skipBOM();
 		
 		return reader.read(is);
+	}
+	
+	/**
+	 * Parsing di un XML con eliminazione di eventuali DTD indicate per il documento
+	 * @param xml
+	 * @return
+	 * @throws DocumentException
+	 */
+	private Document getDocument(String xml) throws DocumentException {
+		return DocumentHelper.parseText(this.removeDoctypeFromXml(xml));
+	}
+	
+	/**
+	 * Ripulisce la stringa (che rappresenta un XML) da eventuali indicazioni di file DTD associati al documento
+	 * @param xml
+	 * @return
+	 */
+	private String removeDoctypeFromXml(String xml) {
+		if (xml != null && !xml.isEmpty()) {
+			int fromIndex = xml.indexOf(this.DOCTYPE_ELEMENT_PREFIX);
+			if (fromIndex != -1) {
+				if (logger.isDebugEnabled())
+					logger.debug("DocwayParsedMessage: Manually clean XML content from DOCTYPE... ");
+				int toIndex = xml.indexOf(">", fromIndex);
+				if (toIndex != -1) {
+					xml = xml.substring(0, fromIndex) + xml.substring(toIndex+1);
+					
+					if (logger.isTraceEnabled())
+						logger.trace("XML without DOCTYPE = " + xml);
+				}
+			}
+		}
+		return xml;
 	}
 
 	public Document getFatturaPADocument() throws Exception {

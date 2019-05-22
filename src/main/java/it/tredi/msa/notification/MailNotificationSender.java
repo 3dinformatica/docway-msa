@@ -129,19 +129,24 @@ public class MailNotificationSender extends NotificationSender {
 
 	@Override
 	public boolean notifyError(String message) throws Exception {
-		boolean done = false;
-		MailSender mailSender = createMailSender();
-		mailSender.connect();
-		for (String toAddress: admEmailAddresses) {
-			try {
-				mailSender.sendMail(senderAdress, senderPersonal, toAddress, SUBJECT_ERROR, message);
-				done = true;
+		boolean done = true;
+		
+		// mbernardini 10/05/2019 : controllo la presenza degli indirizzi di destinatari prima di tentare l'invio di email di notifica di errori
+		if (admEmailAddresses != null && admEmailAddresses.length > 0 ) {
+			MailSender mailSender = createMailSender();
+			mailSender.connect();
+			for (String toAddress: admEmailAddresses) {
+				try {
+					if (toAddress != null && !toAddress.isEmpty())
+						mailSender.sendMail(senderAdress, senderPersonal, toAddress, SUBJECT_ERROR, message);
+				}
+				catch (Exception e) {
+					logger.warn(String.format(NotificationService.NOTIFICATION_ERROR_MESSAGE_DEST, toAddress, message), e);
+					done = false;
+				}			
 			}
-			catch (Exception e) {
-				logger.warn(String.format(NotificationService.NOTIFICATION_ERROR_MESSAGE_DEST, toAddress, message), e);
-			}			
+			mailSender.disconnect();
 		}
-		mailSender.disconnect();
 		return done;
 	}
 	

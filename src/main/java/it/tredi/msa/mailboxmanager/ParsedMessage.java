@@ -10,6 +10,7 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.commons.text.translate.NumericEntityUnescaper;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import it.tredi.mail.MessageParser;
 import it.tredi.mail.entity.MailAttach;
+import it.tredi.utils.xml.XMLCleaner;
 
 public class ParsedMessage {
 	
@@ -172,8 +174,10 @@ public class ParsedMessage {
 										
 										// Verifico che effettivamente il daticert.xml sia quello del messaggio ricervuto (e non di un eventuale
 										// messaggio inoltrato incluso)
-										String identificativo = cleanMessageId(tmp.selectSingleNode("/postacert/dati/identificativo").getText());
-										if (identificativo.equals(this.getMessageId())) {
+										
+										// mbernardini 17/04/2019 : corretto il controllo su messageId del messaggio originale in caso di daticert multipli
+										String msgid = cleanMessageId(tmp.selectSingleNode("/postacert/dati/msgid").getText());
+										if (msgid.equals(cleanMessageId(this.parser.getXRiferimentoMessageID()))) {
 											datiCertDocument = tmp;
 											datiCertDocumentInCache = true;
 										}
@@ -191,12 +195,38 @@ public class ParsedMessage {
 		return datiCertDocument;
 	}	
 	
+	/**
+	 * Conversione in DOM di una parte del messaggio email che si sta processando
+	 * @param part
+	 * @return
+	 * @throws Exception
+	 */
 	private Document partToDocument(Part part) throws Exception {
 		Document doc = null;
 		if (part != null) {
 			byte[] b = (new PartContentProvider(part)).getContent();
-			String content = new String(b, "UTF-8");
-			doc = DocumentHelper.parseText(content);
+			
+			// Primo tentativo di parsing... classico, senza alterazioni del contenuto
+			String content = new String(b/*, "UTF-8"*/);
+			try {
+				doc = DocumentHelper.parseText(content);
+			}
+			catch(Exception e) {
+				// mbernardini 18/04/2019 : parsing in DOM di parti di messaggio contenenti caratteri non validi in XML
+				
+				logger.warn("Unable to parse part content: " + e.getMessage() + "... Try removing invalid xml chars...");
+				
+				// Secondo tentativo di parsing... in caso di errore viene ripulito in contenuto della parte prima di 
+				// procedere al parsing in DOM
+				if (logger.isDebugEnabled())
+					logger.debug("content = " + content);
+				
+				NumericEntityUnescaper neu = new NumericEntityUnescaper();
+				content = neu.translate(content);
+				content = XMLCleaner.removeInvalidXML10Chars(content); // eliminazione di caratteri non validi in XML
+				
+				doc = DocumentHelper.parseText(content);
+			}
 		}
 		return doc;
 	}
@@ -215,17 +245,17 @@ public class ParsedMessage {
 	public String getRealToAddressFromDatiCertPec() throws Exception {
 		List<Element> l = (List<Element>)getDatiCertDocument().selectNodes("/postacert/intestazione/destinatari");
 		if (l.size() == 1)
-			return l.get(0).getText();
+			return l.get(0).getTextTrim(); // mbernardini 07/05/2019 : eliminazione di eventuali spazi prima e dopo l'indirizzo
 		Element el = (Element)getDatiCertDocument().selectSingleNode("/postacert/dati/consegna");
 		if (el != null)
-			return el.getText();
+			return el.getTextTrim(); // mbernardini 07/05/2019 : eliminazione di eventuali spazi prima e dopo l'indirizzo
 		return null;
 	}
 
 	public String getMittenteAddressFromDatiCertPec() throws Exception {
 		Element el = (Element)getDatiCertDocument().selectSingleNode("/postacert/intestazione/mittente");
 		if (el != null)
-			return el.getText();
+			return el.getTextTrim(); // mbernardini 07/05/2019 : eliminazione di eventuali spazi prima e dopo l'indirizzo
 		return null;
 	}	
 	

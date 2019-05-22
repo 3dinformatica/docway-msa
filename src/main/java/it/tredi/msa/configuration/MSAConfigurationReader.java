@@ -15,6 +15,9 @@ public class MSAConfigurationReader {
 	private final static String MAILBOXMANAGERS_REFRESHTIME_PROPERTY = "mailboxmanagers.refresh.time";
 	private final static String MAILBOXMANAGERS_HOT_RELOADING_PROPERTY = "mailboxmanagers.hot-reloading";
 	
+	private final static String MAILBOXMANAGERS_PARSETHREAD_POOLSIZE_PROPERTY = "mailboxmanagers.parse-thread.poolsize";
+	private final static String MAILBOXMANAGERS_PARSETHREAD_ACTIVATION_THRESHOLD_PROPERTY = "mailboxmanagers.parse-thread.activation-threshold";
+	
 	
 	// mbernardini 26/02/2019 : forzata l'univocita' degli indirizzi delle caselle di posta gestite da msa
 	//public final static String MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES_PROPERTY = "mailboxmanagers.allow-email-duplicates";
@@ -32,6 +35,9 @@ public class MSAConfigurationReader {
 		msaConfiguration.setMailboxManagersWorkTimeMailDelay(propertiesReader.getIntProperty(MAILBOXMANAGERS_WORK_TIME_MAIL_DELAY_PROPERTY, 0));
 		msaConfiguration.setMailboxManagersPoolsize(propertiesReader.getIntProperty(MAILBOXMANAGERS_POOLSIZE_PROPERTY, 1));
 		msaConfiguration.setMailboxManagersRefreshTime(propertiesReader.getIntProperty(MAILBOXMANAGERS_REFRESHTIME_PROPERTY, 1));
+		
+		msaConfiguration.setMailboxManagersParseThreadPoolsize(propertiesReader.getIntProperty(MAILBOXMANAGERS_PARSETHREAD_POOLSIZE_PROPERTY, 1));
+		msaConfiguration.setMailboxManagersParseThreadActivationThreshold(propertiesReader.getIntProperty(MAILBOXMANAGERS_PARSETHREAD_ACTIVATION_THRESHOLD_PROPERTY, 0));
 		
 		// mbernardini 26/02/2019 : forzata l'univocita' degli indirizzi delle caselle di posta gestite da msa
 		//msaConfiguration.setAllowEmailDuplicates(propertiesReader.getBooleanProperty(MAILBOXMANAGERS_ALLOW_EMAIL_DUPLICATES_PROPERTY, false));

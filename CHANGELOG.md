@@ -1,10 +1,58 @@
 # Change Log
 
-## [3.0.9] - SNAPSHOT
+## [3.0.12] - SNAPSHOT
+
+### Changed
+- Parsing parallelo di un blocco di messaggi (pool di threads di parsing) con avvio del salvataggio dei documenti appena disponibile il primo messaggio parsato
+- Adeguamento normativo al parsing dei dati di segnatura (codAmm e codAoo, normativa del 2013)
+
+### Fixed
+- "Corretta" (usato un trucco per ingannare Spring) per chiudere la connessione a MongoDB solo al termine della chiusura di tutti i thread di elaborazione delle mailbox
+- Identificazioni alernative del rif esterno al quale agganciare una notifica PEC 
+- In fase di notifica di errori via email, verificata l'effettiva presenza di indirizzi di destinatari (amministratori di msa) prima di procedere con l'invio vero e proprio
+- Corretto bug in riconoscimento fatturePA su procedura di override degli assegnatari se smistamento fatturePA risulta abilitato sulla mailbox
+
+
+## [3.0.11] - 2019-05-08
+
+### Added
+- UnitTest su messaggi con parti UTF-7 (Task #17826). Soluzione: https://www.bottaioli.it/internet/java-io-unsupportedencodingexception-unicode-1-1-utf-7-solved/
+
+### Changed
+- Parametrizzato il numero di tentativi di connessione ad una casella di posta (properties _docway4mailboxmanager.mail-reader.connection-attempts_)
+- Eliminate eventuali DOCTYPE (DTD) dai documenti XML relativi all'interoperabilità (problemi di parsing sui file di notifica) (Task #17796)
+
+
+## [3.0.10] - 2019-05-07
+
+### Added
+- Aggiunta la data di invio del messaggio email al documento registrato
+- Parsing parallelo (a blocchi) di messaggi contenuti in una casella di posta (properties _mailboxmanagers.parse-thread.poolsize_ e _mailboxmanagers.parse-thread.activation-threshold_)
+
+### Changed
+- Migliorato lo script bash di avvio del servizio su ambiente Linux (controllo di integrità fra PID del processo e file pid memorizzato)
+- Chiusura parallela di tutti i thread di scaricamento email in fase di shutdown del processo msa
+- Identificazione alernativa del rif esterno al quale agganciare la notifica di interoperabilità (es. analisi dell'oggetto del messaggio)
+
+### Fixed
+- Parsing in DOM di parti di messaggio contenenti caratteri non validi in XML
+- In caso di aggiunta di rif. interni ad un documento già registrato (singolo messaggio inviato a 2 mailbox configurate su MSA) occorre aggiornare anche i dati relativi alla storia
+- Data e Ora di invio del messaggio email separata in 2 attributi su XML per problema di chiavi su eXtraWay
+- Migliorata la terminazione dell'applicazione: Chiusura delle caselle precedente alla terminazione del contesto Spring (chiusura connessione con MongoDB)
+- Trim su email lette da file di interoperabilità per problemi nell'individuazione del rif. esterno in aggancio di notifiche (Task #17771)
+
+
+## [3.0.9] - 2019-04-18
 
 ### Changed
 - Aggiunta la possibilità di impostara un tempo di sleep dopo ogni salvataggio di documento in orario di lavoro (property _mailboxmanagers.worktime.mail.delay_)
 - Aggiunta dell'nrecord dell'assegnatatio alle email di notifica (property _docway4mailboxmanager.mail-sender.add-matricola-on-notification_)
+
+### Fixed
+- Corretto il controllo su messageId del messaggio originale in caso di daticert multipli
+- Eliminazione di caratteri non validi su xml dai campi: oggetto, note, annotazioni
+- Corretto possibile bug in salvataggio ricevute PEC orfane come doc non protocollato (caso di email salvate parzialmente o gia' presenti ma non eliminate dalla cartella inbox)
+
 
 ## [3.0.8] - 2019-04-04
 
