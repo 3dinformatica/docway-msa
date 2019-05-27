@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.0.12] - SNAPSHOT
+## [3.0.12] - 2019-05-27
 
 ### Changed
 - Parsing parallelo di un blocco di messaggi (pool di threads di parsing) con avvio del salvataggio dei documenti appena disponibile il primo messaggio parsato
