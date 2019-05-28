@@ -385,6 +385,9 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 
 		// mbernardini 25/02/2019 : lettura del parametro di smistamento fatturaPA dalla casella di posta
 		conf.setSmistamentoFatturePA(casellaEl.attributeValue("smistamentoFatturePA", "false").equalsIgnoreCase("true"));
+		
+		// mbernardini 27/05/2019 : casella di import (casella contenente messaggi con allegati i reali messaggi da importare)
+		conf.setCasellaImport(casellaEl.attributeValue("casellaImport", "false").equalsIgnoreCase("true"));
 
 		conf.setIgnoreStandardOrphanPecReceipts(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS, true));
 		// mbernardini 18/01/2019 : salvataggio di ricevute PEC orfane come doc non protocollati

@@ -409,7 +409,7 @@ public class EmlExtractionTest extends EmlReader {
 		
 		System.out.println("input file = " + fileName);
 		
-		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file, false));
+		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file, false), false);
 		
 		assertNotNull(parsed);
 		assertNotNull(parsed.getMessageId());

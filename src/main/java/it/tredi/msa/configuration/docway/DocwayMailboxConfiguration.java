@@ -95,6 +95,8 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private OggettoParseMode oggettoParseMode;
 	private boolean protocollaFattura;
 	private boolean smistamentoFatturePA; // mbernardini 25/02/2019 : smistamento fatturaPA
+	
+	private boolean casellaImport; // mbernardini 27/05/2019 : casella di import
 
 	//ricevute PEC orfane
 	private boolean ignoreStandardOrphanPecReceipts;
@@ -560,6 +562,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setSmistamentoFatturePA(boolean smistamentoFatturePA) {
 		this.smistamentoFatturePA = smistamentoFatturePA;
+	}
+	
+	public boolean isCasellaImport() {
+		return casellaImport;
+	}
+
+	public void setCasellaImport(boolean casellaImport) {
+		this.casellaImport = casellaImport;
 	}
 
 	public boolean isIgnoreStandardOrphanPecReceipts() {

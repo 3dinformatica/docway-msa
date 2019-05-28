@@ -18,6 +18,7 @@ import it.tredi.mail.MessageUtils;
 import it.tredi.msa.ContextProvider;
 import it.tredi.msa.Services;
 import it.tredi.msa.configuration.MailboxConfiguration;
+import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.entity.AuditMailboxRun;
 import it.tredi.msa.entity.AuditMailboxRunStatus;
 import it.tredi.msa.repository.AuditMailboxRunRepository;
@@ -233,7 +234,14 @@ public abstract class MailboxManager implements Runnable {
         		}
         		else {
         			// PARSING PARALLELO DEI MESSAGGI (POOL DI THREADS DI PARSING)
-	        		
+        			
+        			boolean importMode = false;
+        			if (configuration != null && configuration instanceof DocwayMailboxConfiguration) {
+        				importMode = ((DocwayMailboxConfiguration) configuration).isCasellaImport();
+        				if (logger.isInfoEnabled())
+        					logger.info("[" + configuration.getAddress() + "] import mode ACTIVE...");
+        			}
+        			
 	        		if  (parserWorkList.size() < parserWorkListSize) {
 	        			parserWorkList.add(new MessageParserThreadWorkObj(index, message, messages.length, configuration.getAddress()));
 	        			if  (parserWorkList.size() == parserWorkListSize) {
@@ -243,7 +251,7 @@ public abstract class MailboxManager implements Runnable {
 	        				
 	        				CountDownLatch latch = new CountDownLatch(parserWorkListSize);
 	        				for (int wlIndex=0; wlIndex < parserWorkList.size(); wlIndex++) {
-	        					MessageParserThred parserThread = new MessageParserThred(latch, parserWorkList.get(wlIndex));
+	        					MessageParserThred parserThread = new MessageParserThred(latch, parserWorkList.get(wlIndex), importMode);
 	        					parserThread.start();
 	        				}
 	        				

@@ -81,7 +81,7 @@ public class ValidazioneSegnaturaTest extends EmlReader {
 		
 		System.out.println("input file = " + fileName);
 		
-		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file));
+		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file), false);
 		
 		assertNotNull(parsed);
 		assertNotNull(parsed.getMessageId());
@@ -127,7 +127,7 @@ public class ValidazioneSegnaturaTest extends EmlReader {
 		
 		System.out.println("input file = " + fileName);
 		
-		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file));
+		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file), false);
 		
 		assertNotNull(parsed);
 		assertNotNull(parsed.getMessageId());

@@ -162,7 +162,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	
 	@Override
     public ParsedMessage parseMessage(Message message) throws Exception {
-    	return new DocwayParsedMessage(message);
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration) super.getConfiguration();
+    	return new DocwayParsedMessage(message, conf.isCasellaImport());
     }	
 	
 	@Override

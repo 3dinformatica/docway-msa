@@ -1,6 +1,7 @@
 package it.tredi.msa.mailboxmanager;
 
 import java.util.concurrent.CountDownLatch;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,11 +13,13 @@ public class MessageParserThred extends Thread {
 
 	private MessageParserThreadWorkObj toDo;
 	private CountDownLatch latch;
+	private boolean importMode;
 	
-    public MessageParserThred(CountDownLatch latch, MessageParserThreadWorkObj toDo) {
+    public MessageParserThred(CountDownLatch latch, MessageParserThreadWorkObj toDo, boolean importMode) {
 		super();
 		this.toDo = toDo;
 		this.latch = latch;
+		this.importMode = importMode;
 	}
 
 	@Override
@@ -25,7 +28,7 @@ public class MessageParserThred extends Thread {
 			if (logger.isInfoEnabled())
 				logger.info("[" + toDo.getMailboxAddress() + "] parsing message (" + toDo.getMessageIndex()  + "/" + toDo.getMessageCount() + ")...");
 			
-			DocwayParsedMessage parsedMessage = new DocwayParsedMessage(toDo.getMessage());
+			DocwayParsedMessage parsedMessage = new DocwayParsedMessage(toDo.getMessage(), importMode);
     		toDo.setDONE(parsedMessage);
     		
     		if (logger.isInfoEnabled())

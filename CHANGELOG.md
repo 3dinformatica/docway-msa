@@ -1,5 +1,12 @@
 # Change Log
 
+## [3.0.13] - SNAPSHOT
+
+### Added
+- Aggiunta gestione di caselle di import (messaggi contenti in allegato il reale EML da processare). Sono ritenuti validi i soli messaggi 
+multipart contenenti uno ed un solo allegato con estensione eml.
+
+
 ## [3.0.12] - 2019-05-27
 
 ### Changed

@@ -73,8 +73,8 @@ public class DocwayParsedMessage extends ParsedMessage {
 	private String fileNameNotificaFatturaPA;
 	private String fileNameFatturaRiferita;
 	
-	public DocwayParsedMessage(Message message) throws Exception {
-		super(message);
+	public DocwayParsedMessage(Message message, boolean importMode) throws Exception {
+		super(message, importMode);
 	}
 	
 	public Document getInteropPaDocument() {

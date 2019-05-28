@@ -17,6 +17,7 @@ import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import it.tredi.mail.ImportMessageParser;
 import it.tredi.mail.MessageParser;
 import it.tredi.mail.entity.MailAttach;
 import it.tredi.utils.xml.XMLCleaner;
@@ -38,8 +39,28 @@ public class ParsedMessage {
 	
 	private List<String> relevantMssages = new ArrayList<String>();
 	
+	/**
+	 * Costruttore
+	 * @param message Messaggio email da processare
+	 * @throws Exception
+	 */
 	public ParsedMessage(Message message) throws Exception {
-		this.parser = new MessageParser(message);
+		this(message, false);
+	}
+	
+	/**
+	 * Costruttore. Permette il parsing del messaggio in modalita' import (messaggio contenente in allegato l'effettivo messaggio
+	 * eml da processare)
+	 * @param message Messaggio email da processare
+	 * @param importMode True se il messaggio che effettivamente deve essere processato risulta allegato al corrente, false in caso di parsing classico
+	 * @throws Exception
+	 */
+	public ParsedMessage(Message message, boolean importMode) throws Exception {
+		if (importMode)
+			this.parser = new ImportMessageParser(message);
+		else
+			this.parser = new MessageParser(message);
+		
 		relevantMssages = new ArrayList<>();
 		getMessageId(); //force setting messageId
 	}
