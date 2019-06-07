@@ -500,19 +500,24 @@ public abstract class MailboxManager implements Runnable {
             		else if (obj instanceof Message) { //message exception - parseMessage
             			Message message = (Message)obj;
             			
-        				// mbernardini 29/01/2019 : salvataggio in audit anche di eventuali errori in fase di parse del messaggio
-            			String messageId = null;
-            			try {
-            				messageId = MessageUtils.getMessageId(message);
-	            			if (!Services.getAuditService().auditMessageInErrorFound(configuration, messageId)) // controllo che il messaggio non risulti gia' registrato sull'audit
+            			// mbernardini 29/01/2019 : salvataggio in audit anche di eventuali errori in fase di parse del messaggio
+            			String messageId = MessageUtils.getMessageId(message);
+            			
+            			// mbernardini 07/06/2019 : in caso di errore di parsing gia' riscontrato in precedenza si evita di inviare la notifica d'errore
+            			if (!Services.getAuditService().auditMessageInErrorFound(configuration, messageId)) {  // controllo che il messaggio non risulti gia' registrato sull'audit
+	            			try {
 	            				Services.getAuditService().writeErrorAuditMessage(configuration, message, (Exception)t);
+	            			}
+	            			catch(Exception e) {
+	            				logger.error("[" + configuration.getAddress() + "] unable to save error in audit [MessageId: " + messageId + "]... " + e.getMessage(), e);
+	            			}
+	            			// mbernardini 28/01/2019 : aumentato il livello di log in caso message non parsato
+	            			logger.error("[" + configuration.getAddress() + "] unexpected error parsing message [Sent: " + message.getSentDate() + "] [Subject: " + message.getSentDate() + "]", t);
+	            			Services.getNotificationService().notifyError(String.format(STORE_MESSAGE_ERROR_MESSAGE, configuration.getName(), "", message.getSentDate(), message.getSubject(), t.getMessage()));
             			}
-            			catch(Exception e) {
-            				logger.error("[" + configuration.getAddress() + "] unable to save error in audit [MessageId: " + messageId + "]... " + e.getMessage(), e);
+            			else {
+            				logger.error("[" + configuration.getAddress() + "] unexpected error [" + t.getMessage() + "] parsing message [Sent: " + message.getSentDate() + "] [Subject: " + message.getSentDate() + "]... Error already stored on Audit!");
             			}
-            			// mbernardini 28/01/2019 : aumentato il livello di log in caso message non parsato
-            			logger.error("[" + configuration.getAddress() + "] unexpected error parsing message [Sent: " + message.getSentDate() + "] [Subject: " + message.getSentDate() + "]", t);
-            			Services.getNotificationService().notifyError(String.format(STORE_MESSAGE_ERROR_MESSAGE, configuration.getName(), "", message.getSentDate(), message.getSubject(), t.getMessage()));
             		}
             		// mbernardini 28/01/2019 : aggiunto caso di oggetto sconosciuto
             		else { // unknown object
