@@ -837,11 +837,18 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		int count = qr.elements;
 		for (int i=0; i<count; i++) {
 			Document document = aclClient.loadDocByQueryResult(i, qr);
-			Attribute indirizzoEl = (Attribute)document.selectSingleNode("/persona_interna/recapito/email/@addr");
-			if (indirizzoEl != null) {
-				String indirizzo = indirizzoEl.getText().trim();
-				if (!indirizzo.isEmpty())
-					res += "," + indirizzo;
+			
+			// mbernardini 07/06/2019 : caricamento di tutti gli indirizzi email associati ad una persona interna per la notifica su documenti assegnati
+			List<?> indirizzi = document.selectNodes("/persona_interna/recapito/email/@addr");
+			if (indirizzi != null && indirizzi.size() > 0) {
+				for (int j=0; j<indirizzi.size(); j++) {
+					Element indirizzoEl = (Element) indirizzi.get(j);
+					if (indirizzoEl != null && indirizzoEl.getText() != null) {
+						String indirizzo = indirizzoEl.getText().trim();
+						if (!indirizzo.isEmpty())
+							res += "," + indirizzo;
+					}
+				}
 			}
 		}
 

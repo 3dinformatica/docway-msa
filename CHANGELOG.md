@@ -1,5 +1,11 @@
 # Change Log
 
+## [3.0.14] - SNAPSHOT
+
+### Fixed
+- Caricamento di tutti gli indirizzi email associati ad una persona interna per la notifica su documenti assegnati (Task #18022).
+
+
 ## [3.0.13] - 2019-06-07
 
 ### Added
