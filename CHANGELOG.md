@@ -6,6 +6,9 @@
 - Aggiunta gestione di caselle di import (messaggi contenti in allegato il reale EML da processare). Sono ritenuti validi i soli messaggi 
 multipart contenenti uno ed un solo allegato con estensione eml. (Task #17664)
 
+### Fixed
+- Evitato l'invio della notifica di errore di parsing di un messaggio email per il quale era già stato riscontrato il problema (messaggio già presente come errore sulla console di Audit) (Task #17664)
+
 
 ## [3.0.12] - 2019-05-27
 
