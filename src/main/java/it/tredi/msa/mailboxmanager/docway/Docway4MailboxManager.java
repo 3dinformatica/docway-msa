@@ -842,9 +842,9 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			List<?> indirizzi = document.selectNodes("/persona_interna/recapito/email/@addr");
 			if (indirizzi != null && indirizzi.size() > 0) {
 				for (int j=0; j<indirizzi.size(); j++) {
-					Element indirizzoEl = (Element) indirizzi.get(j);
-					if (indirizzoEl != null && indirizzoEl.getText() != null) {
-						String indirizzo = indirizzoEl.getText().trim();
+					Attribute indirizzoEl = (Attribute) indirizzi.get(j);
+					if (indirizzoEl != null && indirizzoEl.getValue() != null) {
+						String indirizzo = indirizzoEl.getValue().trim();
 						if (!indirizzo.isEmpty())
 							res += "," + indirizzo;
 					}
