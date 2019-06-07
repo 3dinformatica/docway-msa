@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.0.13] - SNAPSHOT
+## [3.0.13] - 2019-06-07
 
 ### Added
 - Aggiunta gestione di caselle di import (messaggi contenti in allegato il reale EML da processare). Sono ritenuti validi i soli messaggi 

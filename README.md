@@ -27,13 +27,13 @@ cancellare il messaggio alla fine dell’elaborazione o se spostarlo su un diver
 
 Per poter installare l'MSA occorre configurare alcuni file:
 
-1. ***application.properties***: descrive la porta da utilizzare per l'applicazione MSA e i parametri di connessione a
+1. **application.properties**: descrive la porta da utilizzare per l'applicazione MSA e i parametri di connessione a
 MongoDB per i vari audit per la registrazione dello stato dell'elaborazione delle caselle di posta.
-2. ***it.highwaytech.broker.properties***: per i parametri di connessione al broker ExtraWay e le varie configurazioni
+2. **it.highwaytech.broker.properties**: per i parametri di connessione al broker ExtraWay e le varie configurazioni
 dell'audit applicativo.
-3. ***it.tredi.msa.properties***: configurazioni generali delle modalità operative di esecuzione dell'agent (per maggiori
+3. **it.tredi.msa.properties**: configurazioni generali delle modalità operative di esecuzione dell'agent (per maggiori
 informazioni controllare i commenti presenti sul file).
-4. ***log4j2.xml***: parametri di configurazione dei log applicativi.
+4. **log4j2.xml**: parametri di configurazione dei log applicativi.
 
 ## Configurazione servizi
 
