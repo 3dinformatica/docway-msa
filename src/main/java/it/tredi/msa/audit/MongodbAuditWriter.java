@@ -53,6 +53,7 @@ public class MongodbAuditWriter extends AuditWriter {
 			}			
 			auditMessage.setEmlId(null);
 			auditMessage.setErrorMessage(null);
+			auditMessage.setErrorClass(null);
 			auditMessage.setErrorStackTrace(null);
 			auditMessage.setMailboxAddress(mailboxConfiguration.getAddress());
 			auditMessage.setMailboxName(mailboxConfiguration.getName());
@@ -132,6 +133,8 @@ public class MongodbAuditWriter extends AuditWriter {
 		}
 		auditMessage.setEmlId(objId.toHexString());
 		auditMessage.setErrorMessage(exception.getMessage());
+		// mbernardini 10/06/2019 : registrazione della classe di errore per job di rielaborazione automatica
+		auditMessage.setErrorClass(exception.getClass().getName());
 		
 		//stack trace to string
 		StringWriter sw = new StringWriter();

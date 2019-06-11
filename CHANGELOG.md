@@ -2,6 +2,9 @@
 
 ## [3.0.14] - SNAPSHOT
 
+### Added
+- Registrazione della classe di un eventuale errore riscontrato in elaborazione di un messaggio (per job di rielaborazione automatica). (Task #18040)
+
 ### Fixed
 - Caricamento di tutti gli indirizzi email associati ad una persona interna per la notifica su documenti assegnati (Task #18022).
 
