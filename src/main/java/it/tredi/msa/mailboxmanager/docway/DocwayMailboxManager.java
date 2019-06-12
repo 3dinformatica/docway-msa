@@ -409,17 +409,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	}
 	
 	private void createDocwayFiles(ParsedMessage parsedMessage, DocwayDocument doc) throws Exception {
-
 		//email body html/text attachment
-		DocwayFile file = createDocwayFile();
-		file.setName(TESTO_HTML_EMAIL_FILENAME);
-		String text = parsedMessage.getHtmlParts().trim();
-		if (text.isEmpty()) { //no html -> switch to text version
-			file.setName(TESTO_EMAIL_FILENAME);
-			text = parsedMessage.getTextPartsWithHeaders();
-		}
-		file.setContentByProvider(new StringContentProvider(text));
-		doc.addFile(file);
+		// mbernardini 12/06/2019 : ripristinato il salvataggio come allegato del contenuto estratto come HTML e testo semplice
+		_attachMessageContent(doc, parsedMessage.getHtmlParts(), TESTO_HTML_EMAIL_FILENAME);
+		_attachMessageContent(doc, parsedMessage.getTextPartsWithHeaders(), TESTO_EMAIL_FILENAME);
 		
 		// mbernardini 17/12/2018 : gestione di messaggi email contenenti allegati danneggiati
 		boolean damagedFound = false;
@@ -428,7 +421,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//email attachments (files + immagini)
 		List<MailAttach> attachments = parsedMessage.getAttachments();
 		for (MailAttach attachment:attachments) {
-			file = createDocwayFile();
+			DocwayFile file = createDocwayFile();
 			
 			if (logger.isDebugEnabled())
 				logger.debug("Read content from attachment " + attachment.getFileName() + "...");
@@ -464,7 +457,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		// In caso di file danneggiati viene forzata l'aggiunta al documento dell'EML del messaggio email
 		//EML
 		if (((DocwayMailboxConfiguration)getConfiguration()).isStoreEml() || damagedFound) {
-			file = createDocwayFile();
+			DocwayFile file = createDocwayFile();
 			file.setContentByProvider(new MessageContentProvider(parsedMessage.getMessage(), true));
 			file.setName(MESSAGGIO_ORIGINALE_EMAIL_FILENAME);
 			doc.addFile(file);			
@@ -479,6 +472,22 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			//	note = "";
 			//note = "Rilevati possibili file danneggiati allegati alla mail: " + String.join(", ", damagedFiles) + "\n-----\n" + note;
 			//doc.setNote(note);
+		}
+	}
+	
+	/**
+	 * Aggiunta del testo estratto dal messaggio (in formato HTML o testo semplice) al documento
+	 * @param doc
+	 * @param content
+	 * @param attachName
+	 * @throws Exception 
+	 */
+	private void _attachMessageContent(DocwayDocument doc, String content, String attachName) throws Exception {
+		if (doc != null && content != null && !content.isEmpty()) {
+			DocwayFile file = createDocwayFile();
+			file.setName(attachName);
+			file.setContentByProvider(new StringContentProvider(content.trim()));
+			doc.addFile(file);
 		}
 	}
 	

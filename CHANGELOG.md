@@ -5,6 +5,9 @@
 ### Added
 - Registrazione della classe di un eventuale errore riscontrato in elaborazione di un messaggio (per job di rielaborazione automatica). (Task #18040)
 
+### Changed
+- Ripristinato il salvataggio come allegato del testo semplice estratto dal messaggio email elaborato (oltre che il testo HTML). Funzionalità già implementata su precedente versione di MSA.
+
 ### Fixed
 - Caricamento di tutti gli indirizzi email associati ad una persona interna per la notifica su documenti assegnati (Task #18022).
 
