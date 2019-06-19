@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.0.14] - SNAPSHOT
+## [3.0.14] - 2019-06-19
 
 ### Added
 - Registrazione della classe di un eventuale errore riscontrato in elaborazione di un messaggio (per job di rielaborazione automatica). (Task #18040)
