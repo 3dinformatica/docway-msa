@@ -8,6 +8,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.DESKeySpec;
 
 import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
+import it.tredi.msa.mailboxmanager.docway.utils.AspettoClassificazioneUtils;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,6 +65,8 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_MIME_ALLOW_UTF8 = "docway4mailboxmanager.mail-reader.mail-mime-allowutf8";
 	
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_ATTEMPTS = "docway4mailboxmanager.mail-reader.connection-attempts";
+	
+	public final static String DOCWAY4MAILBOXMANAGER_ASPETTO_CLASSIFICAZIONE = "docway4mailboxmanager.aspetto-classificazione";
 
 	private String host;
 	private int port;
@@ -388,7 +392,10 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		
 		// mbernardini 27/05/2019 : casella di import (casella contenente messaggi con allegati i reali messaggi da importare)
 		conf.setCasellaImport(casellaEl.attributeValue("casellaImport", "false").equalsIgnoreCase("true"));
-
+		
+		// mbernardini 19/06/2019 : archiviazione documenti tramite TAGS presenti sull'oggetto del messaggio elaborato da MSA
+		conf.setArchiviazioneByTags(casellaEl.attributeValue("archiviazioneTags", "false").equalsIgnoreCase("true"));
+		
 		conf.setIgnoreStandardOrphanPecReceipts(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_IGNORE_STANDARD_ORPHAN_RECEIPTS, true));
 		// mbernardini 18/01/2019 : salvataggio di ricevute PEC orfane come doc non protocollati
 		conf.setOrphanPecReceiptsAsVarie(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_PEC_ORPHAN_RECEIPTS_AS_VARIE, true));
@@ -399,6 +406,10 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		
 		// mbernardini 08/05/2019 : recupero del numero di tentativi di connessione alla casella di posta
 		conf.setMailboxConnectionAttempts(propertiesReader.getIntProperty(DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_ATTEMPTS, 3));
+		
+		// mbernardini 02/07/2019 : formato della classificazione da utilizzare in caso di fascicolazione automatica di 
+		// documenti (rif interni in CC ereditati dal fascicolo)
+		conf.setAspettoClassificazione(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_ASPETTO_CLASSIFICAZIONE, AspettoClassificazioneUtils.DEFAULT_ASPETTO_CLASSIFICAZIONE));
 		
 		return conf;
 	}

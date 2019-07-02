@@ -1,4 +1,4 @@
-package it.tredi.msa.test.manager;
+package it.tredi.msa.mailboxmanager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,13 +9,15 @@ import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.docway.DocwayDocument;
 import it.tredi.msa.mailboxmanager.docway.DocwayMailboxManager;
 import it.tredi.msa.mailboxmanager.docway.DocwayParsedMessage;
+import it.tredi.msa.mailboxmanager.docway.FascicoloReference;
 import it.tredi.msa.mailboxmanager.docway.RifEsterno;
 import it.tredi.msa.mailboxmanager.docway.RifInterno;
+import it.tredi.msa.mailboxmanager.docway.exception.MultipleFoldersException;
 
 /**
  * Manager DocWay di test per caselle PEC (utilizzato su alcuni UnitTest di parsing di messaggi PEC)
  */
-public class DocWayDummyPecMailboxManager extends DocwayMailboxManager {
+public class DocWayDummyMailboxManager extends DocwayMailboxManager {
 
 	@Override
 	protected Object saveNewDocument(DocwayDocument doc, ParsedMessage parsedMessage) throws Exception {
@@ -206,6 +208,26 @@ public class DocWayDummyPecMailboxManager extends DocwayMailboxManager {
 	public void messageStored(ParsedMessage parsedMessage) throws Exception {
 		// Nothing to do...
 		System.out.println("messageStored!");
+	}
+
+	@Override
+	protected FascicoloReference findCodFascicoloByTags(String codammaoo, List<String> tags) throws MultipleFoldersException, Exception {
+		return null;
+	}
+
+	@Override
+	protected boolean isMittenteInterno(ParsedMessage message) throws Exception {
+		return false;
+	}
+
+	@Override
+	protected boolean containsDestinatariEsterni(ParsedMessage message) throws Exception {
+		return false;
+	}
+
+	@Override
+	protected boolean containsDestinatariInterni(ParsedMessage message) throws Exception {
+		return true;
 	}
 
 }

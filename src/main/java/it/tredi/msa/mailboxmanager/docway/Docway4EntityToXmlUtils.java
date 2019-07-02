@@ -16,6 +16,7 @@ import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiRiepilogoItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
+import it.tredi.msa.mailboxmanager.docway.utils.AspettoClassificazioneUtils;
 import it.tredi.msa.mailboxmanager.utils.DateUtils;
 import it.tredi.utils.xml.XMLCleaner;
 
@@ -24,7 +25,14 @@ import it.tredi.utils.xml.XMLCleaner;
  */
 public class Docway4EntityToXmlUtils {
 
-	public static Document docwayDocumentToXml(DocwayDocument doc, Date currentDate) {
+	/**
+	 * Conversione di un documento da model a XML (compatibile con il formato docway4)
+	 * @param doc
+	 * @param currentDate
+	 * @param classifFormat Regola di formattazione della classificazione
+	 * @return
+	 */
+	public static Document docwayDocumentToXml(DocwayDocument doc, Date currentDate, String classifFormat) {
 		//DocwayDocument -> xml
 		Element docEl = DocumentHelper.createElement("doc");
 		Document xmlDocument =DocumentHelper.createDocument(docEl);
@@ -128,7 +136,7 @@ public class Docway4EntityToXmlUtils {
 			Element rifIntEl = DocumentHelper.createElement("rif_interni");
 			docEl.add(rifIntEl);
 			for (RifInterno rifInterno:doc.getRifInterni())
-				rifIntEl.add(rifInternoToXml(rifInterno));
+				rifIntEl.add(rifInternoToXml(rifInterno, classifFormat));
 		}		
 		
 		//allegato
@@ -301,7 +309,13 @@ public class Docway4EntityToXmlUtils {
 		return rifEl;
 	}	
 	
-	public static Element rifInternoToXml(RifInterno rifInterno) {
+	/**
+	 * Conversione di un Rif Interno da model a formato XML
+	 * @param rifInterno
+	 * @param classifFormat Regola di formattazione della classificazione (necessaria in caso di CC ereditati dal fascicolo)
+	 * @return
+	 */
+	public static Element rifInternoToXml(RifInterno rifInterno, String classifFormat) {
 		Element rifEl = DocumentHelper.createElement("rif");
 		rifEl.addAttribute("diritto", rifInterno.getDiritto());
 		rifEl.addAttribute("nome_persona", rifInterno.getNomePersona());
@@ -315,8 +329,11 @@ public class Docway4EntityToXmlUtils {
 		if (!rifInterno.getDiritto().equalsIgnoreCase("RPA"))
 			rifEl.addAttribute("intervento", rifInterno.isIntervento()? "si" : "no");
 		
-		if (rifInterno.getCodFasc() != null && !rifInterno.getCodFasc().isEmpty())
+		if (rifInterno.getCodFasc() != null && !rifInterno.getCodFasc().isEmpty()) {
 			rifEl.addAttribute("cod_fasc", rifInterno.getCodFasc());
+			if (!rifInterno.getDiritto().equalsIgnoreCase("RPA"))
+				rifEl.addAttribute("cc_from_fasc", AspettoClassificazioneUtils.printFascNum(rifInterno.getCodFasc(), classifFormat));
+		}
 		return rifEl;
 	}
 	
