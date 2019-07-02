@@ -176,6 +176,9 @@ public class ArchiviazioneTagsTest extends EmlReader {
 		
 		System.out.println("fascicolo.rifs.size = " + fascicolo.getRifs().size());
 		
+		// verifico se si tratta di un messaggio inoltrato alla casella di archiviazione TAGS
+		assertFalse(this.mailboxManager.isForwardedToTagsMailbox(parsed));
+		
 		// controllo se il mittente del messaggio e' interno o esterno (doc in partenza o arrivo)
 		assertFalse(this.mailboxManager.isMittenteRifInt(parsed));
 		
@@ -247,6 +250,9 @@ public class ArchiviazioneTagsTest extends EmlReader {
 		
 		System.out.println("fascicolo.rifs.size = " + fascicolo.getRifs().size());
 		
+		// verifico se si tratta di un messaggio inoltrato alla casella di archiviazione TAGS
+		assertFalse(this.mailboxManager.isForwardedToTagsMailbox(parsed));
+		
 		// controllo se il mittente del messaggio e' interno o esterno (doc in partenza o arrivo)
 		assertTrue(this.mailboxManager.isMittenteRifInt(parsed));
 		
@@ -305,6 +311,9 @@ public class ArchiviazioneTagsTest extends EmlReader {
 		// recupero del fascicolo in base ai TAGS individuati sull'oggetto
 		FascicoloReference fascicolo = this.mailboxManager.fascicoloByTags(COD_AMM + COD_AOO, parsed.getSubjectTags());
 		assertNull(fascicolo);
+
+		// verifico se si tratta di un messaggio inoltrato alla casella di archiviazione TAGS
+		assertFalse(this.mailboxManager.isForwardedToTagsMailbox(parsed));
 		
 		// controllo se il mittente del messaggio e' interno o esterno (doc in partenza o arrivo)
 		assertTrue(this.mailboxManager.isMittenteRifInt(parsed));
@@ -314,6 +323,154 @@ public class ArchiviazioneTagsTest extends EmlReader {
 		
 		// verifico la presenza di rif esterni fra i destinatari del messaggio
 		assertTrue(this.mailboxManager.containsDestinatariRifEst(parsed));
+		
+		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
+				
+		assertEquals(0, parsed.getRelevantMssages().size());
+	}
+	
+	/**
+	 * Test di archiviazione TAGS come doc non protocollato (mittente e destinatari tutti interni)
+	 * @throws Exception
+	 */
+	@Test
+	public void mittenteDestinatriInterniTags() throws Exception {
+		String fileName = "solo-interni-tags.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + TAGS_EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file), false);
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		assertFalse(parsed.isPecMessage());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(0, parsed.getAttachments().size());
+		
+		// verifica dei TAGS contenuti nell'oggetto del messaggio
+		assertTrue(parsed.containsTags());
+		assertEquals(2, parsed.getSubjectTags().size());
+		assertEquals("#2019", parsed.getSubjectTags().get(0));
+		assertEquals("#agrodolce", parsed.getSubjectTags().get(1));
+				
+		Document interopDocument = parsed.getSegnaturaInteropPADocument();
+		assertNull(interopDocument); // non si tratta di un messaggio di interoperabilita'
+		
+		// recupero del fascicolo in base ai TAGS individuati sull'oggetto
+		FascicoloReference fascicolo = this.mailboxManager.fascicoloByTags(COD_AMM + COD_AOO, parsed.getSubjectTags());
+		assertNotNull(fascicolo);
+		assertNotNull(fascicolo.getCodFascicolo());
+		assertEquals("2018-3DINBOL-01/02.00006.00002.00002", fascicolo.getCodFascicolo());
+		assertNotNull(fascicolo.getOggetto());
+		assertNotEquals("", fascicolo.getOggetto());
+		
+		System.out.println("fascicolo.numero = " + fascicolo.getCodFascicolo());
+		System.out.println("fascicolo.oggetto = " + fascicolo.getOggetto());
+		
+		assertNotNull(fascicolo.getRifs());
+		assertTrue(fascicolo.getRifs().size() > 0); // ogni fascicolo ha almeno un rif. interno (rpa)
+		
+		System.out.println("fascicolo.rifs.size = " + fascicolo.getRifs().size());
+		
+		// verifico se si tratta di un messaggio inoltrato alla casella di archiviazione TAGS
+		assertFalse(this.mailboxManager.isForwardedToTagsMailbox(parsed));
+		
+		// controllo se il mittente del messaggio e' interno o esterno (doc in partenza o arrivo)
+		assertTrue(this.mailboxManager.isMittenteRifInt(parsed));
+		
+		// verifico la presenza di rif interni fra i destinatari del messaggio 
+		assertTrue(this.mailboxManager.containsDestinatariRifInt(parsed));
+		
+		// verifico la presenza di rif esterni fra i destinatari del messaggio
+		assertFalse(this.mailboxManager.containsDestinatariRifEst(parsed));
+		
+		// definizione del flusso del documento
+		assertEquals(DocTipoEnum.VARIE, this.mailboxManager.flussoByRecipients(parsed));
+		
+		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
+				
+		assertEquals(0, parsed.getRelevantMssages().size());
+	}
+	
+	/**
+	 * Test di inoltro a casella di archiviazione TAGS
+	 * @throws Exception
+	 */
+	@Test
+	public void inoltroMailboxTags() throws Exception {
+		String fileName = "inoltro-casella-tags.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + TAGS_EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file), false);
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		assertFalse(parsed.isPecMessage());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(1, parsed.getAttachments().size());
+		
+		// verifica dei TAGS contenuti nell'oggetto del messaggio
+		assertTrue(parsed.containsTags());
+		assertEquals(2, parsed.getSubjectTags().size());
+		assertEquals("#2019", parsed.getSubjectTags().get(0));
+		assertEquals("#agrodolce", parsed.getSubjectTags().get(1));
+		
+		Document interopDocument = parsed.getSegnaturaInteropPADocument();
+		assertNull(interopDocument); // non si tratta di un messaggio di interoperabilita'
+		
+		// recupero del fascicolo in base ai TAGS individuati sull'oggetto
+		FascicoloReference fascicolo = this.mailboxManager.fascicoloByTags(COD_AMM + COD_AOO, parsed.getSubjectTags());
+		assertNotNull(fascicolo);
+		assertNotNull(fascicolo.getCodFascicolo());
+		assertEquals("2018-3DINBOL-01/02.00006.00002.00002", fascicolo.getCodFascicolo());
+		assertNotNull(fascicolo.getOggetto());
+		assertNotEquals("", fascicolo.getOggetto());
+		
+		System.out.println("fascicolo.numero = " + fascicolo.getCodFascicolo());
+		System.out.println("fascicolo.oggetto = " + fascicolo.getOggetto());
+		
+		assertNotNull(fascicolo.getRifs());
+		assertTrue(fascicolo.getRifs().size() > 0); // ogni fascicolo ha almeno un rif. interno (rpa)
+		
+		System.out.println("fascicolo.rifs.size = " + fascicolo.getRifs().size());
+		
+		// verifico se si tratta di un messaggio inoltrato alla casella di archiviazione TAGS
+		assertTrue(this.mailboxManager.isForwardedToTagsMailbox(parsed));
+		
+		// controllo se il mittente del messaggio e' interno o esterno (doc in partenza o arrivo)
+		assertTrue(this.mailboxManager.isMittenteRifInt(parsed));
+		
+		// verifico la presenza di rif interni fra i destinatari del messaggio 
+		assertTrue(this.mailboxManager.containsDestinatariRifInt(parsed));
+		
+		// verifico la presenza di rif esterni fra i destinatari del messaggio
+		assertFalse(this.mailboxManager.containsDestinatariRifEst(parsed));
+		
+		// definizione del flusso del documento
+		assertEquals(DocTipoEnum.VARIE, this.mailboxManager.flussoByRecipients(parsed));
 		
 		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
 				

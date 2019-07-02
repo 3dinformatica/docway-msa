@@ -319,19 +319,15 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		// mbernardini 01/07/2019 : archiviazione tramite TAGS
 		// In caso di archiviazione tramite TAGS attiva potrebbe essere necessario applicare variazioni alla costruzione 
 		// del documento in base a quanto previsto dal document model
-		boolean fascicoloFound = false;
 		FascicoloReference fascicolo = null;
 		
 		if (conf.isArchiviazioneByTags() && parsedMessage.containsTags()) {
 			fascicolo = this.findCodFascicoloByTags(conf.getCodAmmAoo(), parsedMessage.getSubjectTags());
 			
 			if (fascicolo != null && fascicolo.getCodFascicolo() != null && !fascicolo.getCodFascicolo().isEmpty()) {
-				fascicoloFound = true;
 				if (logger.isDebugEnabled())
 					logger.debug("[" + conf.getAddress() + "] fascicolazione tramite TAGS. fascicolo = " + fascicolo.getCodFascicolo());
-			}
-			
-			if (fascicoloFound) {
+				
 				// identificazione del flusso di documento
 				forcedType = getFlussoDocByRecipients(parsedMessage);
 				if (logger.isDebugEnabled())
@@ -479,7 +475,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	 * @return
 	 */
 	private List<RifInterno> mergeRifInterniFascicolo(List<RifInterno> rifInterni, FascicoloReference fascicolo) {
-		if (fascicolo != null) {
+		if (fascicolo != null && fascicolo.getCodFascicolo() != null && !fascicolo.getCodFascicolo().isEmpty()) {
 			if (rifInterni == null)
 				rifInterni = new ArrayList<>();
 			
@@ -900,9 +896,25 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         		doc.setClassifCod(classif.substring(0, classif.indexOf(" ")));
         }
         */
+        
+        // mbernardini 01/07/2019 : archiviazione tramite TAGS
+		// In caso di archiviazione tramite TAGS attiva potrebbe essere necessario applicare variazioni alla costruzione 
+		// del documento in base a quanto previsto dal document model
+		FascicoloReference fascicolo = null;
+		if (conf.isArchiviazioneByTags() && parsedMessage.containsTags()) {
+			fascicolo = this.findCodFascicoloByTags(conf.getCodAmmAoo(), parsedMessage.getSubjectTags());
+			
+			if (fascicolo != null && fascicolo.getCodFascicolo() != null && !fascicolo.getCodFascicolo().isEmpty()) {
+				if (logger.isDebugEnabled())
+					logger.debug("[" + conf.getAddress() + "] fascicolazione tramite TAGS. fascicolo = " + fascicolo.getCodFascicolo());
+			}
+			
+			// TODO In caso di email PEC di interoperabilita' non e' necessario valutare il flusso del documento perche' dovrebbe sempre trattarsi di un documento in arrivo
+		}
 		
 		//rif interni
 		List<RifInterno> rifInterni = createRifInterni(parsedMessage);
+		rifInterni = this.mergeRifInterniFascicolo(rifInterni, fascicolo); // eventuale archiviazione in fascicolo tramite TAGS estratti dall'oggetto del messaggio
 		for (RifInterno rifInterno:rifInterni)
 			doc.addRifInterno(rifInterno);
 		

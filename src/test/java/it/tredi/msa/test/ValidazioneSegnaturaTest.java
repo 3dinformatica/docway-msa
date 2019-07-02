@@ -116,5 +116,45 @@ public class ValidazioneSegnaturaTest extends EmlReader {
 		assertTrue(parsed.getRelevantMssages().get(0).indexOf("testo_di_prova.pdf") != -1);
 	}
 	
+	/**
+	 * Test di parsing di messaggio email con segnatura priva di allegati ma con testo indicato (VALIDA)
+	 * @throws Exception
+	 */
+	@Test
+	public void segnaturaSoloTestoExtraction() throws Exception {
+		String fileName = "segnatura_solo_testo.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file), false);
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		assertTrue(parsed.isPecMessage());
+		assertFalse(parsed.isPecReceipt());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(3, parsed.getAttachments().size());
+		
+		Document interopDocument = parsed.getSegnaturaInteropPADocument();
+		assertNotNull(interopDocument);
+		
+		// TODO stampa del testo
+		
+		assertTrue(parsed.isSegnaturaInteropPAMessage(COD_AMM, COD_AOO));
+		
+		this.mailboxManager.processMessage(parsed);
+		assertEquals(0, parsed.getRelevantMssages().size());
+	}
 
 }

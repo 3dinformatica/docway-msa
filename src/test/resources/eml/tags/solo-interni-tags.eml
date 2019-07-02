@@ -1,0 +1,128 @@
+Return-Path: <mbernardini@3di.it>
+Delivered-To: test-archiviatore@libero.it
+Received: from dcd-15 ([10.103.10.29])
+	by dcbackend-26.iol.local with LMTP id KL+oM3VlG111+QQAtEMq+Q
+	for <test-archiviatore@libero.it>; Tue, 02 Jul 2019 16:08:53 +0200
+Received: from dcp-16.iol.local ([10.103.10.29])
+	by dcd-15 with LMTP id oNCNM3VlG13UEAAAkA0XfQ
+	; Tue, 02 Jul 2019 16:08:53 +0200
+Received: from libero.it ([10.103.10.29])
+	by dcp-16.iol.local with LMTP id OD5aG3VlG134fgAA26Pe9g
+	; Tue, 02 Jul 2019 16:08:53 +0200
+Received: from mail-io1-f45.google.com ([209.85.166.45])
+	by smtp-29.iol.local with ESMTP
+	id iJQ9htDBYVSqViJSnhdQvA; Tue, 02 Jul 2019 16:08:53 +0200
+X-IOL-DMARC: pass con il dominio 3di.it 
+X-IOL-DKIM: pass con il dominio d=3di.it
+X-IOL-SPF: pass con l'IP 209.85.166.45;3di.it
+X-IOL-SEC: _SPFOK_DKIMOK_DMARCOK
+x-fbsn: gmail.com
+x-libjamoibt: 2601
+Received-SPF: pass
+X-CNFS-Analysis: v=2.3 cv=cLYxTWWN c=1 sm=1 tr=0
+ a=UmkYa9AZFJEwcQacvEqPdQ==:117 a=0o9FgrsRnhwA:10 a=k3qqfnPMAAAA:8
+ a=uwafwA5Ghk4UAXG13CEA:9 a=QEXdDO2ut3YA:10 a=iEuQFhaYB3NVL7Wy1bkA:9
+ a=tcAsW5YjiigJhoiI:21 a=CCNC_hAKtvY2_BkhHswq:22
+Authentication-Results: smtp-29.iol.local;
+	dkim=pass header.d=3di.it header.b=MTwx9dDt
+Received: by mail-io1-f45.google.com with SMTP id j6so37251653ioa.5
+        for <test-archiviatore@libero.it>; Tue, 02 Jul 2019 07:08:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=3di.it; s=google;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=05BCtoU84NQCmtcxFvxbeKUIHIeRExAJ/88MiMCnYa8=;
+        b=MTwx9dDtYJUylf3bLoiLJWqOQsCtcbYcsX7wJijFaoo8sPdqzkuPz8l/8ow7fxxxA/
+         BEc5w84z9EB5OPqn5KBo/aBwTomIQqeLUgErTzB028FG8BnArlP/e13JihmLhUDvFLbB
+         10BvG0ubOdmR6dCrYIEFwWDop8j9W8pM30UcWkbXeMbuBSVDUgWMnRr4RhsSOEXUwIgj
+         FbksM2MzKjTaIqeJ1cq+/9O5D87DxOXTIX+tVkdrBl5/q6cEqvawg9s1g0N9KgP4yghe
+         euHS3Ojfd2pxW1vyDuCeo4Et37LF6Enq2JgmpE/PmktEENGtzzZaxIjOepyvxkHtJog3
+         Oesw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=05BCtoU84NQCmtcxFvxbeKUIHIeRExAJ/88MiMCnYa8=;
+        b=EEa7DqhrnTH2mZp2v4pdp8+m8MXAg55Zni0cFUVQK2hPT2KT2oDPBsxHXlYOHO3aVT
+         Ji9G7LLU6D9gp9jxEHn+qSVwdku6ofO6MDJZjVeErgAigZTjJJw00I53XFs6jdBzbPpX
+         nvveFbCIDX60CHUKXSqiLdPF51d5Se/Y0Dxx/OJr02vYRQLwJZ4554kL11HNsfwF34iU
+         ygAvisvR747L0qvkP1pDS3ubL2wn1XX4QnrxybHKUQlUME0ZIe4+8RaDM1nB4N20LUoj
+         NHw7Lk/A/akxDzTqQLSqYEbop/bDihNwRCZhl6QXv29sp5+hpHmD79sXXG9etPwOvydK
+         TcEg==
+X-Gm-Message-State: APjAAAU1mdi6pbgJQntxjuC+5XhR3GQCGo9+xRo7uEGuGGdp4JgELBW1
+	6bqsMFLbl0x82Ueu0kNHQV5YUpbS0DpBYNhJoDZ8JfLs
+X-Google-Smtp-Source: APXvYqzFBM+Y9qQi/Rs460rgXRAgcxgMyKUND7AURIV+m+dDUssXACPoY/4oLiWGm/5qmoZK1tHAgoGQgTIm7eVZKHc=
+X-Received: by 2002:a02:16c5:: with SMTP id a188mr36670567jaa.86.1562076533121;
+ Tue, 02 Jul 2019 07:08:53 -0700 (PDT)
+MIME-Version: 1.0
+From: Mirko Bernardini <mbernardini@3di.it>
+Date: Tue, 2 Jul 2019 16:08:42 +0200
+Message-ID: <CAHHYZu7gSZKb8bhwGHCiS+82PJzXVduCGZ=UPNU2TMFZUqsGvQ@mail.gmail.com>
+Subject: #2019 test solo interni #agrodolce
+To: Domenico Pranteda <dpranteda@3di.it>
+Cc: test-archiviatore@libero.it
+Content-Type: multipart/alternative; boundary="000000000000de762e058cb348be"
+X-CMAE-Envelope: MS4wfAW0tiyOOWRXDn5LHR39HktttQuNf+hNXCuCtpEiTrxopOYekHeHQGVlFLAdmYCtkz1hG4hhdTbFInbRvRWiH4fZxkvjn/cw6FJakQ7LXZVVZCTbArsi
+ f5Osl/kmCjPYWyQF9pj4VxqeUoqDP3/zFH4rY9zPdfwYOvfe1KAB+yWxwDstKCH/pK+BPevFvQNeJw==
+
+--000000000000de762e058cb348be
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+testo
+
+--=20
+--------------------------------------------------------------------
+Mirko Bernardini
+
+3D INFORMATICA S.R.L.
+Via Speranza, 35
+40068 S. Lazzaro di Savena (BO)
+http://www.3di.it
+Tel : 051 450844
+Fax : 051 451942
+--------------------------------------------------------------------
+
+Le informazioni, i dati e le notizie contenute nella presente comunicazione
+e i relativi allegati sono di natura privata e come tali possono essere
+riservati e sono, comunque, ad uso esclusivo del destinatario. La
+diffusione, distribuzione e/o la copiatura del documento trasmesso da parte
+di qualsiasi soggetto diverso dal destinatario =C3=A8 proibita. Se ha ricev=
+uto
+questo messaggio per errore, la preghiamo di eliminarlo senza copiarlo o
+inoltrarlo a terzi, dandocene gentilmente comunicazione, anche inviando un
+messaggio di ritorno all=E2=80=99indirizzo e-mail del mittente. Grazie.
+
+This e-mail (including attachments) is intended only for the recipient(s)
+named above. It may contain confidential or privileged information and
+should not be read, copied or otherwise used by any other person. If you
+have received this e-mail in error, please notify the sender by reply
+e-mail, then delete it from your system without copying it. Thank you.
+
+--000000000000de762e058cb348be
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">testo<br clear=3D"all"><div><br></div>-- <br><div dir=3D"l=
+tr" class=3D"gmail_signature" data-smartmail=3D"gmail_signature"><div dir=
+=3D"ltr"><div><div dir=3D"ltr">--------------------------------------------=
+------------------------<br>Mirko Bernardini<br><br>3D INFORMATICA S.R.L.<b=
+r>Via Speranza, 35<br>40068 S. Lazzaro di Savena (BO)<br><a href=3D"http://=
+www.3di.it" target=3D"_blank">http://www.3di.it</a><br>Tel : 051 450844<br>=
+Fax : 051 451942<br>-------------------------------------------------------=
+-------------<br><i style=3D"font-size:12.8px"><br></i></div><div dir=3D"lt=
+r"><font size=3D"1">Le informazioni, i dati e le notizie contenute nella pr=
+esente comunicazione e i relativi allegati sono di natura privata e come ta=
+li possono essere riservati e sono, comunque, ad uso esclusivo del destinat=
+ario. La diffusione, distribuzione e/o la copiatura del documento trasmesso=
+ da parte di qualsiasi soggetto diverso dal destinatario =C3=A8 proibita. S=
+e ha ricevuto questo messaggio per errore, la preghiamo di eliminarlo senza=
+ copiarlo o inoltrarlo a terzi, dandocene gentilmente comunicazione, anche =
+inviando un messaggio di ritorno all=E2=80=99indirizzo e-mail del mittente.=
+ Grazie.<br></font></div><div dir=3D"ltr"><p><font size=3D"1">This e-mail (=
+including attachments) is intended only for the recipient(s) named above. I=
+t may contain confidential or privileged information and should not be read=
+, copied or otherwise used by any other person. If you have received this e=
+-mail in error, please notify the sender by reply e-mail, then delete it fr=
+om your system without copying it. Thank you.</font></p></div></div></div><=
+/div></div>
+
+--000000000000de762e058cb348be--
