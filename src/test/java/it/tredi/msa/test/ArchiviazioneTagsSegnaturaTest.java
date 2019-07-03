@@ -36,7 +36,7 @@ import it.tredi.msa.test.conf.MsaTesterApplication;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = MsaTesterApplication.class)
-//@Ignore // TODO per l'attivazione richiede un archivio eXtraWay opportunamente configurato
+@Ignore // TODO per l'attivazione richiede un archivio eXtraWay opportunamente configurato
 public class ArchiviazioneTagsSegnaturaTest extends EmlReader {
 	
 	private static final String TAGS_EML_LOCATION = "tags";
