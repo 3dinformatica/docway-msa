@@ -300,7 +300,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	 * @return Documento da registrare su DocWay
 	 * @throws Exception
 	 */
-	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {
+	protected DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {
 		return createDocwayDocumentByMessage(parsedMessage, DocTipoEnum.NOONE);
 	}
 	
@@ -316,6 +316,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		DocwayDocument doc = new DocwayDocument();
 		
+		// mbernardini 03/07/2019 : non si verifica in produzione, ma necessario per gli unittest
+		if (currentDate == null)
+			currentDate = new Date();
+		
 		// mbernardini 01/07/2019 : archiviazione tramite TAGS
 		// In caso di archiviazione tramite TAGS attiva potrebbe essere necessario applicare variazioni alla costruzione 
 		// del documento in base a quanto previsto dal document model
@@ -324,7 +328,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		if (conf.isArchiviazioneByTags() && parsedMessage.containsTags()) {
 			fascicolo = this.findCodFascicoloByTags(conf.getCodAmmAoo(), parsedMessage.getSubjectTags());
 			
-			if (fascicolo != null && fascicolo.getCodFascicolo() != null && !fascicolo.getCodFascicolo().isEmpty()) {
+			if (isValidFolderReference(fascicolo)) {
 				if (logger.isDebugEnabled())
 					logger.debug("[" + conf.getAddress() + "] fascicolazione tramite TAGS. fascicolo = " + fascicolo.getCodFascicolo());
 				
@@ -433,12 +437,21 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			doc.addRifInterno(rifInterno);
 		
 		//storia creazione
-		StoriaItem creazione = new StoriaItem("creazione");
+		StoriaItem creazione = new StoriaItem(StoriaItemType.CREAZIONE);
 		creazione.setOper(conf.getOper());
 		creazione.setUffOper(conf.getUffOper());
 		creazione.setData(currentDate);
 		creazione.setOra(currentDate);
 		doc.addStoriaItem(creazione);
+		
+		// mbernardini 03/07/2019 : aggiunta della fascicolazione alla storia del documento
+		if (isValidFolderReference(fascicolo)) {
+			StoriaItem fascicolazione = StoriaItem.createFromAddFascicolo(fascicolo);
+			fascicolazione.setOperatore(conf.getOperatore());
+			fascicolazione.setData(currentDate);
+			fascicolazione.setOra(currentDate);
+			doc.addStoriaItem(fascicolazione);
+		}
 		
 		//aggiunta in storia delle operazioni relative ai rif interni
 		for (RifInterno rifInterno:rifInterni) {
@@ -475,7 +488,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	 * @return
 	 */
 	private List<RifInterno> mergeRifInterniFascicolo(List<RifInterno> rifInterni, FascicoloReference fascicolo) {
-		if (fascicolo != null && fascicolo.getCodFascicolo() != null && !fascicolo.getCodFascicolo().isEmpty()) {
+		if (isValidFolderReference(fascicolo)) {
 			if (rifInterni == null)
 				rifInterni = new ArrayList<>();
 			
@@ -684,10 +697,14 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		return file;
 	}	
 	
-	private DocwayDocument createDocwayDocumentByInteropPAMessage(ParsedMessage  parsedMessage) throws Exception {
+	protected DocwayDocument createDocwayDocumentByInteropPAMessage(ParsedMessage  parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		if (logger.isDebugEnabled())
 			logger.debug("[" + conf.getAddress() + "] creazione del documento da messaggio Interoperabilita'. messageId = " + parsedMessage.getMessageId());
+		
+		// mbernardini 03/07/2019 : non si verifica in produzione, ma necessario per gli unittest
+		if (currentDate == null)
+			currentDate = new Date();
 		
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();
@@ -904,7 +921,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		if (conf.isArchiviazioneByTags() && parsedMessage.containsTags()) {
 			fascicolo = this.findCodFascicoloByTags(conf.getCodAmmAoo(), parsedMessage.getSubjectTags());
 			
-			if (fascicolo != null && fascicolo.getCodFascicolo() != null && !fascicolo.getCodFascicolo().isEmpty()) {
+			if (isValidFolderReference(fascicolo)) {
 				if (logger.isDebugEnabled())
 					logger.debug("[" + conf.getAddress() + "] fascicolazione tramite TAGS. fascicolo = " + fascicolo.getCodFascicolo());
 			}
@@ -919,12 +936,21 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			doc.addRifInterno(rifInterno);
 		
 		//storia creazione
-		StoriaItem creazione = new StoriaItem("creazione");
+		StoriaItem creazione = new StoriaItem(StoriaItemType.CREAZIONE);
 		creazione.setOper(conf.getOper());
 		creazione.setUffOper(conf.getUffOper());
 		creazione.setData(currentDate);
 		creazione.setOra(currentDate);
 		doc.addStoriaItem(creazione);
+		
+		// mbernardini 03/07/2019 : aggiunta della fascicolazione alla storia del documento
+		if (isValidFolderReference(fascicolo)) {
+			StoriaItem fascicolazione = StoriaItem.createFromAddFascicolo(fascicolo);
+			fascicolazione.setOperatore(conf.getOperatore());
+			fascicolazione.setData(currentDate);
+			fascicolazione.setOra(currentDate);
+			doc.addStoriaItem(fascicolazione);
+		}
 		
 		//aggiunta in storia delle operazioni relative ai rif interni
 		for (RifInterno rifInterno:rifInterni) {
@@ -1279,5 +1305,15 @@ public abstract class DocwayMailboxManager extends MailboxManager {
     		// mbernardini 25/01/2019 : registrazione nell'audit di msa dello skip
     		super.messageSkipped(parsedMessage); // in realta' il messaggio risulta skippato
     }
+	
+	/**
+	 * Ritorna TRUE se il riferimento al fascicolo risulta corretto (codice del fascicolo 
+	 * settato), false altrimenti
+	 * @param fascicolo
+	 * @return
+	 */
+	private boolean isValidFolderReference(FascicoloReference fascicolo) {
+		return (fascicolo != null && fascicolo.getCodFascicolo() != null && !fascicolo.getCodFascicolo().isEmpty());
+	}
 	
 }

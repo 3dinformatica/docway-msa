@@ -195,7 +195,9 @@ public class Docway4EntityToXmlUtils {
 	}
 	
 	public static Element storiaItemToXml(StoriaItem storiaItem) {
-		Element el = DocumentHelper.createElement(storiaItem.getType());
+		Element el = DocumentHelper.createElement(storiaItem.getItemType().getText());
+		
+		// informazioni sull'operatore che ha eseguito l'azione della storia
 		if (storiaItem.getOper() != null && !storiaItem.getOper().isEmpty())
 			el.addAttribute("oper", storiaItem.getOper());
 		if (storiaItem.getCodOper() != null && !storiaItem.getCodOper().isEmpty())
@@ -204,6 +206,16 @@ public class Docway4EntityToXmlUtils {
 			el.addAttribute("uff_oper", storiaItem.getUffOper());
 		if (storiaItem.getCodUffOper() != null && !storiaItem.getCodUffOper().isEmpty())
 			el.addAttribute("cod_uff_oper", storiaItem.getCodUffOper());
+		if (storiaItem.getOperatore() != null && !storiaItem.getOperatore().isEmpty())
+			el.addAttribute("operatore", storiaItem.getOperatore());
+		
+		// date e ora dell'azione
+		if (storiaItem.getData() != null && !storiaItem.getData().isEmpty())
+			el.addAttribute("data", storiaItem.getData());
+		if (storiaItem.getOra() != null && !storiaItem.getOra().isEmpty())
+			el.addAttribute("ora", storiaItem.getOra());
+		
+		// eventuali informazioni su assegnazioni
 		if (storiaItem.getNomePersona() != null && !storiaItem.getNomePersona().isEmpty())
 			el.addAttribute("nome_persona", storiaItem.getNomePersona());
 		if (storiaItem.getCodPersona() != null && !storiaItem.getCodPersona().isEmpty())
@@ -212,14 +224,14 @@ public class Docway4EntityToXmlUtils {
 			el.addAttribute("nome_uff", storiaItem.getNomeUff());
 		if (storiaItem.getCodUff() != null && !storiaItem.getCodUff().isEmpty())
 			el.addAttribute("cod_uff", storiaItem.getCodUff());		
-		if (storiaItem.getOperatore() != null && !storiaItem.getOperatore().isEmpty())
-			el.addAttribute("operatore", storiaItem.getOperatore());
-		if (storiaItem.getCodOperatore() != null && !storiaItem.getCodOperatore().isEmpty())
-			el.addAttribute("cod_operatore", storiaItem.getCodOperatore());
-		if (storiaItem.getData() != null && !storiaItem.getData().isEmpty())
-			el.addAttribute("data", storiaItem.getData());
-		if (storiaItem.getOra() != null && !storiaItem.getOra().isEmpty())
-			el.addAttribute("ora", storiaItem.getOra());
+		
+		if (storiaItem.getTipo() != null && !storiaItem.getTipo().isEmpty())
+			el.addAttribute("tipo", storiaItem.getTipo());
+		
+		// eventuali informazioni su fascicolazione
+		if (storiaItem.getCodice() != null && !storiaItem.getCodice().isEmpty())
+			el.addAttribute("codice", storiaItem.getCodice());
+		
 		return el;
 	}
 
