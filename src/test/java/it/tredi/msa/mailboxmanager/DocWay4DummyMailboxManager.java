@@ -121,4 +121,18 @@ public class DocWay4DummyMailboxManager extends Docway4MailboxManager {
 		return this.getFlussoDocByRecipients(message);
 	}
 	
+	/**
+	 * Pubblicazione del metodo createDocwayDocumentByMessage per chiamata diretta da unit-test
+	 */
+	public DocwayDocument buildDocwayDocument(ParsedMessage message) throws Exception {
+		return this.createDocwayDocumentByMessage(message);
+	}
+	
+	/**
+	 * Pubblicazione del metodo createDocwayDocumentByInteropPAMessage per chiamata diretta da unit-test
+	 */
+	public DocwayDocument buildDocWayDocumentByInterop(ParsedMessage message) throws Exception {
+		return this.createDocwayDocumentByInteropPAMessage(message);
+	}
+	
 }

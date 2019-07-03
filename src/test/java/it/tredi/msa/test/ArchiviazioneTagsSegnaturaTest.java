@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -25,6 +26,7 @@ import it.tredi.msa.configuration.docway.Docway4MailboxConfiguration;
 import it.tredi.msa.mailboxmanager.DocWay4DummyMailboxManager;
 import it.tredi.msa.mailboxmanager.DummyMailReader;
 import it.tredi.msa.mailboxmanager.docway.DocTipoEnum;
+import it.tredi.msa.mailboxmanager.docway.DocwayDocument;
 import it.tredi.msa.mailboxmanager.docway.DocwayParsedMessage;
 import it.tredi.msa.mailboxmanager.docway.FascicoloReference;
 import it.tredi.msa.test.conf.MsaTesterApplication;
@@ -34,7 +36,7 @@ import it.tredi.msa.test.conf.MsaTesterApplication;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = MsaTesterApplication.class)
-@Ignore // TODO per l'attivazione richiede un archivio eXtraWay opportunamente configurato
+//@Ignore // TODO per l'attivazione richiede un archivio eXtraWay opportunamente configurato
 public class ArchiviazioneTagsSegnaturaTest extends EmlReader {
 	
 	private static final String TAGS_EML_LOCATION = "tags";
@@ -47,6 +49,8 @@ public class ArchiviazioneTagsSegnaturaTest extends EmlReader {
 	private static final String XW_DOCWAY_DB = "xdocwaydoc";
 	private static final String XW_ACL_DB = "acl";
 
+	private static final String EXPECTED_COD_FASC = "2018-3DINBOL-01/02.00006.00002.00002";
+	
 	/**
 	 * Manager di test per DocWay4
 	 */
@@ -91,6 +95,9 @@ public class ArchiviazioneTagsSegnaturaTest extends EmlReader {
 		configuration.setCodAoo(COD_AOO);
 		configuration.setCodAooInteropPA(COD_AOO);
 		configuration.setCodAmmAoo(COD_AMM + COD_AOO);
+		
+		configuration.setOper("archiviatore automatico");
+		configuration.setUffOper("unit-test");
 		
 		configuration.setTipoDoc("arrivo");
 		
@@ -164,7 +171,7 @@ public class ArchiviazioneTagsSegnaturaTest extends EmlReader {
 		FascicoloReference fascicolo = this.mailboxManager.fascicoloByTags(COD_AMM + COD_AOO, parsed.getSubjectTags());
 		assertNotNull(fascicolo);
 		assertNotNull(fascicolo.getCodFascicolo());
-		assertEquals("2018-3DINBOL-01/02.00006.00002.00002", fascicolo.getCodFascicolo());
+		assertEquals(EXPECTED_COD_FASC, fascicolo.getCodFascicolo());
 		assertNotNull(fascicolo.getOggetto());
 		assertNotEquals("", fascicolo.getOggetto());
 		
@@ -190,6 +197,29 @@ public class ArchiviazioneTagsSegnaturaTest extends EmlReader {
 		
 		// definizione del flusso del documento
 		assertEquals(DocTipoEnum.ARRIVO, this.mailboxManager.flussoByRecipients(parsed));
+		
+		// conversione da message a document
+		DocwayDocument document = this.mailboxManager.buildDocWayDocumentByInterop(parsed);
+		assertNotNull(document);
+		assertEquals(DocTipoEnum.ARRIVO.getText(), document.getTipo());
+		assertEquals(1, document.getRifEsterni().size());
+		assertNull(document.getRifEsterni().get(0).getCod());
+		assertEquals("2018-COMUASO-0000954", document.getRifEsterni().get(0).getnProt());
+		assertEquals("20180529", document.getRifEsterni().get(0).getDataProt());
+		assertEquals("Comune di Asolo", document.getRifEsterni().get(0).getNome());
+		assertEquals("assistenza@pec.3di.it", document.getRifEsterni().get(0).getEmailCertificata());
+		assertEquals(3, document.getRifInterni().size());
+		assertEquals(EXPECTED_COD_FASC, document.getRifInterni().get(0).getCodFasc());
+		assertEquals("PI000008", document.getRifInterni().get(0).getCodPersona());
+		assertEquals("RPA", document.getRifInterni().get(0).getDiritto());
+		assertEquals(EXPECTED_COD_FASC, document.getRifInterni().get(1).getCodFasc());
+		assertEquals("PI000060", document.getRifInterni().get(1).getCodPersona());
+		assertEquals("CC", document.getRifInterni().get(1).getDiritto());
+		assertFalse(document.getRifInterni().get(1).isIntervento());
+		assertNull(document.getRifInterni().get(2).getCodFasc());
+		assertEquals("PI000102", document.getRifInterni().get(2).getCodPersona());
+		assertEquals("CC", document.getRifInterni().get(2).getDiritto());
+		assertTrue(document.getRifInterni().get(2).isIntervento());
 		
 		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
 				
