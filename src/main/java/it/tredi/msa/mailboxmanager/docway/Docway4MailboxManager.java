@@ -1035,8 +1035,20 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		
 		String numero = "";
 		Element identificatoreEl = dcwParsedMessage.getInteropPaDocument().getRootElement().element("Identificatore");
-		if (identificatoreEl != null)
-			numero = identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") + identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione");
+		if (identificatoreEl != null) {
+			// mbernardini 09/07/2019 : gestiti errori di notifiche con dati mancanti sul protocollo del mittente
+			String dataRegistrazione = identificatoreEl.elementText("DataRegistrazione");
+			String codiceAmministrazione = identificatoreEl.elementText("CodiceAmministrazione");
+			String codiceAoo = identificatoreEl.elementText("CodiceAOO");
+			String numeroRegistrazione = identificatoreEl.elementText("NumeroRegistrazione");
+			if (dataRegistrazione != null && !dataRegistrazione.isEmpty() 
+					&& codiceAmministrazione != null && !codiceAmministrazione.isEmpty() 
+					&& codiceAoo != null && !codiceAoo.isEmpty()
+					&& numeroRegistrazione != null && !numeroRegistrazione.isEmpty()) {
+				
+				numero = dataRegistrazione.substring(0, 4) + "-" + codiceAmministrazione + codiceAoo + "-" + numeroRegistrazione;
+			}
+		}
 		attachInteropPAFileToDocument(parsedMessage, info, dcwParsedMessage.getMittenteAddressFromDatiCertPec(), numero);
 	}
 	

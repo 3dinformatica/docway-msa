@@ -1,5 +1,11 @@
 # Change Log
 
+## [3.0.15] - SNAPSHOT
+
+### Fixed
+- Gestiti errori di notifiche con dati mancanti sul protocollo del mittente (Task #18197)
+
+
 ## [3.0.14] - 2019-06-19
 
 ### Added
