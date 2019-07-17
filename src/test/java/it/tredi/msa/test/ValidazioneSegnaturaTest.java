@@ -18,11 +18,11 @@ import org.springframework.util.ResourceUtils;
 
 import it.tredi.msa.configuration.docway.AssegnatarioMailboxConfiguration;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
+import it.tredi.msa.mailboxmanager.DocWayDummyMailboxManager;
+import it.tredi.msa.mailboxmanager.DummyMailReader;
 import it.tredi.msa.mailboxmanager.docway.DocwayMailboxManager;
 import it.tredi.msa.mailboxmanager.docway.DocwayParsedMessage;
 import it.tredi.msa.test.conf.MsaTesterApplication;
-import it.tredi.msa.test.manager.DocWayDummyPecMailboxManager;
-import it.tredi.msa.test.manager.DummyMailReader;
 
 /**
  * UnitTest su estrazione contenuto di eml PEC di interoperabilita' (validazione di segnatura.xml)
@@ -42,7 +42,7 @@ public class ValidazioneSegnaturaTest extends EmlReader {
 	 */
 	@Before
 	public void initManager() {
-		this.mailboxManager = new DocWayDummyPecMailboxManager();
+		this.mailboxManager = new DocWayDummyMailboxManager();
 		this.mailboxManager.setConfiguration(buildConfiguration());
 		this.mailboxManager.setMailReader(new DummyMailReader());
 	}

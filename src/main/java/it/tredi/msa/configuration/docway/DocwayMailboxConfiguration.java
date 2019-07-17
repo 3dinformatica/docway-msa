@@ -97,12 +97,20 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	private boolean smistamentoFatturePA; // mbernardini 25/02/2019 : smistamento fatturaPA
 	
 	private boolean casellaImport; // mbernardini 27/05/2019 : casella di import
+	
+	/**
+	 * Archiviazione documenti tramite TAGS presenti sull'oggetto del messaggio elaborato da MSA
+	 */
+	private boolean archiviazioneByTags; // mbernardini 19/06/2019 : archiviazione documenti tramite TAGS presenti sull'oggetto del messaggio elaborato da MSA
 
 	//ricevute PEC orfane
 	private boolean ignoreStandardOrphanPecReceipts;
 	
 	//salvataggio ricevute PEC orfane come doc non protocollato
 	private boolean orphanPecReceiptsAsVarie;
+	
+	// mbernardini 02/07/2019 : formato della classificazione da utilizzare in caso di fascicolazione automatica di documenti (rif interni in CC ereditati dal fascicolo)
+	private String aspettoClassificazione;
 	
 	public boolean isStoreEml() {
 		return storeEml;
@@ -571,6 +579,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	public void setCasellaImport(boolean casellaImport) {
 		this.casellaImport = casellaImport;
 	}
+	
+	public boolean isArchiviazioneByTags() {
+		return archiviazioneByTags;
+	}
+
+	public void setArchiviazioneByTags(boolean archiviazioneByTags) {
+		this.archiviazioneByTags = archiviazioneByTags;
+	}
 
 	public boolean isIgnoreStandardOrphanPecReceipts() {
 		return ignoreStandardOrphanPecReceipts;
@@ -586,6 +602,14 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 
 	public void setOrphanPecReceiptsAsVarie(boolean orphanPecReceiptsAsVarie) {
 		this.orphanPecReceiptsAsVarie = orphanPecReceiptsAsVarie;
+	}
+
+	public String getAspettoClassificazione() {
+		return aspettoClassificazione;
+	}
+
+	public void setAspettoClassificazione(String aspettoClassificazione) {
+		this.aspettoClassificazione = aspettoClassificazione;
 	}
 	
 	

@@ -2,8 +2,12 @@
 
 ## [3.0.15] - SNAPSHOT
 
+### Added
+- Fascicolazione automatica di documenti tramite riconoscimento di TAGS presenti nell'oggetto del messaggio. Richiede una specifica configurazione sulla casella di posta da ACL. (Task #18039)
+
 ### Fixed
 - Gestiti errori di notifiche con dati mancanti sul protocollo del mittente (Task #18197)
+
 
 
 ## [3.0.14] - 2019-06-19

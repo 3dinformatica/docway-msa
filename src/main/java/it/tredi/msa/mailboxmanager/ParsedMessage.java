@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -106,6 +108,14 @@ public class ParsedMessage {
 		return internetAddressesToString(this.parser.getCc());
 	}
 	
+	public InternetAddress[] getToAddresses() {
+		return this.parser.getTo();
+	}
+	
+	public InternetAddress[] getCcAddresses() {
+		return this.parser.getCc();
+	}
+	
 	/**
 	 * Dato un array di iternetAddress restituisce una stringa con indicato l'elenco di indirizzi 
 	 * @param addresses
@@ -125,7 +135,6 @@ public class ParsedMessage {
 		else
 			return "";
 	}
-	
 	
 	public List<Part> getLeafPartsL() {
 		return this.parser.getMessageParts();
@@ -336,6 +345,46 @@ public class ParsedMessage {
 			}
 		}
 		return names;
+	}
+	
+	/**
+	 * Ritorna true se il messaggio email contiene tags nell'oggetto, false altrimenti
+	 * @return
+	 */
+	public boolean containsTags() {
+		boolean found = false;
+		try {
+			String subject = this.getSubject();
+			if (subject != null && !subject.isEmpty()) {
+				Matcher matcher = Pattern.compile("#(\\w+)").matcher(subject);
+				found = matcher.find();
+			}
+		}
+		catch(Exception e) {
+			logger.error("ParsedMessage: Unable to evaluate tags on message subject... " + e.getMessage(), e);
+		}
+		return found;
+	}
+	
+	/**
+	 * Ritorna l'elenco dei tags presenti nell'oggetto e in base ai quali attivare l'analisi del messaggio tramite tags
+	 * @return
+	 */
+	public List<String> getSubjectTags() {
+		List<String> tags = new ArrayList<String>();
+		try {
+			String subject = this.getSubject();
+			if (subject != null && !subject.isEmpty()) {
+				Matcher matcher = Pattern.compile("#(\\w+)").matcher(subject);
+				while(matcher.find()) {
+					tags.add(matcher.group());
+				}
+			}
+		}
+		catch(Exception e) {
+			logger.error("ParsedMessage: Unable to evaluate tags on message subject... " + e.getMessage(), e);
+		}
+		return tags;
 	}
 	
 }

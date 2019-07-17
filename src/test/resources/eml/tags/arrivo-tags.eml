@@ -1,0 +1,145 @@
+Return-Path: <mbernard78@gmail.com>
+Delivered-To: test-archiviatore@libero.it
+Received: from dcd-14 ([10.103.10.11])
+	by dcbackend-26.iol.local with LMTP id ILO8C5L/Gl1FpQQAtEMq+Q
+	for <test-archiviatore@libero.it>; Tue, 02 Jul 2019 08:54:10 +0200
+Received: from dcp-11.iol.local ([10.103.10.11])
+	by dcd-14 with LMTP id UC+nC5L/Gl21YwEACWh6zQ
+	; Tue, 02 Jul 2019 08:54:10 +0200
+Received: from libero.it ([10.103.10.11])
+	by dcp-11.iol.local with LMTP id SJUhOJH/Gl31owEAkcKRMg
+	; Tue, 02 Jul 2019 08:54:10 +0200
+Received: from mail-lj1-f176.google.com ([209.85.208.176])
+	by smtp-11.iol.local with ESMTP
+	id iCeahGbcYDQhBiCg6h4K22; Tue, 02 Jul 2019 08:54:10 +0200
+X-IOL-DMARC: pass con il dominio gmail.com 
+X-IOL-DKIM: pass con il dominio d=gmail.com
+X-IOL-SPF: pass con l'IP 209.85.208.176;gmail.com
+X-IOL-SEC: _SPFOK_DKIMOK_DMARCOK
+x-fbsn: gmail.com
+x-libjamoibt: 2601
+Received-SPF: pass
+X-CNFS-Analysis: v=2.3 cv=aa+wYigt c=1 sm=1 tr=0
+ a=aTL5S57ZQgueWqBheg4P7g==:117 a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19
+ a=x7bEGLp0ZPQA:10 a=IS2CXZA1PGEA:10 a=0o9FgrsRnhwA:10 a=k3qqfnPMAAAA:8
+ a=f1Cqrhwo41bU3XYElcQA:9 a=QEXdDO2ut3YA:10 a=iEuQFhaYB3NVL7Wy1bkA:9
+ a=x3nVzxdjh18PB73M:21 a=CCNC_hAKtvY2_BkhHswq:22
+Authentication-Results: smtp-11.iol.local;
+	dkim=pass header.d=gmail.com header.b=kHj0kh5M
+Received: by mail-lj1-f176.google.com with SMTP id x25so15751932ljh.2
+        for <test-archiviatore@libero.it>; Mon, 01 Jul 2019 23:54:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=5x1WD//ookCXfqfTkqp/zvMKbv/35tEeiu/IrJIzo1E=;
+        b=kHj0kh5MYxRf2CCTpdDwtACrk7YrhwE2BEYSJf6FO64OqMW+eqySRpJefQcRvBIj6/
+         POFSzy8dZVMbIbKPuuv0LJqBSUaT4ebg8WXQ9bIDv7d1OIPi3KrfdIx1qrFqIx9uwn8x
+         ce1dKWSJEn9qCZfIPvs/FDMV8j16rm8oWofK2D/noBp/qks/4tL4/IGhV6L44kTonwLc
+         CnlxbSQdUVHyAgfcyuQWRiQlZHv8QZpzY5jnV872OBKL/T1Wj4YVtGRLQNoztXPYT5eJ
+         m4Twcg9uYrTMJkqYg3ingCqv/g9VPZ6Vz6Mz7meDEGZ/jKe9XvAgk7FGVd/m3CUXVyzk
+         E5ZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=5x1WD//ookCXfqfTkqp/zvMKbv/35tEeiu/IrJIzo1E=;
+        b=EE80fNia1Zq/5dZ5yd/2cUScllNBB9QOyUwbb/xafe7d3QvUqWiOf64QZUvWL3S5hC
+         t+NhpNrNYYw97XZa7kXWKfLLLOSYNeyL3rHiw8P1u+C4qLEXS8OnM61/Zp76BQEaaRvT
+         a6eXa2NNkSWvqNlsxfEmzSRFWY3pJKLFiNcK/6cbES0g9PPxiH5QgtWIr307UZfD3Ct0
+         wPJM5RqNdE0jBopspq3NQemTfd9/DqDqeVjTiUz7dkE+J0vbIkOD7yiJty3vKx0b75HL
+         m0JDtfAk3wDtgWamVRruWTE/TRK+zZjZs6dJSD0q+Zm8dhzuUaj/Ef9KmVGJ/c0oSXv4
+         Bm/g==
+X-Gm-Message-State: APjAAAUYYSqNwV1nzJvC5xqDLbfMfA7MRft8DKG9WBF15R+ruAitYL1w
+	CIUE/L5qKK8qder4ysibr9IguJ5Q+9YwF3Fh/EY=
+X-Google-Smtp-Source: APXvYqxVR27pzQ/I8mQ34vJFamEFNC/FwzazpM4eMr/y8EFQ4yxgQFkB2hOQh5l1UIyMnI+kNROEbYxszCpY9JVKrF8=
+X-Received: by 2002:a2e:b0c4:: with SMTP id g4mr15464978ljl.155.1562050449761;
+ Mon, 01 Jul 2019 23:54:09 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAHHYZu6SySQRa_f7Vn+o7Mj197QaF=d74Y1fjgy6Ch3M=YY6RA@mail.gmail.com>
+In-Reply-To: <CAHHYZu6SySQRa_f7Vn+o7Mj197QaF=d74Y1fjgy6Ch3M=YY6RA@mail.gmail.com>
+From: Mirko Bernardini <mbernard78@gmail.com>
+Date: Tue, 2 Jul 2019 08:53:57 +0200
+Message-ID: <CAE8U3p3iAmVPdyKx=4twKvwk+2GB5+nNa6ERd5XDnQy73uBOUw@mail.gmail.com>
+Subject: Re: Prova invio email con tags #agrodolce sparsi nell'oggetto #2019
+To: Mirko Bernardini <mbernardini@3di.it>
+Cc: test-archiviatore@libero.it
+Content-Type: multipart/alternative; boundary="0000000000002de9bd058cad3655"
+X-CMAE-Envelope: MS4wfBZL+5CO97/C+6f416dxukzQOJZg/NI/JWW6UuiZw5/oYwc6s8taoF3NggEFbW1JKwJAkdZbHWBhT7XseMAkyHSQ2Dr7YDIzrvW3G8V3btD+47Abl5tR
+ UCZd7vCh0Atbbt/1VIKMUGzE+R32qgbD52+KKM+xfiLUXxQJy0KGr1SLAYLMDp7L9mkQHT+WSFZclLefe2prKRx1YWCAGudnRwY=
+
+--0000000000002de9bd058cad3655
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Risposta...
+
+Il mar 2 lug 2019, 08:50 Mirko Bernardini <mbernardini@3di.it> ha scritto:
+
+> Testo del messaggio
+>
+> --
+> --------------------------------------------------------------------
+> Mirko Bernardini
+>
+> 3D INFORMATICA S.R.L.
+> Via Speranza, 35
+> 40068 S. Lazzaro di Savena (BO)
+> http://www.3di.it
+> Tel : 051 450844
+> Fax : 051 451942
+> --------------------------------------------------------------------
+>
+> Le informazioni, i dati e le notizie contenute nella presente
+> comunicazione e i relativi allegati sono di natura privata e come tali
+> possono essere riservati e sono, comunque, ad uso esclusivo del
+> destinatario. La diffusione, distribuzione e/o la copiatura del documento
+> trasmesso da parte di qualsiasi soggetto diverso dal destinatario =C3=A8
+> proibita. Se ha ricevuto questo messaggio per errore, la preghiamo di
+> eliminarlo senza copiarlo o inoltrarlo a terzi, dandocene gentilmente
+> comunicazione, anche inviando un messaggio di ritorno all=E2=80=99indiriz=
+zo e-mail
+> del mittente. Grazie.
+>
+> This e-mail (including attachments) is intended only for the recipient(s)
+> named above. It may contain confidential or privileged information and
+> should not be read, copied or otherwise used by any other person. If you
+> have received this e-mail in error, please notify the sender by reply
+> e-mail, then delete it from your system without copying it. Thank you.
+>
+
+--0000000000002de9bd058cad3655
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"auto">Risposta...=C2=A0</div><br><div class=3D"gmail_quote"><di=
+v dir=3D"ltr" class=3D"gmail_attr">Il mar 2 lug 2019, 08:50 Mirko Bernardin=
+i &lt;<a href=3D"mailto:mbernardini@3di.it">mbernardini@3di.it</a>&gt; ha s=
+critto:<br></div><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8=
+ex;border-left:1px #ccc solid;padding-left:1ex"><div dir=3D"ltr">Testo del =
+messaggio<br clear=3D"all"><div><br></div>-- <br><div dir=3D"ltr" class=3D"=
+m_-4994612059603298352m_-333102604309125676gmail_signature" data-smartmail=
+=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr">---------------=
+-----------------------------------------------------<br>Mirko Bernardini<b=
+r><br>3D INFORMATICA S.R.L.<br>Via Speranza, 35<br>40068 S. Lazzaro di Save=
+na (BO)<br><a href=3D"http://www.3di.it" target=3D"_blank" rel=3D"noreferre=
+r">http://www.3di.it</a><br>Tel : 051 450844<br>Fax : 051 451942<br>-------=
+-------------------------------------------------------------<br><i style=
+=3D"font-size:12.8px"><br></i></div><div dir=3D"ltr"><font size=3D"1">Le in=
+formazioni, i dati e le notizie contenute nella presente comunicazione e i =
+relativi allegati sono di natura privata e come tali possono essere riserva=
+ti e sono, comunque, ad uso esclusivo del destinatario. La diffusione, dist=
+ribuzione e/o la copiatura del documento trasmesso da parte di qualsiasi so=
+ggetto diverso dal destinatario =C3=A8 proibita. Se ha ricevuto questo mess=
+aggio per errore, la preghiamo di eliminarlo senza copiarlo o inoltrarlo a =
+terzi, dandocene gentilmente comunicazione, anche inviando un messaggio di =
+ritorno all=E2=80=99indirizzo e-mail del mittente. Grazie.<br></font></div>=
+<div dir=3D"ltr"><p><font size=3D"1">This e-mail (including attachments) is=
+ intended only for the recipient(s) named above. It may contain confidentia=
+l or privileged information and should not be read, copied or otherwise use=
+d by any other person. If you have received this e-mail in error, please no=
+tify the sender by reply e-mail, then delete it from your system without co=
+pying it. Thank you.</font></p></div></div></div></div></div>
+</blockquote></div>
+
+--0000000000002de9bd058cad3655--

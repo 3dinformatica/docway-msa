@@ -1,4 +1,4 @@
-package it.tredi.msa.test.manager;
+package it.tredi.msa.mailboxmanager;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;

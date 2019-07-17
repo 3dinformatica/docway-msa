@@ -32,6 +32,7 @@ import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
 import it.tredi.msa.mailboxmanager.StringContentProvider;
+import it.tredi.msa.mailboxmanager.docway.exception.MultipleFoldersException;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoDocumentoBuilder;
@@ -164,7 +165,37 @@ public abstract class DocwayMailboxManager extends MailboxManager {
     public ParsedMessage parseMessage(Message message) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration) super.getConfiguration();
     	return new DocwayParsedMessage(message, conf.isCasellaImport());
-    }	
+    }
+	
+	/**
+	 * Ritorna true se il messaggio di posta elettronica corrisponde ad un messaggio inoltrato alla mailbox corrente, false
+	 * se la mailbox corrente risulta come mittente e/o destinatario del messaggio
+	 * @return
+	 */
+	public boolean isForwardedToTagsMailbox(ParsedMessage parsedMessage) {
+		boolean forwardedToTags = false;
+		if (parsedMessage != null) {
+			DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration) super.getConfiguration();
+			if (conf.isArchiviazioneByTags() // la casella corrente corrisponde ad una mailbox di archiviazione tramite tags
+					&& parsedMessage.isReplyOrForward() // il messaggio corrisponde ad un inoltro o rispondi
+					&& parsedMessage.containsTags() // l'oggetto del messaggio contiene almeno 1 tag
+					&& this.equalsToAddress(parsedMessage, conf.getAddress()) // l'unico destinatario del messaggio corrisponde alla casella di archiviazione
+				) {
+				
+				forwardedToTags = true;
+			}
+		}
+		return forwardedToTags;
+	}
+	
+	private boolean equalsToAddress(ParsedMessage parsedMessage, String expected) {
+		InternetAddress[] addresses = parsedMessage.getToAddresses();
+		return (expected != null && !expected.isEmpty() && addresses != null 
+				&& addresses.length == 1 
+				&& addresses[0] != null
+				&& addresses[0].getAddress() != null 
+				&& addresses[0].getAddress().equalsIgnoreCase(expected));
+	}
 	
 	@Override
     public void storeMessage(ParsedMessage parsedMessage) throws Exception {
@@ -181,12 +212,12 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		if (storeType == StoreType.SAVE_NEW_DOCUMENT || storeType == StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE || storeType == StoreType.UPDATE_PARTIAL_DOCUMENT || storeType == StoreType.UPDATE_NEW_RECIPIENT) { //save new document or update existing one
 			//build new Docway document
-			boolean docAsVarie = false;
+			DocTipoEnum forcedType = null;
 			if (storeType == StoreType.SAVE_ORPHAN_PEC_RECEIPT_AS_VARIE) {
-				docAsVarie = true ; // viene forzata la creazione di un documento non protocollato (generico)
+				forcedType = DocTipoEnum.VARIE; // viene forzata la creazione di un documento non protocollato (generico)
 				parsedMessage.addRelevantMessage(ORPHAN_RECEIPTS_MESSAGE); // aggiunta al documento dell'annotazione relativa alla ricevuta orfana
 			}
-			DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage, docAsVarie);
+			DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage, forcedType);
 			
 			//save new document
 			Object retObj = null;
@@ -269,8 +300,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	 * @return Documento da registrare su DocWay
 	 * @throws Exception
 	 */
-	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {
-		return createDocwayDocumentByMessage(parsedMessage, false);
+	protected DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {
+		return createDocwayDocumentByMessage(parsedMessage, DocTipoEnum.NOONE);
 	}
 	
 	/**
@@ -281,18 +312,44 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	 * @return Documento da registrare su DocWay
 	 * @throws Exception
 	 */
-	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage, boolean docAsVarie) throws Exception {
+	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage, DocTipoEnum forcedType) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		DocwayDocument doc = new DocwayDocument();
+		
+		// mbernardini 03/07/2019 : non si verifica in produzione, ma necessario per gli unittest
+		if (currentDate == null)
+			currentDate = new Date();
+		
+		// mbernardini 01/07/2019 : archiviazione tramite TAGS
+		// In caso di archiviazione tramite TAGS attiva potrebbe essere necessario applicare variazioni alla costruzione 
+		// del documento in base a quanto previsto dal document model
+		FascicoloReference fascicolo = null;
+		
+		if (conf.isArchiviazioneByTags() && parsedMessage.containsTags()) {
+			fascicolo = this.findCodFascicoloByTags(conf.getCodAmmAoo(), parsedMessage.getSubjectTags());
+			
+			if (isValidFolderReference(fascicolo)) {
+				if (logger.isDebugEnabled())
+					logger.debug("[" + conf.getAddress() + "] fascicolazione tramite TAGS. fascicolo = " + fascicolo.getCodFascicolo());
+				
+				// identificazione del flusso di documento
+				forcedType = getFlussoDocByRecipients(parsedMessage);
+				if (logger.isDebugEnabled())
+					logger.debug("[" + conf.getAddress() + "] fascicolazione tramite TAGS. tipo doc calcolato = " + forcedType);
+			}
+		}
+		
+		if (forcedType == null)
+			forcedType = DocTipoEnum.NOONE;
 		
 		if (logger.isDebugEnabled())
 			logger.debug("[" + conf.getAddress() + "] creazione del documento da messaggio parsato. messageId = " 
 						+ parsedMessage.getMessageId() 
-						+ ((docAsVarie) ? ", FORZATO IL SALVATAGGIO COME DOCUMENTO NON PROTOCOLLATO/GENERICO" : ""));
+						+ ((forcedType != DocTipoEnum.NOONE) ? ", FORZATO IL SALVATAGGIO COME DOCUMENTO '" + forcedType.getText() + "'" : ""));
 		
 		//tipo doc
-		if (docAsVarie)
-			doc.setTipo(DocwayMailboxConfiguration.DOC_TIPO_VARIE);
+		if (forcedType.isValidValue())
+			doc.setTipo(forcedType.getText());
 		else
 			doc.setTipo(conf.getTipoDoc());
 		
@@ -302,7 +359,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//anno
 		doc.setAnno(conf.isCurrentYear()? (new SimpleDateFormat("yyyy")).format(currentDate) : "");
 		
-		if (!docAsVarie) {
+		if (forcedType != DocTipoEnum.VARIE) {
 			//bozza
 			doc.setBozza(conf.isBozza());
 			
@@ -311,11 +368,15 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			
 			//annullato
 			doc.setAnnullato(false);
+			
+			//repertorio
+			if (forcedType.getText().equals("") || forcedType.getText().equals(conf.getTipoDoc())) { 
+				// il repertorio deve essere gestito solo se non e' stato sovrascritto il tipo di documento (forcedType nullo) o se il tipo forzato
+				// corrisponde a quello previsto dalla configurazione (document model)
+				doc.setRepertorio(conf.getRepertorio());
+				doc.setRepertorioCod(conf.getRepertorioCod());
+			}
 		}
-		
-		//repertorio
-		doc.setRepertorio(conf.getRepertorio());
-		doc.setRepertorioCod(conf.getRepertorioCod());
 		
 		//data prot
 		doc.setDataProt(conf.isCurrentDate()? (new SimpleDateFormat("yyyyMMdd")).format(currentDate) : "");
@@ -348,12 +409,13 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			doc.addRifEsterno(createRifEsterno((parsedMessage.getFromPersonal() == null || parsedMessage.getFromPersonal().isEmpty())? address : parsedMessage.getFromPersonal(), address));
 		}
 		else if (doc.getTipo().equalsIgnoreCase(DocwayMailboxConfiguration.DOC_TIPO_PARTENZA)) {
-			Address []recipients = parsedMessage.getMessage().getRecipients(RecipientType.TO);
+			Address[] recipients = parsedMessage.getMessage().getRecipients(RecipientType.TO);
 			for (Address recipient:recipients) {
 				String personal = ((InternetAddress)recipient).getPersonal();
 				String address = ((InternetAddress)recipient).getAddress();
 				doc.addRifEsterno(createRifEsterno((personal==null || personal.isEmpty())? address : personal, address));
 			}
+			// TODO gestione dei CC
 		}
 		
 		//voce di indice
@@ -370,16 +432,26 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//rif interni
 		List<RifInterno> rifInterni = createRifInterni(parsedMessage);
+		rifInterni = this.mergeRifInterniFascicolo(rifInterni, fascicolo); // eventuale archiviazione in fascicolo tramite TAGS estratti dall'oggetto del messaggio
 		for (RifInterno rifInterno:rifInterni)
 			doc.addRifInterno(rifInterno);
 		
 		//storia creazione
-		StoriaItem creazione = new StoriaItem("creazione");
+		StoriaItem creazione = new StoriaItem(StoriaItemType.CREAZIONE);
 		creazione.setOper(conf.getOper());
 		creazione.setUffOper(conf.getUffOper());
 		creazione.setData(currentDate);
 		creazione.setOra(currentDate);
 		doc.addStoriaItem(creazione);
+		
+		// mbernardini 03/07/2019 : aggiunta della fascicolazione alla storia del documento
+		if (isValidFolderReference(fascicolo)) {
+			StoriaItem fascicolazione = StoriaItem.createFromAddFascicolo(fascicolo);
+			fascicolazione.setOperatore(conf.getOperatore());
+			fascicolazione.setData(currentDate);
+			fascicolazione.setOra(currentDate);
+			doc.addStoriaItem(fascicolazione);
+		}
 		
 		//aggiunta in storia delle operazioni relative ai rif interni
 		for (RifInterno rifInterno:rifInterni) {
@@ -403,10 +475,125 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			postit.setData(currentDate);
 			postit.setOra(currentDate);
 			doc.addPostit(postit);
-		}		
+		}
 		
 		return doc;
 	}
+	
+	/**
+	 * Unione dei rif interni previsti dalla configurazione della mailbox (document model) con quelli ereditati dall'eventuale fascicolo
+	 * sul quale il documento dovra' essere caricato
+	 * @param rifInterni Elenco di rif interni previsti da configurazione della mailbox
+	 * @param fascicolo Informazioni sul fascicolo all'interno del quale caricare il documento (contiene i rif interni definiti sul fascicolo)
+	 * @return
+	 */
+	private List<RifInterno> mergeRifInterniFascicolo(List<RifInterno> rifInterni, FascicoloReference fascicolo) {
+		if (isValidFolderReference(fascicolo)) {
+			if (rifInterni == null)
+				rifInterni = new ArrayList<>();
+			
+			// TODO non e' detto che il caricamento dei rif del fascicolo debba essere fatto, dovrebbe dipendere da una property di docway
+			List<String> codL = new ArrayList<>();
+			List<RifInterno> merged = new ArrayList<>();
+			for(int i=0; i<fascicolo.getRifs().size(); i++) {
+				RifInterno rif = fascicolo.getRifs().get(i);
+				rif.setCodFasc(fascicolo.getCodFascicolo());
+				merged.add(rif);
+				codL.add(rif.getCodPersona());
+			}
+			for(int i=0; i<rifInterni.size(); i++) {
+				RifInterno rif = rifInterni.get(i);
+				if (rif.getDiritto().equalsIgnoreCase("RPA")) {
+					rif.setDiritto("CC"); // l'RPA corrispondera' a quello del fasicoclo
+					rif.setIntervento(true);
+				}
+				if (!codL.contains(rif.getCodPersona())) { // rif interno non ereditato dal fascicolo
+					merged.add(rif);
+					codL.add(rif.getCodPersona());
+				}
+			}
+			rifInterni = merged;
+		}
+		return rifInterni;
+	}
+	
+	/**
+	 * Cerca di desumere il tipo di documento in base all'analisi del mittente e destinatari del messaggio
+	 * @param message
+	 * @throws Exception in caso di altra eccezione
+	 * @return
+	 */
+	protected DocTipoEnum getFlussoDocByRecipients(ParsedMessage message) throws Exception {
+		DocTipoEnum flusso = null;
+		
+		boolean mittenteInterno = this.isMittenteInterno(message);
+		boolean destinatariEsterni = this.containsDestinatariEsterni(message);
+		if (!mittenteInterno) {
+			// mittente del messaggio ESTERNO -> doc. in arrivo
+			flusso = DocTipoEnum.ARRIVO;
+		}
+		else {
+			// mittente del messaggio INTERNO
+			
+			if (isForwardedToTagsMailbox(message)) {
+				// messaggio inoltrato alla casella di gestione dei TAGS -> doc. varie
+				flusso = DocTipoEnum.VARIE;
+			}
+			else {
+				if (destinatariEsterni) {
+					// almeno un rif. esterno presente fra i destinatari -> doc. in partenza
+					flusso = DocTipoEnum.PARTENZA;
+				}
+				else {
+					// individuati solo rif. interni -> doc. interno
+				
+					flusso = DocTipoEnum.VARIE;
+					// TODO andrebbe gestito come caso di doc interno:
+					// Questo implica il recupero dei rif. interni dai destinatari del documento e una logica completamente diversa della costruzione del doc XML
+					//flusso = DocTipoEnum.INTERNO;
+				}
+			}
+		}
+		return flusso;
+	}
+	
+	/**
+	 * Ricerca di un fascicolo in base ai TAGS indicati nell'oggetto del messaggio. Deve essere recuperato uno ed un solo
+	 * fascicolo in base ai TAGS presenti sul messagggio.
+	 * @param codammaoo cod_amm_aoo in base al quale filtrare i fascicoli
+	 * @param tags Elenco di TAGS in base ai quali ricercare il fascicolo
+	 * @return Fascicolo trovato in base ai TAGS presenti nell'oggetto del messaggio
+	 * @throws MultipleFoldersException in caso di piu' fascicoli trovati in base ai TAGS specificati
+	 * @throws Exception in caso di altra eccezione
+	 */
+	protected abstract FascicoloReference findCodFascicoloByTags(String codammaoo, List<String> tags) throws MultipleFoldersException, Exception;
+	
+	/**
+	 * Verifica se il mittente del messaggio corrisponde ad un utente interno o ad uno esterno. Ritorna true se l'utente che risulta essere
+	 * il mittente del messaggio fa parte dell'anagrafica interna (persona/struttura interna), false altrimenti.
+	 * @param message
+	 * @return
+	 * @throws Exception
+	 */
+	protected abstract boolean isMittenteInterno(ParsedMessage message) throws Exception;
+	
+	/**
+	 * Verifica se il messaggio corrente contiene degli indirizzi email che possono essere associati a destinatari esterni (persone/strutture esterne)
+	 * @param message
+	 * @return
+	 * @throws Exception
+	 */
+	protected abstract boolean containsDestinatariEsterni(ParsedMessage message) throws Exception;
+	
+	/**
+	 * Verifica se il messaggio corrente contiene degli indirizzi email che possono essere associati a destinatari interni 
+	 * all'azienda (persone/strutture interne)
+	 * @param message
+	 * @return
+	 * @throws Exception
+	 */
+	protected abstract boolean containsDestinatariInterni(ParsedMessage message) throws Exception;
+	
 	
 	private void createDocwayFiles(ParsedMessage parsedMessage, DocwayDocument doc) throws Exception {
 		//email body html/text attachment
@@ -510,10 +697,14 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		return file;
 	}	
 	
-	private DocwayDocument createDocwayDocumentByInteropPAMessage(ParsedMessage  parsedMessage) throws Exception {
+	protected DocwayDocument createDocwayDocumentByInteropPAMessage(ParsedMessage  parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		if (logger.isDebugEnabled())
 			logger.debug("[" + conf.getAddress() + "] creazione del documento da messaggio Interoperabilita'. messageId = " + parsedMessage.getMessageId());
+		
+		// mbernardini 03/07/2019 : non si verifica in produzione, ma necessario per gli unittest
+		if (currentDate == null)
+			currentDate = new Date();
 		
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		Document segnaturaDocument = dcwParsedMessage.getSegnaturaInteropPADocument();
@@ -722,19 +913,44 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         		doc.setClassifCod(classif.substring(0, classif.indexOf(" ")));
         }
         */
+        
+        // mbernardini 01/07/2019 : archiviazione tramite TAGS
+		// In caso di archiviazione tramite TAGS attiva potrebbe essere necessario applicare variazioni alla costruzione 
+		// del documento in base a quanto previsto dal document model
+		FascicoloReference fascicolo = null;
+		if (conf.isArchiviazioneByTags() && parsedMessage.containsTags()) {
+			fascicolo = this.findCodFascicoloByTags(conf.getCodAmmAoo(), parsedMessage.getSubjectTags());
+			
+			if (isValidFolderReference(fascicolo)) {
+				if (logger.isDebugEnabled())
+					logger.debug("[" + conf.getAddress() + "] fascicolazione tramite TAGS. fascicolo = " + fascicolo.getCodFascicolo());
+			}
+			
+			// TODO In caso di email PEC di interoperabilita' non e' necessario valutare il flusso del documento perche' dovrebbe sempre trattarsi di un documento in arrivo
+		}
 		
 		//rif interni
 		List<RifInterno> rifInterni = createRifInterni(parsedMessage);
+		rifInterni = this.mergeRifInterniFascicolo(rifInterni, fascicolo); // eventuale archiviazione in fascicolo tramite TAGS estratti dall'oggetto del messaggio
 		for (RifInterno rifInterno:rifInterni)
 			doc.addRifInterno(rifInterno);
 		
 		//storia creazione
-		StoriaItem creazione = new StoriaItem("creazione");
+		StoriaItem creazione = new StoriaItem(StoriaItemType.CREAZIONE);
 		creazione.setOper(conf.getOper());
 		creazione.setUffOper(conf.getUffOper());
 		creazione.setData(currentDate);
 		creazione.setOra(currentDate);
 		doc.addStoriaItem(creazione);
+		
+		// mbernardini 03/07/2019 : aggiunta della fascicolazione alla storia del documento
+		if (isValidFolderReference(fascicolo)) {
+			StoriaItem fascicolazione = StoriaItem.createFromAddFascicolo(fascicolo);
+			fascicolazione.setOperatore(conf.getOperatore());
+			fascicolazione.setData(currentDate);
+			fascicolazione.setOra(currentDate);
+			doc.addStoriaItem(fascicolazione);
+		}
 		
 		//aggiunta in storia delle operazioni relative ai rif interni
 		for (RifInterno rifInterno:rifInterni) {
@@ -1089,5 +1305,15 @@ public abstract class DocwayMailboxManager extends MailboxManager {
     		// mbernardini 25/01/2019 : registrazione nell'audit di msa dello skip
     		super.messageSkipped(parsedMessage); // in realta' il messaggio risulta skippato
     }
+	
+	/**
+	 * Ritorna TRUE se il riferimento al fascicolo risulta corretto (codice del fascicolo 
+	 * settato), false altrimenti
+	 * @param fascicolo
+	 * @return
+	 */
+	private boolean isValidFolderReference(FascicoloReference fascicolo) {
+		return (fascicolo != null && fascicolo.getCodFascicolo() != null && !fascicolo.getCodFascicolo().isEmpty());
+	}
 	
 }

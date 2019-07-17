@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.mail.internet.InternetAddress;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
@@ -27,6 +29,7 @@ import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.MailboxManager;
 import it.tredi.msa.mailboxmanager.MessageContentProvider;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
+import it.tredi.msa.mailboxmanager.docway.exception.MultipleFoldersException;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.NotificaItem;
@@ -41,7 +44,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 
 	protected ExtrawayClient xwClient;
 	protected ExtrawayClient aclClient;
-	private boolean extRestrictionsOnAcl;
+	protected boolean extRestrictionsOnAcl;
 	private int physDocToUpdate;
 	private int physDocForAttachingFile;
 	
@@ -266,7 +269,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		DocwayParsedMessage dcwParsedMessage = (DocwayParsedMessage)parsedMessage;
 		
 		//save new document in Extraway
-		Document xmlDocument = Docway4EntityToXmlUtils.docwayDocumentToXml(doc, super.currentDate);
+		Document xmlDocument = Docway4EntityToXmlUtils.docwayDocumentToXml(doc, super.currentDate, conf.getAspettoClassificazione());
 		int lastSavedDocumentPhysDoc = xwClient.saveNewDocument(xmlDocument);
 		parsedMessage.clearRelevantMessages();
 		
@@ -454,12 +457,13 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 		return restrictions;
 	}
 	
-	@Override
-    public RifEsterno createRifEsterno(String name, String address) throws Exception {
-        RifEsterno rifEsterno = new RifEsterno();
-        rifEsterno.setEmail(address);
-
-        //in caso di archivio con anagrafiche esterne replicate su AOO differenti occorre filtrare anche sull'AOO della casella di archiviazione
+	/**
+	 * Costruzione della query di ricerca di anagrafiche esterne (persone/strutture esterne) in base all'indirizzo email passato
+	 * @param address
+	 * @return
+	 */
+	private String buildQueryRifEsternoByEmailAddress(String address) {
+		//in caso di archivio con anagrafiche esterne replicate su AOO differenti occorre filtrare anche sull'AOO della casella di archiviazione
         String query = "[struest_emailaddr]=\"" + address + "\" OR [persest_recapitoemailaddr]=\"" + address + "\" OR " +
         		"[/struttura_esterna/email_certificata/@addr/]=\"" + address + "\" OR [/persona_esterna/recapito/email_certificata/@addr]=\"" + address + "\"";
         if (extRestrictionsOnAcl) {
@@ -470,9 +474,16 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 	        			+ " (([persest_recapitoemailaddr]=\"" + address + "\" OR [/persona_esterna/recapito/email_certificata/@addr]=\"" + address + "\") AND [/persona_esterna/#cod_ammaoo]=\"" + codAmmAoo + "\")";
         	}
         }
+        return query;
+	}
+	
+	@Override
+    public RifEsterno createRifEsterno(String name, String address) throws Exception {
+        RifEsterno rifEsterno = new RifEsterno();
+        rifEsterno.setEmail(address);
 
         // first try: search email address
-        QueryResult qr = aclClient.search(query, null, "ud(xpart:/xw/@UdType)", 0, 0);
+        QueryResult qr = aclClient.search(buildQueryRifEsternoByEmailAddress(address), null, "ud(xpart:/xw/@UdType)", 0, 0);
         if (qr.elements == 0) { // sender is not present in ACL
             rifEsterno.setNome(name);
         }
@@ -971,7 +982,7 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					rifInterno.setIntervento(true);
 				}
 				if (isNewRifInterno(rifInterno, rifIntEl)) {
-					rifIntEl.add(Docway4EntityToXmlUtils.rifInternoToXml(rifInterno));
+					rifIntEl.add(Docway4EntityToXmlUtils.rifInternoToXml(rifInterno, conf.getAspettoClassificazione()));
 					
 					// mbernardini 23/04/2019 : in caso di aggiunta di rif interni ad un documento gia' registrato occorre aggiornare anche i dati relativi alla storia
 					// questo scenario si ottiene da un invio di un messaggio email a 2 distinte caselle di posta configurate su msa
@@ -1681,6 +1692,154 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			}
 			throw e;
 		}				
+	}
+
+	@Override
+	protected FascicoloReference findCodFascicoloByTags(String codammaoo, List<String> tags) throws MultipleFoldersException, Exception {
+		FascicoloReference fascicolo = null;
+		
+		// costruzione della query extraway in base ai TAGS indicati
+		String query = "";
+		if (tags != null && !tags.isEmpty()) {
+			for (String tag : tags) {
+				if (tag != null && !tag.isEmpty()) {
+					query += "[/fascicolo/tags/tag/@value]=\"" + tag + "\" AND ";
+				}
+			}
+			if (query.endsWith(" AND "))
+				query = query.substring(0, query.length()-5);
+			
+			if (!query.trim().isEmpty() && codammaoo != null && !codammaoo.isEmpty())
+				query += " AND [/fascicolo/@cod_amm_aoo]=\"" + codammaoo + "\"";
+		}
+		
+		if (!query.isEmpty()) {
+			QueryResult qr = xwClient.search(query);
+			if (qr.elements == 1) {
+				
+				Document doc = xwClient.loadDocByQueryResult(0, qr);
+				if (doc != null) {
+					Element root = doc.getRootElement();
+					fascicolo = new FascicoloReference(root.attributeValue("numero", ""), root.elementTextTrim("oggetto"));
+					
+					// recupero dei rif interni del fascicolo...
+					List<RifInterno> rifsL = new ArrayList<>();
+					List<?> nodes = doc.selectNodes("/fascicolo/rif_interni/rif");
+					if (nodes != null && !nodes.isEmpty()) {
+						for (int i=0; i<nodes.size(); i++) {
+							Element el = (Element) nodes.get(i);
+							if (el != null) {
+								RifInterno rifInterno = new RifInterno();
+								boolean isRuolo = el.attributeValue("tipo_uff", "").equalsIgnoreCase("ruolo");
+								if (isRuolo) {
+									rifInterno.setRuolo(el.attributeValue("nome_uff"), el.attributeValue("cod_uff"));									
+								}
+								else {
+									rifInterno.setCodPersona(el.attributeValue("cod_persona"));
+									rifInterno.setNomePersona(el.attributeValue("nome_persona"));
+									rifInterno.setCodUff(el.attributeValue("cod_uff"));
+									rifInterno.setNomeUff(el.attributeValue("nome_uff"));
+								}
+								rifInterno.setDiritto(el.attributeValue("diritto"));
+								rifInterno.setIntervento(el.attributeValue("diritto", "").equalsIgnoreCase("rpa") || el.attributeValue("intervento", "").equalsIgnoreCase("si"));
+								
+								rifsL.add(rifInterno);
+							}
+						}
+					}
+					if (rifsL.size() > 0)
+						fascicolo.setRifs(rifsL);
+				}
+			}
+			else if (qr.elements > 1) {
+				// trovati piu' fascicoli in base ai TAGS specificati
+				throw new MultipleFoldersException(tags);
+			}
+		}
+		
+		return fascicolo;
+	}
+
+	@Override
+	protected boolean isMittenteInterno(ParsedMessage message) throws Exception {
+		return this.isEmailAddressInterno(message.getFromAddress());
+	}
+	
+	/**
+	 * Ritorna true se la mail indicato come parametro si riferisce ad una persona interna, false altrimenti
+	 * @param address Indirizzo da verificare
+	 * @return
+	 * @throws Exception
+	 */
+	private boolean isEmailAddressInterno(String address) throws Exception {
+		if (address != null && !address.isEmpty()) {
+			Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+			QueryResult qr = aclClient.search("[persint_recapitoemailaddr]=\"" + address + "\" AND [persint_codammaoo]=\"" + conf.getCodAmmAoo() + "\"");
+			return qr != null && qr.elements > 0;
+		}
+		else
+			return false;
+	}
+
+	@Override
+	protected boolean containsDestinatariEsterni(ParsedMessage message) throws Exception {
+		int to = message.getToAddresses() != null ? message.getToAddresses().length : 0;
+		int cc = message.getCcAddresses() != null ? message.getCcAddresses().length : 0;
+		return countRifInterniByEmailAddresses(message.getToAddresses()) < to || countRifInterniByEmailAddresses(message.getCcAddresses()) < cc;
+	}
+	
+	@Override
+	protected boolean containsDestinatariInterni(ParsedMessage message) throws Exception {
+		return countRifInterniByEmailAddresses(message.getToAddresses()) > 0 || countRifInterniByEmailAddresses(message.getCcAddresses()) > 0;
+	}
+	
+	/**
+	 * Verifica se almeno uno degli indirizzi email passati corrisponde ad un rif. interno (persona/struttura interna o 
+	 * ruolo)
+	 * @param addresses
+	 * @return
+	 * @throws Exception
+	 */
+	private int countRifInterniByEmailAddresses(InternetAddress[] addresses) throws Exception {
+		int count = 0;
+		if (addresses != null && addresses.length > 0) {
+			Docway4MailboxConfiguration conf = (Docway4MailboxConfiguration)getConfiguration();
+			
+			for (int i=0; i<addresses.length; i++) {
+				if (addresses[i] != null) {
+					String query = "(([/persona_interna/recapito/email/@addr/]=\"" 
+							+ addresses[i].getAddress()
+							+ "\" OR [/persona_interna/recapito/email_certificata/@addr/]=\"" 
+							+ addresses[i].getAddress()
+							+ "\") AND [persint_codammaoo]=\"" 
+							+ conf.getCodAmmAoo() 
+							+ "\") OR "
+							+ "(([/struttura_interna/email/@addr/]=\"" 
+							+ addresses[i].getAddress()
+							+ "\" OR [/struttura_interna/email_certificata/@addr/]=\"" 
+							+ addresses[i].getAddress()
+							+ "\") AND [struint_codammaoo]=\"" 
+							+ conf.getCodAmmAoo() 
+							+ "\") OR "
+							+ "(([/ruolo/email/@addr/]=\"" 
+							+ addresses[i].getAddress()
+							+ "\" OR [/ruolo/email_certificata/@addr/]=\"" 
+							+ addresses[i].getAddress()
+							+ "\") AND [ruoli_codammaoo]=\"" 
+							+ conf.getCodAmmAoo() 
+							+ "\") OR"
+							+ "([/casellaPostaElettronica/mailbox_in/@email/]=\"" 
+							+ addresses[i].getAddress() 
+							+ "\" AND [casellapostaelettronica_codammaoo]=\"" 
+							+ conf.getCodAmmAoo() + "\")";
+					
+					QueryResult qr = aclClient.search(query);
+					if (qr != null && qr.elements > 0)
+						count++;
+				}
+			}
+		}
+		return count;
 	}
 	
 }
