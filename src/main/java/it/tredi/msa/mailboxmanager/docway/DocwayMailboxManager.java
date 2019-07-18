@@ -365,6 +365,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			
 			//num_prot
 			doc.setNumProt((conf.isNumProt()) ? doc.getAnno() + "-" + doc.getCodAmmAoo() + "-." : "");
+			// mbernardini 18/07/2019 : in caso di num_prot non settato occorre forzare la bozza
+			if (doc.getNumProt().equals(""))
+				doc.setBozza(true);
 			
 			//annullato
 			doc.setAnnullato(false);
