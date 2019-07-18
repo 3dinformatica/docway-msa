@@ -359,7 +359,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//anno
 		doc.setAnno(conf.isCurrentYear()? (new SimpleDateFormat("yyyy")).format(currentDate) : "");
 		
-		if (forcedType != DocTipoEnum.VARIE) {
+		if (!doc.getTipo().equalsIgnoreCase(DocwayMailboxConfiguration.DOC_TIPO_VARIE)) {
 			//bozza
 			doc.setBozza(conf.isBozza());
 			
@@ -424,6 +424,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//classif
 		doc.setClassif(conf.getClassif());
 		doc.setClassifCod(conf.getClassifCod());
+		doc = changeDocClassifByFascicolo(doc, fascicolo); // eventuale archiviazione in fascicolo tramite TAGS estratti dall'oggetto del messaggio
 		
 		//note
 		if (conf.isNoteAutomatiche()) {
@@ -477,6 +478,24 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			doc.addPostit(postit);
 		}
 		
+		return doc;
+	}
+	
+	/**
+	 * Aggiornamento della classificazione del documento in base a quella ereditata dall'eventuale fascicolo sul quale
+	 * il documento dovra' essere caricato
+	 * @param doc Documento per il quale deve essere aggiornata la classificazione
+	 * @param fascicolo Informazioni sul fascicolo all'interno del quale caricare il documento
+	 * @return
+	 */
+	private DocwayDocument changeDocClassifByFascicolo(DocwayDocument doc, FascicoloReference fascicolo) {
+		if (doc != null && isValidFolderReference(fascicolo)) {
+			if (fascicolo.getCodClassif() != null && !fascicolo.getCodClassif().isEmpty()) {
+				// classificazione del fascicolo correttamente completata
+				doc.setClassifCod(fascicolo.getCodClassif());
+				doc.setClassif(fascicolo.getDescrClassif());
+			}
+		}
 		return doc;
 	}
 	
@@ -928,6 +947,9 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			
 			// TODO In caso di email PEC di interoperabilita' non e' necessario valutare il flusso del documento perche' dovrebbe sempre trattarsi di un documento in arrivo
 		}
+		
+		//classif
+		doc = changeDocClassifByFascicolo(doc, fascicolo); // eventuale archiviazione in fascicolo tramite TAGS estratti dall'oggetto del messaggio
 		
 		//rif interni
 		List<RifInterno> rifInterni = createRifInterni(parsedMessage);

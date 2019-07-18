@@ -1722,6 +1722,16 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 					Element root = doc.getRootElement();
 					fascicolo = new FascicoloReference(root.attributeValue("numero", ""), root.elementTextTrim("oggetto"));
 					
+					// recupero della classificazione del fascicolo
+					Element classif = root.element("classif");
+					if (classif != null) {
+						String codClassif = classif.attributeValue("cod");
+						if (codClassif != null && !codClassif.isEmpty()) {
+							fascicolo.setCodClassif(codClassif);
+							fascicolo.setDescrClassif(classif.getTextTrim());
+						}
+					}
+					
 					// recupero dei rif interni del fascicolo...
 					List<RifInterno> rifsL = new ArrayList<>();
 					List<?> nodes = doc.selectNodes("/fascicolo/rif_interni/rif");

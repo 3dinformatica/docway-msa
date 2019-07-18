@@ -23,6 +23,16 @@ public class FascicoloReference {
 	private List<RifInterno> rifs;
 	
 	/**
+	 * Codice di classificazione del fascicolo
+	 */
+	private String codClassif;
+	
+	/**
+	 * Descrizione di classificazione del fascicolo
+	 */
+	private String descrClassif;
+	
+	/**
 	 * Costruttore vuoto
 	 */
 	public FascicoloReference() {
@@ -60,6 +70,22 @@ public class FascicoloReference {
 
 	public void setRifs(List<RifInterno> rifs) {
 		this.rifs = rifs;
+	}
+
+	public String getCodClassif() {
+		return codClassif;
+	}
+
+	public void setCodClassif(String codClassif) {
+		this.codClassif = codClassif;
+	}
+
+	public String getDescrClassif() {
+		return descrClassif;
+	}
+
+	public void setDescrClassif(String descrClassif) {
+		this.descrClassif = descrClassif;
 	}
 	
 }
