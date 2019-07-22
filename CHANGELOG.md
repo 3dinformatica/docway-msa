@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.0.15] - SNAPSHOT
+## [3.0.15] - 2019-07-22
 
 ### Added
 - Fascicolazione automatica di documenti tramite riconoscimento di TAGS presenti nell'oggetto del messaggio. Richiede una specifica configurazione sulla casella di posta da ACL. (Task #18039)
