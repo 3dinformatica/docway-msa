@@ -6,7 +6,7 @@
 - Fascicolazione automatica di documenti tramite riconoscimento di TAGS presenti nell'oggetto del messaggio. Richiede una specifica configurazione sulla casella di posta da ACL. (Task #18039)
 
 ### Fixed
-- Gestiti errori di notifiche con dati mancanti sul protocollo del mittente (Task #18197)
+- Gestiti errori di notifiche (relative all'interoperabilità) con dati mancanti sul protocollo del mittente (Task #18197)
 
 
 

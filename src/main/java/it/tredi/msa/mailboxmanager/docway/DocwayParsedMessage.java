@@ -365,12 +365,32 @@ public class DocwayParsedMessage extends ParsedMessage {
 		if (interopPaDocument != null) {
 			if (interopPaDocument.getRootElement().getName().equals("AnnullamentoProtocollazione")) {
 				Element identificatoreEl = interopPaDocument.getRootElement().element("Identificatore");
-				query = "[/doc/rif_esterni/rif/@n_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + identificatoreEl.elementText("CodiceAmministrazione") +
-						identificatoreEl.elementText("CodiceAOO") + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";				
+				
+				// mbernardini 22/07/2019 : gestione dati mancanti sul protocollo del mittente
+				String dataRegistrazione = identificatoreEl.elementText("DataRegistrazione");
+				String codiceAmministrazione = identificatoreEl.elementText("CodiceAmministrazione");
+				String codiceAoo = identificatoreEl.elementText("CodiceAOO");
+				String numeroRegistrazione = identificatoreEl.elementText("NumeroRegistrazione");
+				if (dataRegistrazione != null && !dataRegistrazione.isEmpty() 
+						&& codiceAmministrazione != null && !codiceAmministrazione.isEmpty() 
+						&& codiceAoo != null && !codiceAoo.isEmpty()
+						&& numeroRegistrazione != null && !numeroRegistrazione.isEmpty()) {
+					
+					query = "[/doc/rif_esterni/rif/@n_prot]=\"" + dataRegistrazione.substring(0, 4) + "-" + codiceAmministrazione +
+							codiceAoo + "-" + numeroRegistrazione + "\" AND [/doc/@cod_amm_aoo]=\"" + codAmm + codAoo + "\"";
+				}
 			}
 			else {
 				Element identificatoreEl = interopPaDocument.getRootElement().element("MessaggioRicevuto").element("Identificatore");
-				query = "[/doc/@num_prot]=\"" + identificatoreEl.elementText("DataRegistrazione").substring(0, 4) + "-" + codAmm + codAoo + "-" + identificatoreEl.elementText("NumeroRegistrazione") + "\"";
+				
+				// mbernardini 22/07/2019 : gestione dati mancanti sul protocollo del mittente
+				String dataRegistrazione = identificatoreEl.elementText("DataRegistrazione");
+				String numeroRegistrazione = identificatoreEl.elementText("NumeroRegistrazione");
+				if (dataRegistrazione != null && !dataRegistrazione.isEmpty() 
+						&& numeroRegistrazione != null && !numeroRegistrazione.isEmpty()) {
+					
+					query = "[/doc/@num_prot]=\"" + dataRegistrazione.substring(0, 4) + "-" + codAmm + codAoo + "-" + numeroRegistrazione + "\"";
+				}
 			}
 		}
 		return query;
