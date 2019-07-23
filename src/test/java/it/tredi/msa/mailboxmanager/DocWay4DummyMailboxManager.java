@@ -135,4 +135,11 @@ public class DocWay4DummyMailboxManager extends Docway4MailboxManager {
 		return this.createDocwayDocumentByInteropPAMessage(message);
 	}
 	
+	/**
+	 * Pubblicazione del metodo createDocwayDocumentByFatturaPAMessage per chiamata diretta da unit-test
+	 */
+	public DocwayDocument buildDocwayDocumentByFatturaPAMessage(ParsedMessage message) throws Exception {
+		return this.createDocwayDocumentByFatturaPAMessage(message);
+	}
+	
 }

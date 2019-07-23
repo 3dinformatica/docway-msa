@@ -1,5 +1,11 @@
 # Change Log
 
+## [3.0.16] - SNAPSHOT
+
+### Changed
+- Aggiunto il supporto al riconoscimento di fatturaPA passive ricevute in caso di ente privato (nessuna notifica attesa per la fattura, è implicita l'accettazione). (Task #19191)
+
+
 ## [3.0.15] - 2019-07-22
 
 ### Added
@@ -7,7 +13,6 @@
 
 ### Fixed
 - Gestiti errori di notifiche (relative all'interoperabilità) con dati mancanti sul protocollo del mittente (Task #18197)
-
 
 
 ## [3.0.14] - 2019-06-19

@@ -229,5 +229,26 @@ public class DocWayDummyMailboxManager extends DocwayMailboxManager {
 	protected boolean containsDestinatariInterni(ParsedMessage message) throws Exception {
 		return true;
 	}
+	
+	/**
+	 * Pubblicazione del metodo createDocwayDocumentByMessage per chiamata diretta da unit-test
+	 */
+	public DocwayDocument buildDocwayDocument(ParsedMessage message) throws Exception {
+		return this.createDocwayDocumentByMessage(message);
+	}
+	
+	/**
+	 * Pubblicazione del metodo createDocwayDocumentByInteropPAMessage per chiamata diretta da unit-test
+	 */
+	public DocwayDocument buildDocWayDocumentByInterop(ParsedMessage message) throws Exception {
+		return this.createDocwayDocumentByInteropPAMessage(message);
+	}
+	
+	/**
+	 * Pubblicazione del metodo createDocwayDocumentByFatturaPAMessage per chiamata diretta da unit-test
+	 */
+	public DocwayDocument buildDocwayDocumentByFatturaPAMessage(ParsedMessage message) throws Exception {
+		return this.createDocwayDocumentByFatturaPAMessage(message);
+	}
 
 }

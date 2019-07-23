@@ -1,4 +1,4 @@
-package it.tredi.msa.mailboxmanager.docway.fatturapa;
+package it.tredi.msa.mailboxmanager.docway.fatturapa.utils;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -12,6 +12,15 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiBeniServiziItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiDDTItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiFatturaContainer;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiFatturaPAItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiLineaItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiRegistroFattureItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiRiepilogoItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.ErroreItem;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoDocumentoBuilder;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
 import org.apache.commons.codec.binary.Base64;
@@ -22,6 +31,9 @@ import org.dom4j.Node;
 
 import it.tredi.msa.mailboxmanager.ByteArrayContentProvider;
 
+/**
+ * Utilities di gestione delle fatturePA (parsing dei documenti XML ed estrazione dei dati necessari alla gestione di processo)
+ */
 public class FatturaPAUtils {
 	private static HashMap<String, String> tipiDocumento = new HashMap<String, String>();
 	
@@ -38,7 +50,10 @@ public class FatturaPAUtils {
 	public static final String TIPO_MESSAGGIO_SEND = "SEND"; // Invio della fatturaPA al SdI
 	
 	public static final String ATTESA_NOTIFICHE = "ATTESA";
-	public static final String ATTESA_INVIO = "ATTESAINVIO";	
+	public static final String ATTESA_INVIO = "ATTESAINVIO";
+	
+	public static final String CODICE_DESTINATARIO_PRIVATO = "0000000";
+	public static final String CODICE_DESTINATARIO_UE_EXTRA_UE = "XXXXXXX";
 
 	static { 
 		tipiDocumento.put("TD01", "Fattura");
@@ -49,6 +64,11 @@ public class FatturaPAUtils {
 		tipiDocumento.put("TD06", "Parcella");
 	}
 	
+	/**
+	 * Ritorna la versione della fatturaPA
+	 * @param fatturaPADocument
+	 * @return
+	 */
 	public static String getVersioneFatturaPA(Document fatturaPADocument) {
 		String versione = fatturaPADocument.getRootElement().attributeValue("versione", "");
 		if (versione.length() == 0)
@@ -56,6 +76,11 @@ public class FatturaPAUtils {
 		return versione;
 	}
 	
+	/**
+	 * Estrazione di tutti gli allegati presenti all'interno della fattura/lotto di fatture 
+	 * @param fatturaPADocument
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public static List<List<Object>> getAllegatiFatturaPA(Document fatturaPADocument) {
 		@SuppressWarnings("rawtypes")
@@ -692,6 +717,11 @@ public class FatturaPAUtils {
 		return data;
 	}
 	
+	/**
+	 * Formattazione di un importo (2 decimali) con decimali separati da punto
+	 * @param value
+	 * @return
+	 */
 	private static String formatImporto(double value) {
 		try {
 			DecimalFormat df = new DecimalFormat("#.00", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
@@ -734,6 +764,13 @@ public class FatturaPAUtils {
 		return info;
 	}
 	
+	/**
+	 * Ritorna il valore associato ad un esito della notifica (non previsto per tutte le tipologie di notifica).
+	 * es: scarto esito
+	 * @param notificaFatturaPADocument
+	 * @param tipoNotifica
+	 * @return
+	 */
 	public static String getEsitoNotifica(Document notificaFatturaPADocument, String tipoNotifica) {
 		Node node = null;
 		if (tipoNotifica.equals(TIPO_MESSAGGIO_EC))
@@ -745,6 +782,12 @@ public class FatturaPAUtils {
 		return (node == null)? "" : node.getText();
 	}
 	
+	/**
+	 * Ritorna eventuali note caricate all'interno dell'xml di notifica
+	 * @param notificaFatturaPADocument
+	 * @param tipoNotifica
+	 * @return
+	 */
 	public static String getNoteNotifica(Document notificaFatturaPADocument, String tipoNotifica) {
 		if (tipoNotifica.equals(TIPO_MESSAGGIO_NS)) {
 			List<?> errori = notificaFatturaPADocument.selectNodes("//ListaErrori/Errore");
@@ -773,6 +816,16 @@ public class FatturaPAUtils {
 		return "";
 	}	
 
+	/**
+	 * Ritorna la lista completa di errori riscontrati dal Sdi su una precedente comunicazione e inviati tramite
+	 * la notifica corrente. 
+	 * In caso di nessun errore viene restituita una lista vuota.
+	 * Viene svolto un controllo del tipo di notifica al fine di verificare se e' sensato o meno tentare il recupero di errori
+	 * indicati dal SdI.
+	 * @param notificaFatturaPADocument
+	 * @param tipoNotifica
+	 * @return
+	 */
 	public static List<ErroreItem> getListaErroriNotifica(Document notificaFatturaPADocument, String tipoNotifica) {
 		List<ErroreItem> errori = new ArrayList<ErroreItem>();
 		
@@ -800,6 +853,15 @@ public class FatturaPAUtils {
 		return errori;
 	}	
 
+	/**
+	 * Ritorna l'eventuale tipologia di notifica alla quale puo' fare riferimento la notifica corrente.
+	 * ES:
+	 * SE -> fa riferimento ad una precedente EC
+	 * DT -> non fa riferimento a nessuna precedente notifica
+	 * NS -> fa riferimento ad un precedente invio di fatturaPA via PEC
+	 * @param tipoNotifica
+	 * @return
+	 */
 	public static String getTipoNotificaRiferita(String tipoNotifica) {
 		if (tipoNotifica.equals(TIPO_MESSAGGIO_SE))
 			return TIPO_MESSAGGIO_EC;
@@ -814,7 +876,7 @@ public class FatturaPAUtils {
 	 * Ritorna l'eventuale indirizzo PEC del destinatario indicato all'interno dell'XML della fattura.
 	 * Indirizzo di Posta Elettronica Certificata al quale viene recapitata la fattura; viene valorizzato nei soli casi 
 	 * di destinatario diverso da Pubblica Amministrazione, qualora il destinatario utilizzi il canale PEC per ricevere le 
-	 * fatture. Può essere valorizzato solo seil valore di CodiceDestinatarioè uguale a '0000000'.
+	 * fatture. Può essere valorizzato solo seil valore di CodiceDestinatario è uguale a '0000000'.
 	 * @param fatturaPADocument
 	 * @return
 	 */
@@ -824,6 +886,26 @@ public class FatturaPAUtils {
 			return node.getText();
 		else
 			return null;
+	}
+	
+	/**
+	 * Ritorna true se il destinatario della fattura corrisponde ad un privato, false se si tratta di una pubblica
+	 * amministrazione.
+	 * @param fatturaPADocument
+	 * @return
+	 */
+	public static boolean isDestinatarioPrivato(Document fatturaPADocument) {
+		boolean privato = false;
+		Node node = fatturaPADocument.selectSingleNode("//FatturaElettronicaHeader/DatiTrasmissione/CodiceDestinatario");
+		if (node != null) {
+			String codiceDestinatario = node.getText();
+			if (codiceDestinatario != null) {
+				codiceDestinatario = codiceDestinatario.trim();
+				privato = codiceDestinatario.equals(CODICE_DESTINATARIO_PRIVATO); // TODO il CODICE_DESTINATARIO_UE_EXTRA_UE deve essere considerato privato?
+			}
+		}
+		
+		return privato;
 	}
 	
 }

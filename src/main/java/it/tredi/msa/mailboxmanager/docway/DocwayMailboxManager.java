@@ -34,9 +34,9 @@ import it.tredi.msa.mailboxmanager.PartContentProvider;
 import it.tredi.msa.mailboxmanager.StringContentProvider;
 import it.tredi.msa.mailboxmanager.docway.exception.MultipleFoldersException;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
-import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAUtils;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoDocumentoBuilder;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
+import it.tredi.msa.mailboxmanager.docway.fatturapa.utils.FatturaPAUtils;
 
 /**
  * Estensione della gestione delle mailbox (lettura, elaborazione messaggi, ecc.) per finalita' di gestione documentale
@@ -1238,7 +1238,13 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		rifEsterno.addInteroperabilitaItem(interopItem);
 	}
 
-	private DocwayDocument createDocwayDocumentByFatturaPAMessage(ParsedMessage  parsedMessage) throws Exception {
+	/**
+	 * Creazione di un documento di DocWay in base al parsing di un messaggio relativo ad una fatturaPA passiva ricevuta
+	 * @param parsedMessage
+	 * @return
+	 * @throws Exception
+	 */
+	protected DocwayDocument createDocwayDocumentByFatturaPAMessage(ParsedMessage  parsedMessage) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration) getConfiguration();
 		
 		if (logger.isDebugEnabled())
@@ -1273,7 +1279,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	    	doc.setClassifCod(conf.getClassifCodFtrPA());
 	    	
 	    	//voce indice fatturaPA
-	    	if (!conf.getVoceIndiceFtrPA().isEmpty())
+	    	if (conf.getVoceIndiceFtrPA() != null && !conf.getVoceIndiceFtrPA().isEmpty())
 	    		doc.setVoceIndice(conf.getVoceIndiceFtrPA());
 		    
 		    // gestione del mittente del documento:
@@ -1291,7 +1297,16 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 
 		    FatturaPAItem fatturaPAItem = new FatturaPAItem();
 		    doc.setFatturaPA(fatturaPAItem);
-			fatturaPAItem.setState(FatturaPAUtils.ATTESA_NOTIFICHE); // stato della fattura / lotto di fatture
+		    // stato della fattura / lotto di fatture
+		    if (FatturaPAUtils.isDestinatarioPrivato(fatturaPADocument)) {
+		    	// mbernardini 23/07/2019 : in caso di fatturaPA inviata ad un destinatario privato occorre considerare la fattura come accettata, in 
+		    	// questo caso forziamo quindi lo stato a 'Notifica di esito cessionario / committente' (come se effettivamente avesse ricevuto la 
+		    	// notifica di accettazione o rifiuto)
+		    	fatturaPAItem.setState(FatturaPAUtils.TIPO_MESSAGGIO_EC); 
+		    }
+		    else {
+		    	fatturaPAItem.setState(FatturaPAUtils.ATTESA_NOTIFICHE); // stato della fattura / lotto di fatture
+		    }
 		    if (dcwParsedMessage.getSentDate() != null)
 		    	fatturaPAItem.setSendDate(dcwParsedMessage.getSentDate());
 		    fatturaPAItem.setVersione(FatturaPAUtils.getVersioneFatturaPA(fatturaPADocument)); // versione di fatturaPA

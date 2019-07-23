@@ -1,0 +1,548 @@
+X-Fattura-PA: Yes
+Return-Path: <sdi52@pec.fatturapa.it>
+Delivered-To: FATTURE.SCUOLAPATRIMONIO@PEC.IT
+Received: from mxpecrm01.pec.ad.aruba.it (localhost [127.0.0.1])
+	by mxpecrm01.pec.ad.aruba.it (lmtpd) with LMTP id 12467.002;
+	Sat, 20 Jul 2019 13:18:08 +0200 (CEST)
+Received: from mx.pec.aruba.it (localhost [127.0.0.1])
+	by mx.pec.aruba.it (Postfix) with ESMTP id 45rQN01MKsz2Mv3Vc
+	for <FATTURE.SCUOLAPATRIMONIO@PEC.IT>; Sat, 20 Jul 2019 13:18:08 +0200 (CEST)
+Received: from sendmail.pec.sogei.it (cmaout.pec.sogei.it [217.175.51.47])
+	(using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx.pec.aruba.it (Postfix) with ESMTPS
+	for <FATTURE.SCUOLAPATRIMONIO@PEC.IT>; Sat, 20 Jul 2019 13:18:08 +0200 (CEST)
+Received: from PECSMTPOUT-CL02-FE02.srv.sogei.it (localhost [127.0.0.1])
+	by sendmail.pec.sogei.it (Postfix) with ESMTP id 45rQMz0fx9zYkhYW
+	for <FATTURE.SCUOLAPATRIMONIO@PEC.IT>; Sat, 20 Jul 2019 13:18:07 +0200 (CEST)
+X-Trasporto: posta-certificata
+To: FATTURE.SCUOLAPATRIMONIO@PEC.IT
+X-Riferimento-Message-ID: <39528699865286154.1563621486862@pec.fatturapa.it>
+From: "Per conto di: sdi52@pec.fatturapa.it" <posta-certificata@pcert.sogei.it>
+Reply-To: sdi52@pec.fatturapa.it
+X-Tiporicevuta: breve
+Date: Sat, 20 Jul 2019 13:18:06 +0200
+Received: from sdife85p4.srv.sogei.it (gateway [26.0.254.141])	by
+ sendmail.pec.sogei.it (Postfix) with ESMTPSA id 45rQMy6MVrzYmCSd	for
+ <FATTURE.SCUOLAPATRIMONIO@PEC.IT>; Sat, 20 Jul 2019 13:18:06 +0200 (CEST)
+Subject: POSTA CERTIFICATA: Invio File 1295271040
+MIME-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg="sha-256"; boundary="----A99A9B16DDD1F7B3431A6AF8F18C862E"
+Message-ID: <opec288.20190720131806.06379.29.1.22@pcert.sogei.it>
+
+This is an S/MIME signed message
+
+------A99A9B16DDD1F7B3431A6AF8F18C862E
+Content-Type: multipart/mixed; boundary="----------=_1563621487-6379-140"
+Content-Transfer-Encoding: binary
+MIME-Version: 1.0
+
+------------=_1563621487-6379-140
+Content-Type: multipart/alternative;
+ boundary="----------=_1563621487-6379-141"
+Content-Transfer-Encoding: binary
+
+------------=_1563621487-6379-141
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+--Questo =E8 un Messaggio di Posta Certificata--
+
+Il giorno 20/07/2019 alle ore 13:18:06 (+0200) il messaggio con Oggetto
+"Invio File 1295271040" =E8 stato inviato dal mittente "sdi52@pec.fatturapa=
+.it"
+e indirizzato a:
+FATTURE.SCUOLAPATRIMONIO@PEC.IT
+Il messaggio originale =E8 incluso in allegato, per aprirlo cliccare sul fi=
+le "postacert.eml" (nella webmail o in alcuni client di posta l'allegato po=
+trebbe avere come nome l'oggetto del messaggio originale).
+L'allegato daticert.xml contiene informazioni di servizio sulla trasmissione
+L'identificativo univoco di questo messaggio =E8: opec288.20190720131806.06=
+379.29.1.22@pcert.sogei.it
+
+------------=_1563621487-6379-141
+Content-Type: text/html; charset="iso-8859-1"
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+<head><title>Messaggio di posta certificata</title></head>
+<body>
+<h3>Messaggio di posta certificata</h3>
+<hr><br>
+Il giorno 20/07/2019 alle ore 13:18:06 (+0200) il messaggio<br>
+&quot;Invio File 1295271040&quot; &egrave; stato inviato da &quot;sdi52@pec=
+.fatturapa.it&quot;<br>
+indirizzato a:<br>
+FATTURE.SCUOLAPATRIMONIO@PEC.IT<br>
+
+Il messaggio originale &egrave; incluso in allegato.<br>
+Identificativo messaggio: opec288.20190720131806.06379.29.1.22@pcert.sogei.=
+it<br>
+</body>
+</html>
+
+------------=_1563621487-6379-141--
+
+------------=_1563621487-6379-140
+Content-Type: application/xml; name="daticert.xml"
+Content-Disposition: inline; filename="daticert.xml"
+Content-Transfer-Encoding: base64
+
+PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHBvc3Rh
+Y2VydCB0aXBvPSJwb3N0YS1jZXJ0aWZpY2F0YSIgZXJyb3JlPSJuZXNzdW5v
+Ij4KICAgIDxpbnRlc3RhemlvbmU+CiAgICAgICAgPG1pdHRlbnRlPnNkaTUy
+QHBlYy5mYXR0dXJhcGEuaXQ8L21pdHRlbnRlPgogICAgICAgIDxkZXN0aW5h
+dGFyaSB0aXBvPSJjZXJ0aWZpY2F0byI+RkFUVFVSRS5TQ1VPTEFQQVRSSU1P
+TklPQFBFQy5JVDwvZGVzdGluYXRhcmk+CiAgICAgICAgPHJpc3Bvc3RlPnNk
+aTUyQHBlYy5mYXR0dXJhcGEuaXQ8L3Jpc3Bvc3RlPgogICAgICAgIDxvZ2dl
+dHRvPkludmlvIEZpbGUgMTI5NTI3MTA0MDwvb2dnZXR0bz4KICAgIDwvaW50
+ZXN0YXppb25lPgogICAgPGRhdGk+CiAgICAgICAgPGdlc3RvcmUtZW1pdHRl
+bnRlPlNvZ2VpIFNwQTwvZ2VzdG9yZS1lbWl0dGVudGU+CiAgICAgICAgPGRh
+dGEgem9uYT0iKzAyMDAiPgogICAgICAgICAgICA8Z2lvcm5vPjIwLzA3LzIw
+MTk8L2dpb3Jubz4KICAgICAgICAgICAgPG9yYT4xMzoxODowNjwvb3JhPgog
+ICAgICAgIDwvZGF0YT4KICAgICAgICA8aWRlbnRpZmljYXRpdm8+b3BlYzI4
+OC4yMDE5MDcyMDEzMTgwNi4wNjM3OS4yOS4xLjIyQHBjZXJ0LnNvZ2VpLml0
+PC9pZGVudGlmaWNhdGl2bz4KICAgICAgICA8bXNnaWQ+Jmx0OzM5NTI4Njk5
+ODY1Mjg2MTU0LjE1NjM2MjE0ODY4NjJAcGVjLmZhdHR1cmFwYS5pdCZndDs8
+L21zZ2lkPgogICAgICAgIDxyaWNldnV0YSB0aXBvPSJicmV2ZSIgLz4KICAg
+IDwvZGF0aT4KPC9wb3N0YWNlcnQ+Cg==
+
+------------=_1563621487-6379-140
+Content-Type: message/rfc822; name="postacert.eml"
+Content-Disposition: inline; filename="postacert.eml"
+Content-Transfer-Encoding: 7bit
+
+Received: from sdife85p4.srv.sogei.it (gateway [26.0.254.141])
+	by sendmail.pec.sogei.it (Postfix) with ESMTPSA id 45rQMy6MVrzYmCSd
+	for <FATTURE.SCUOLAPATRIMONIO@PEC.IT>; Sat, 20 Jul 2019 13:18:06 +0200 (CEST)
+From: sdi52@pec.fatturapa.it
+To: FATTURE.SCUOLAPATRIMONIO@PEC.IT
+Subject: Invio File 1295271040
+MIME-Version: 1.0
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_250805_241613027.1563621486872"
+X-TipoRicevuta: breve
+Date: Sat, 20 Jul 2019 13:18:06 +0200 (CEST)
+Message-ID: <opec288.20190720131806.06379.29.1.22@pcert.sogei.it>
+X-Riferimento-Message-ID: <39528699865286154.1563621486862@pec.fatturapa.it>
+
+------=_Part_250805_241613027.1563621486872
+Content-Type: application/octet-stream; name=IT01641790702_fLrNw_MT_001.xml
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=IT01641790702_fLrNw_MT_001.xml
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns3:FileMetadati xmlns:ns2="http://www.w3.org/2000/09/xmldsig#" xmlns:ns3="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fattura/messaggi/v1.0" versione="1.0">
+    <IdentificativoSdI>1295271040</IdentificativoSdI>
+    <NomeFile>IT01641790702_fLrNw.xml</NomeFile>
+    <Hash>480aa1d80e981d878d5d41f0e0477ed56e0fc0a183dfe563df80545d4be08129</Hash>
+    <CodiceDestinatario>0000000</CodiceDestinatario>
+    <Formato>FPR12</Formato>
+    <TentativiInvio>1</TentativiInvio>
+    <MessageId>4052461182</MessageId>
+</ns3:FileMetadati>
+
+------=_Part_250805_241613027.1563621486872
+Content-Type: application/octet-stream; name=IT01641790702_fLrNw.xml
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment; filename=IT01641790702_fLrNw.xml
+
+<?xml version=3D"1.0" encoding=3D"UTF-8"?><ns3:FatturaElettronica xmlns:ns3=
+=3D"http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2" xmlns:ns=
+2=3D"http://www.w3.org/2000/09/xmldsig#" versione=3D"FPR12">
+    <FatturaElettronicaHeader>
+        <DatiTrasmissione>
+            <IdTrasmittente>
+                <IdPaese>IT</IdPaese>
+                <IdCodice>01641790702</IdCodice>
+            </IdTrasmittente>
+            <ProgressivoInvio>***</ProgressivoInvio>
+            <FormatoTrasmissione>FPR12</FormatoTrasmissione>
+            <CodiceDestinatario>0000000</CodiceDestinatario>
+            <ContattiTrasmittente>
+                <Telefono>0874-60561</Telefono>
+            </ContattiTrasmittente>
+            <PECDestinatario>FATTURE.SCUOLAPATRIMONIO@PEC.IT</PECDestinatar=
+io>
+        </DatiTrasmissione>
+        <CedentePrestatore>
+            <DatiAnagrafici>
+                <IdFiscaleIVA>
+                    <IdPaese>IT</IdPaese>
+                    <IdCodice>01141730430</IdCodice>
+                </IdFiscaleIVA>
+                <CodiceFiscale>RNZFBA59B16G921M</CodiceFiscale>
+                <Anagrafica>
+                    <Denominazione>RENZI FABIO</Denominazione>
+                </Anagrafica>
+                <RegimeFiscale>RF01</RegimeFiscale>
+            </DatiAnagrafici>
+            <Sede>
+                <Indirizzo>CONTRADA MAJANESI</Indirizzo>
+                <NumeroCivico>20</NumeroCivico>
+                <CAP>62010</CAP>
+                <Comune>TREIA</Comune>
+                <Provincia>MC</Provincia>
+                <Nazione>IT</Nazione>
+            </Sede>
+        </CedentePrestatore>
+        <CessionarioCommittente>
+            <DatiAnagrafici>
+                <CodiceFiscale>97900380581</CodiceFiscale>
+                <Anagrafica>
+                    <Denominazione>FONDAZIONE SCUOLA DEI BENI E DELLE ATTIV=
+ITA' CULTURALI</Denominazione>
+                </Anagrafica>
+            </DatiAnagrafici>
+            <Sede>
+                <Indirizzo>VIA DEL COLLEGIO ROMANO</Indirizzo>
+                <NumeroCivico>27</NumeroCivico>
+                <CAP>00186</CAP>
+                <Comune>ROMA</Comune>
+                <Provincia>RM</Provincia>
+                <Nazione>IT</Nazione>
+            </Sede>
+        </CessionarioCommittente>
+        <TerzoIntermediarioOSoggettoEmittente>
+            <DatiAnagrafici>
+                <IdFiscaleIVA>
+                    <IdPaese>IT</IdPaese>
+                    <IdCodice>01641790702</IdCodice>
+                </IdFiscaleIVA>
+                <CodiceFiscale>01641790702</CodiceFiscale>
+                <Anagrafica>
+                    <Denominazione>TEAMSYSTEM SERVICE SRL</Denominazione>
+                </Anagrafica>
+            </DatiAnagrafici>
+        </TerzoIntermediarioOSoggettoEmittente>
+        <SoggettoEmittente>TZ</SoggettoEmittente>
+    </FatturaElettronicaHeader>
+    <FatturaElettronicaBody>
+        <DatiGenerali>
+            <DatiGeneraliDocumento>
+                <TipoDocumento>TD01</TipoDocumento>
+                <Divisa>EUR</Divisa>
+                <Data>2019-07-20</Data>
+                <Numero>11</Numero>
+                <DatiRitenuta>
+                    <TipoRitenuta>RT01</TipoRitenuta>
+                    <ImportoRitenuta>74.88</ImportoRitenuta>
+                    <AliquotaRitenuta>20.00</AliquotaRitenuta>
+                    <CausalePagamento>A</CausalePagamento>
+                </DatiRitenuta>
+                <DatiCassaPrevidenziale>
+                    <TipoCassa>TC22</TipoCassa>
+                    <AlCassa>4.00</AlCassa>
+                    <ImportoContributoCassa>14.40</ImportoContributoCassa>
+                    <ImponibileCassa>360.00</ImponibileCassa>
+                    <AliquotaIVA>22.00</AliquotaIVA>
+                    <Ritenuta>SI</Ritenuta>
+                </DatiCassaPrevidenziale>
+                <ImportoTotaleDocumento>456.77</ImportoTotaleDocumento>
+                <Causale>DOCENZA DEL CORSO SCUOLA DEL PATRIMONIO </Causale>
+            </DatiGeneraliDocumento>
+        </DatiGenerali>
+        <DatiBeniServizi>
+            <DettaglioLinee>
+                <NumeroLinea>1</NumeroLinea>
+                <Descrizione>COMPENSO PER DOCENZA DEL CORSO SCUOLA DEL PATR=
+IMONIO NEL GIORNO 07/03/2019</Descrizione>
+                <Quantita>3.00</Quantita>
+                <UnitaMisura>ORE</UnitaMisura>
+                <PrezzoUnitario>120.00</PrezzoUnitario>
+                <PrezzoTotale>360.00</PrezzoTotale>
+                <AliquotaIVA>22.00</AliquotaIVA>
+                <Ritenuta>SI</Ritenuta>
+            </DettaglioLinee>
+            <DatiRiepilogo>
+                <AliquotaIVA>22.00</AliquotaIVA>
+                <ImponibileImporto>374.40</ImponibileImporto>
+                <Imposta>82.37</Imposta>
+                <EsigibilitaIVA>I</EsigibilitaIVA>
+            </DatiRiepilogo>
+        </DatiBeniServizi>
+        <DatiPagamento>
+            <CondizioniPagamento>TP02</CondizioniPagamento>
+            <DettaglioPagamento>
+                <ModalitaPagamento>MP05</ModalitaPagamento>
+                <ImportoPagamento>381.89</ImportoPagamento>
+            </DettaglioPagamento>
+        </DatiPagamento>
+    </FatturaElettronicaBody>
+<ds:Signature xmlns:ds=3D"http://www.w3.org/2000/09/xmldsig#" Id=3D"id-60ee=
+d581ca4ccd632ed87152b935c6f8"><ds:SignedInfo><ds:CanonicalizationMethod Alg=
+orithm=3D"http://www.w3.org/2001/10/xml-exc-c14n#"/><ds:SignatureMethod Alg=
+orithm=3D"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><ds:Reference=
+ URI=3D""><ds:Transforms><ds:Transform Algorithm=3D"http://www.w3.org/2000/=
+09/xmldsig#enveloped-signature"/><ds:Transform Algorithm=3D"http://www.w3.o=
+rg/2001/10/xml-exc-c14n#"/></ds:Transforms><ds:DigestMethod Algorithm=3D"ht=
+tp://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>9eGLOCe10+7TxrR7Zff=
+kLJ4UrYIKIRjAkzmmBPfinGo=3D</ds:DigestValue></ds:Reference><ds:Reference Ty=
+pe=3D"http://uri.etsi.org/01903#SignedProperties" URI=3D"#xades-id-60eed581=
+ca4ccd632ed87152b935c6f8"><ds:Transforms><ds:Transform Algorithm=3D"http://=
+www.w3.org/2001/10/xml-exc-c14n#"/></ds:Transforms><ds:DigestMethod Algorit=
+hm=3D"http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>qS4uCGGLwnt=
+0RvrGPbPX+BUTzI9lkb0UewEoFYRg3+A=3D</ds:DigestValue></ds:Reference></ds:Sig=
+nedInfo><ds:SignatureValue Id=3D"value-id-60eed581ca4ccd632ed87152b935c6f8"=
+>MFujSGNUnc+u0/s6Zk7r+dmEiJnNDNTP3ia5fnyVRI5hb+//PwqGn6BaZtISSpmrbiR14h22by=
+z2xg7Q2XQ1URMY1hLwFQgT6jw0kOM6KtYGJMg9T6lcNSBxvlapLqEGYB5iCsZVt4ghvitTxx0ZK=
+fdZZ/Qoj/YYs8Yx9PFN+sdWwP1DzIif4PAaUbgWJ7L/BqoUdo9KtnzTABElsjilRzCdD8bgPhUl=
+/uWGHpRh7pREIA5ikRmGZxXXfaDgXo8APJd8uyQUn6sq5Ke+i2oXeZ7rCRDE+Oqbmy1byKaCEUy=
+bjpJTQPVibx4oziZemzPvymmYIFURZN6tq81WdQBvbw=3D=3D</ds:SignatureValue><ds:Ke=
+yInfo><ds:X509Data><ds:X509Certificate>MIIHWDCCBkCgAwIBAgIIFBMVoLDKgCcwDQYJ=
+KoZIhvcNAQELBQAwfTELMAkGA1UEBhMCSVQxJDAiBgNVBAoMG05hbWlyaWFsIFMucC5BLi8wMjA=
+0NjU3MDQyNjEgMB4GA1UECwwXQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxJjAkBgNVBAMMHU5hbW=
+lyaWFsIENBIEZpcm1hIFF1YWxpZmljYXRhMB4XDTE5MDUyMjEzMzUwMFoXDTIyMDUyODIyMDAwM=
+FowgY8xCzAJBgNVBAYTAklUMRIwEAYDVQQEDAlESSBSSUVOWk8xEDAOBgNVBCoMB01JQ0hFTEUx=
+HzAdBgNVBAUTFlRJTklULURSTk1ITDY2RTMwWjQwMVcxGjAYBgNVBAMMEURJIFJJRU5aTyBNSUN=
+IRUxFMR0wGwYDVQQuExRBVURNMjAxOTA1MjIzMjY0ODQ5MzCCASIwDQYJKoZIhvcNAQEBBQADgg=
+EPADCCAQoCggEBALCrm0hEqb7erZYsLYfooi6GkJW734wokxT74R+idWV2FjU3OLNoINS+gPh26=
+z2r2GadJPjqSAMYMCrhxk2nW8n6bL4tXe42Yv0p1BKAUYd3HVd+KUO37zRKevoB4X/FlVylPGYn=
+CwaklL9TN14XtObHd0ZNlbiva2aQS0h7RQXBXzSQitpb7fx4PSICS7pvrAgcI1CuJraVqlR3VfM=
+lV4D09gN/Ml0+Pw8zjRuyPas5sugs+xTMSpiBhwaOyUoYFUrfwr2fmAsmkKs1nz1Y+5NbSwtdUI=
+rpuIrQEiTrtAeCh5HqulcdiTKOCny7TrGquHBfxNCAQ5i9i5uhmt2Wdw0CAwEAAaOCA8cwggPDM=
+IGcBggrBgEFBQcBAQSBjzCBjDBRBggrBgEFBQcwAoZFaHR0cHM6Ly9kb2NzLm5hbWlyaWFsdHNw=
+LmNvbS9kb2N1bWVudHMvTmFtaXJpYWxDQUZpcm1hUXVhbGlmaWNhdGEuY3J0MDcGCCsGAQUFBzA=
+BhitodHRwOi8vb2NzcC5uYW1pcmlhbHRzcC5jb20vb2NzcC9jZXJ0c3RhdHVzMB0GA1UdDgQWBB=
+RXOt6DDm5hHp3s89J9sKa3aPfCoDAfBgNVHSMEGDAWgBRj/e3mjGJHSM/qCUFzdhHiZGJ7EDCBz=
+QYIKwYBBQUHAQMEgcAwgb0wCAYGBACORgEBMAsGBgQAjkYBAwIBFDAIBgYEAI5GAQQwEwYGBACO=
+RgEGMAkGBwQAjkYBBgEwgYQGBgQAjkYBBTB6MDsWNWh0dHBzOi8vZG9jcy5uYW1pcmlhbHRzcC5=
+jb20vZG9jdW1lbnRzL1BEUy9QRFNfZW4ucGRmEwJlbjA7FjVodHRwczovL2RvY3MubmFtaXJpYW=
+x0c3AuY29tL2RvY3VtZW50cy9QRFMvUERTX2l0LnBkZhMCaXQwggG4BgNVHSAEggGvMIIBqzAJB=
+gcEAIvsQAECMAgGBgQAj3oBAjCCAZIGCysGAQQBgpprAQEDMIIBgTApBggrBgEFBQcCARYdaHR0=
+cHM6Ly9kb2NzLm5hbWlyaWFsdHNwLmNvbS8wggFSBggrBgEFBQcCAjCCAUQeggFAAEkAbAAgAHA=
+AcgBlAHMAZQBuAHQAZQAgAGMAZQByAHQAaQBmAGkAYwBhAHQAbwAgAOgAIAB2AGEAbABpAGQAbw=
+AgAHMAbwBsAG8AIABwAGUAcgAgAGYAaQByAG0AZQAgAGEAcABwAG8AcwB0AGUAIABjAG8AbgAgA=
+HAAcgBvAGMAZQBkAHUAcgBhACAAYQB1AHQAbwBtAGEAdABpAGMAYQAuAC8AVABoAGkAcwAgAGMA=
+ZQByAHQAaQBmAGkAYwBhAHQAZQAgAG0AYQB5ACAAbwBuAGwAeQAgAGIAZQAgAHUAcwBlAGQAIAB=
+mAG8AcgAgAHUAbgBhAHQAdABlAG4AZABlAGQALwBhAHUAdABvAG0AYQB0AGUAZAAgAGQAaQBnAG=
+kAdABhAGwAIABzAGkAZwBuAGEAdAB1AHIAZQBzAC4wRgYDVR0fBD8wPTA7oDmgN4Y1aHR0cDovL=
+2NybC5uYW1pcmlhbHRzcC5jb20vRmlybWFDZXJ0YVF1YWxpZmljYXRhMS5jcmwwDgYDVR0PAQH/=
+BAQDAgZAMA0GCSqGSIb3DQEBCwUAA4IBAQDZBaEZ7keni3KWzRLh4AXGK3oalXAWsL53w9QWqH5=
+1EXbk2RZ2XGSiN/MXla1VH3QYCxKfIerE2ARWFRfQOlZV47v/WHU8Zt31oMfJ+SGDrWRV3bwB6e=
+AWeNS1dx0JWi6FmzQ7pyuho5K6gFcp8Tc5KmlQGUpSIC9APBu7Y0gX+z7GnFtlf+zMML0G5TzCu=
+YqHYaU8r+nZtfAKCw6w0Yyoz0GYnJQl64X1lTLTAFydh6NoA3EO/Z2A9N9AYUu7ck0cPDDHQBDt=
+mw7SZYRuWqbRclkUbRdJ1lEeHQ8Rh49mbdr4pjCXZNF/M8Z5ahUAvP9kS/HeSoO9b6EwuOipuxx=
+j</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object><xades:Qualifyi=
+ngProperties xmlns:xades=3D"http://uri.etsi.org/01903/v1.3.2#" Target=3D"#i=
+d-60eed581ca4ccd632ed87152b935c6f8"><xades:SignedProperties Id=3D"xades-id-=
+60eed581ca4ccd632ed87152b935c6f8"><xades:SignedSignatureProperties><xades:S=
+igningTime>2019-07-20T11:17:55Z</xades:SigningTime><xades:SigningCertificat=
+eV2><xades:Cert><xades:CertDigest><ds:DigestMethod Algorithm=3D"http://www.=
+w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>Yp5L3w4leUw3QWd5L2BkeYc8X5ck=
+Me9LRH+CvtmUjks=3D</ds:DigestValue></xades:CertDigest><xades:IssuerSerialV2=
+>MIGOMIGBpH8wfTELMAkGA1UEBhMCSVQxJDAiBgNVBAoMG05hbWlyaWFsIFMucC5BLi8wMjA0Nj=
+U3MDQyNjEgMB4GA1UECwwXQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxJjAkBgNVBAMMHU5hbWlya=
+WFsIENBIEZpcm1hIFF1YWxpZmljYXRhAggUExWgsMqAJw=3D=3D</xades:IssuerSerialV2><=
+/xades:Cert></xades:SigningCertificateV2></xades:SignedSignatureProperties>=
+<xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference=
+=3D"#null"><xades:MimeType>application/octet-stream</xades:MimeType></xades=
+:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperti=
+es></xades:QualifyingProperties></ds:Object></ds:Signature></ns3:FatturaEle=
+ttronica>
+------=_Part_250805_241613027.1563621486872
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Invio file IT01641790702_fLrNw.xml, con identificativo 1295271040.In allega=
+to il file contenente la fattura ed il file contenente i metadati.
+La mail e' inviata dal Sistema di Interscambio per la fatturazione elettron=
+ica (L. 244/2007).
+Se il file allegato presenta estensione .xml.p7m vuol dire che e' stato fir=
+mato digitalmente con firma Cades;  per aprirlo e' necessario installare su=
+l proprio computer un apposito software.
+Tali software sono facilmente reperibili sul web sia a pagamento che gratui=
+tamente (licenza open source). Il file xml ottenuto dopo aver 'decifrato' l=
+a firma puo' essere agevolmente visualizzato
+in formato PDF utilizzando la funzionalit=C3=83=C2=A0 'Visualizza PDF Fattu=
+ra' dell'area 'Fatturazione elettronica' del sito Fatture e Corrispettivi.
+
+
+Per qualsiasi necessita' di chiarimenti non rispondere a questa mail, ma ut=
+ilizzare i tradizionali canali di assistenza presenti sul sito www.fatturap=
+a.gov.it.
+
+Il nuovo indirizzo da utilizzare per inviare le prossime fatture al Sistema=
+ di Interscambio, fino ad un eventuale nuovo avviso, e' sdi52@pec.fatturapa=
+.it. L'utilizzo di un indirizzo diverso non garantisce il buon esito del re=
+capito al destinatario.
+
+
+
+If you need any clarification do not reply to this email, but use tradition=
+al support channels on the site www.fatturapa.gov.it.
+
+The file IT01641790702_fLrNw.xml has been sent with ID 1295271040.The file =
+containing the invoice and the file containing the metadata are attached.
+This mail is sent by the Exchange System for electronic invoicing (Law 244/=
+2007).
+If the attached file has the extension .xml.p7m, it means that the file has=
+ been signed with Cades signature; to be able to read it, you need to insta=
+ll a specific software on your computer.
+These software can be easily found on the web, both paid and free (open sou=
+rce license). The xml file obtained after signature decoding can be easily =
+displayed in PDF format,
+using the 'Visualizza PDF Fattura' in the 'Fatturazione elettronica' area o=
+f the Fatture e Corrispettivi website.
+
+If you want to send other files to the Exchange System, please use the addr=
+ess: sdi52@pec.fatturapa.it.Using a different address does not guarantee de=
+livery.
+
+
+------=_Part_250805_241613027.1563621486872--
+
+------------=_1563621487-6379-140--
+
+------A99A9B16DDD1F7B3431A6AF8F18C862E
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+
+MIIacQYJKoZIhvcNAQcCoIIaYjCCGl4CAQExDTALBglghkgBZQMEAgEwCwYJKoZI
+hvcNAQcBoIIXiTCCBXwwggRkoAMCAQICCEUeAH2kQ7UYMA0GCSqGSIb3DQEBCwUA
+MIGQMQswCQYDVQQGEwJJVDENMAsGA1UEBwwEUm9tYTEmMCQGA1UECgwdQWdlbnpp
+YSBwZXIgbCdJdGFsaWEgRGlnaXRhbGUxNzA1BgNVBAsMLkFyZWEgU29sdXppb25p
+IHBlciBsYSBQdWJibGljYSBBbW1pbmlzdHJhemlvbmUxETAPBgNVBAMMCEFnSUQg
+Q0ExMB4XDTE4MDkyNzA4MzgzNVoXDTIxMDkyNjA4MzgzNVowZDELMAkGA1UEBhMC
+SVQxDTALBgNVBAgMBFJvbWExDTALBgNVBAcMBFJvbWExFTATBgNVBAoMDFNvZ2Vp
+IFMucC5BLjEgMB4GA1UEAwwXUG9zdGEgQ2VydGlmaWNhdGEgU29nZWkwggEiMA0G
+CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCe4uzNp0B8GaEFMdvY7mfoc70yEgea
++OpF8G7dcrhLjNq2DhoJdAjpKTiXb1bOA34e1JevLQfASXgmb9cvpe2XKu7fzM+F
+QheOG11hcaLms982QBqm6g+ZmtQH3bJWQiSX+v2xjjc1Ybyi5uvT+3ZyazsB3XaR
+KpTi2R8PM3HFA/GOhHadCo/M/7hxQMqZjpLDbs7iR4ohgZVGBrhmeLZbFISpLbFf
+haOnRHYUvjDqRKlhAAn44ek3tt39tlsNTJ763JxIJ87Kpqm6YzqOx36lkJ02HEa2
+xWOu9cLZ9EIU8E6qKoOygvqtaXiTrCvgpzLAIfhuZsBAWaiQ4F8j+J/ZAgMBAAGj
+ggIDMIIB/zA3BggrBgEFBQcBAQQrMCkwJwYIKwYBBQUHMAGGG2h0dHA6Ly9jYTEu
+YWdpZC5nb3YuaXQvT0NTUDAdBgNVHQ4EFgQUxgM0OlQZhWyiMUxPo+vlW9YxLEYw
+HwYDVR0jBBgwFoAUpf2FBQ7D8dZlSiBs4ttNYJMriqAwTwYDVR0gBEgwRjBEBgYr
+TBADAQEwOjA4BggrBgEFBQcCARYsaHR0cDovL3d3dy5hZ2lkLmdvdi5pdC9jZXJ0
+aWZpY2F0aS1maXJtYS1wZWMwgeAGA1UdHwSB2DCB1TCBsKCBraCBqoaBp2xkYXA6
+Ly9jYTEuYWdpZC5nb3YuaXQvY249QWdJRCUyMENBMSxvdT1BcmVhJTIwU29sdXpp
+b25pJTIwcGVyJTIwbGElMjBQdWJibGljYSUyMEFtbWluaXN0cmF6aW9uZSxvPUFn
+ZW56aWElMjBwZXIlMjBsJTI3SXRhbGlhJTIwRGlnaXRhbGUsQz1JVD9jZXJ0aWZp
+Y2F0ZVJldm9jYXRpb25MaXN0MCCgHqAchhpodHRwOi8vY2ExLmFnaWQuZ292Lml0
+L0NSTDAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwQwKwYDVR0R
+BCQwIoEgcG9zdGEtY2VydGlmaWNhdGFAcGNlcnQuc29nZWkuaXQwDQYJKoZIhvcN
+AQELBQADggEBAD5j9xc6NZaxGyNj77oMC1e2gV1/UGqiYPijLv/FjywUz8L7urm5
+oc1BKvVh7WMKFueef32HGuo5fBG7lMmpuYJUoT5k6SuiuoslzhRBq4CmBQjTiSXA
+kojvn6dHckt/33AWwKxwn2kkbhExJMXt/pJ2p3177i3rhrxOITBsV6OSr2qMWmGT
+fRUYti1PLZkvz7WSCJj0Nwy+hNB+/Hryox+UmXZAmF9DiM122qwtqsq4ARjcY+4E
+BTr5Du0GwlOasUAgFcfw3wIPioLKTsw1CS897quIEq/SpGjA/D6sWQqGCn/8/avK
+HbZjjJ2Dl/Q+fnPp5aCRXKWPX3qVYVp7AgAwghIFMIIP7aADAgECAghJiAIfpTX4
+ajANBgkqhkiG9w0BAQsFADBrMQswCQYDVQQGEwJJVDEOMAwGA1UEBwwFTWlsYW4x
+IzAhBgNVBAoMGkFjdGFsaXMgUy5wLkEuLzAzMzU4NTIwOTY3MScwJQYDVQQDDB5B
+Y3RhbGlzIEF1dGhlbnRpY2F0aW9uIFJvb3QgQ0EwHhcNMTgwNzExMTAwMzE0WhcN
+MjgwNzEwMTAwMzE0WjCBkDELMAkGA1UEBhMCSVQxDTALBgNVBAcMBFJvbWExJjAk
+BgNVBAoMHUFnZW56aWEgcGVyIGwnSXRhbGlhIERpZ2l0YWxlMTcwNQYDVQQLDC5B
+cmVhIFNvbHV6aW9uaSBwZXIgbGEgUHViYmxpY2EgQW1taW5pc3RyYXppb25lMREw
+DwYDVQQDDAhBZ0lEIENBMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
+ANU2n0Xri8wepI2AarzJVG5E9/kQpXhuLbX3sQgN0RjTfhvPB9fwXRrfvar5upsW
+GvwPuUB2Z3A2jseDa1hbvHeefkkfjKT/UkUidqZEKprb176t/zJoNVI7lgRCjjz9
+0ByVjUHIFuwQUHOVMbfHyeBWpTQrzYsxnofRKRep3ZESLlhKaln4/8/rSICxnD8K
+peTQ41Qn8VYpj0RV0NU0+k9VgR9C/K4zX1z4AonMemcRP/8B1XFyjk2LaqUXHt8L
+Bw6Wb+OYO+n9rXKT8pDyr9/zd+kSJxxI2gvooye7Xt3xJGqODkpZru3Q3Gb5c8T2
+UZ2mnKZwOciN4p/5tcOaC1cCAwEAAaOCDYUwgg2BMIILgQYDVR0eBIILeDCCC3Sg
+ggs+MA2BC2FnaWQuZ292Lml0MBmBF2NlcnQuaW5mb3JtYXRpY2EuYWNpLml0MBGB
+D2NlcnQuaW50ZXJuby5pdDAMgQplbWFyY2hlLml0MBCBDmZhc3R3ZWItcGVjLml0
+MBWBE2dlc3RvcmVwZWMudW5pbmEuaXQwDIEKa21haWxlci5pdDAOgQxsZWdhbG1h
+aWwuaXQwEIEOcGNlcnQuc29nZWkuaXQwEIEOcGVjLmFjdGFsaXMuaXQwEIEOcGVj
+LmFuY2l0ZWwuaXQwDoEMcGVjLmFydWJhLml0MBaBFHBlYy5iYXNpbGljYXRhbmV0
+Lml0MA+BDXBlYy1lbWFpbC5jb20wEoEQcGVjLnBvc3RlY2VydC5pdDAWgRRwZWMu
+cG9zdGVpdGFsaWFuZS5pdDAVgRNwZWMucnVwYXIucHVnbGlhLml0MBaBFHBvc3Rh
+Y2VydC5jZWRhY3JpLml0MB+BHXBvc3RhY2VydGlmaWNhdGEubm90YXJpYXRvLml0
+MBKBEHBvc3RhY2VydC5pdC5uZXQwDoEMcG9zdGVjZXJ0Lml0MBWBE3NpY3VyZXp6
+YXBvc3RhbGUuaXQwEIEOdGVsZWNvbXBvc3QuaXQwF4EVdHJ1c3RlZG1haWwuaW50
+ZXNhLml0MAyBCnR3dGNlcnQuaXQwEYEPenVjY2hldHRpcGVjLml0MBCBDmNlcnQu
+aW50ZXNhLml0MBaBFGNlcnRtYWlsLmtwbnF3ZXN0Lml0MBWBE2NlcnRtYWlsLmly
+aWRlb3MuaXQwEoIQYWdpZC1jYTEtdGVzdC5pdDANggthZ2lkLmdvdi5pdDAfgh1h
+dmFuemFtZW50b2RpZ2l0YWxlLml0YWxpYS5pdDAMggpjZXJ0LXBhLml0MAqCCGNu
+aXBhLml0MBuCGWZhc2NpY29sb3Nhbml0YXJpby5nb3YuaXQwDYILaW5kaWNlcGEu
+aXQwEYIPaW5kaWNlcGEuZ292Lml0MA+CDXBhZ29wYS5nb3YuaXQwGYIXcG9zdGFj
+ZXJ0aWZpY2F0YS5nb3YuaXQwDYILcm5kdC5nb3YuaXQwD4INc3Bjb29wLmdvdi5p
+dDANggtzcGlkLmdvdi5pdDAOggxpY3NwYy5nb3YuaXQwDYILZGF0aS5nb3YuaXQw
+EIIOZ2VvZGF0aS5nb3YuaXQwUKROMEwxCzAJBgNVBAYTAklUMQ0wCwYDVQQIDARS
+b21hMQ0wCwYDVQQHDARSb21hMR8wHQYDVQQKDBZBQ0kgSW5mb3JtYXRpY2EgUy5w
+LkEuMFmkVzBVMQswCQYDVQQGEwJJVDEQMA4GA1UECAwHQmVyZ2FtbzEZMBcGA1UE
+BwwQUG9udGUgU2FuIFBpZXRybzEZMBcGA1UECgwQQXJ1YmEgUEVDIFMucC5BLjBX
+pFUwUzELMAkGA1UEBhMCSVQxEDAOBgNVBAgMB0JlcmdhbW8xGTAXBgNVBAcMEFBv
+bnRlIFNhbiBQaWV0cm8xFzAVBgNVBAoMDkFjdGFsaXMgUy5wLkEuMFekVTBTMQsw
+CQYDVQQGEwJJVDENMAsGA1UECAwEUm9tYTENMAsGA1UEBwwEUm9tYTEmMCQGA1UE
+CgwdQWdlbnppYSBwZXIgbCdJdGFsaWEgRGlnaXRhbGUwSKRGMEQxCzAJBgNVBAYT
+AklUMQ0wCwYDVQQIDARSb21hMQ0wCwYDVQQHDARSb21hMRcwFQYDVQQKDA5BbmNp
+dGVsIFMucC5BLjBPpE0wSzELMAkGA1UEBhMCSVQxDjAMBgNVBAgMBVBhcm1hMRMw
+EQYDVQQHDApDb2xsZWNjaGlvMRcwFQYDVQQKDA5DZWRhY3JpIFMucC5BLjBbpFkw
+VzELMAkGA1UEBhMCSVQxDTALBgNVBAgMBFJvbWExDTALBgNVBAcMBFJvbWExKjAo
+BgNVBAoMIUNvbnNpZ2xpbyBOYXppb25hbGUgZGVsIE5vdGFyaWF0bzBMpEowSDEL
+MAkGA1UEBhMCSVQxDzANBgNVBAgMBk1pbGFubzEPMA0GA1UEBwwGTWlsYW5vMRcw
+FQYDVQQKDA5GYXN0d2ViIFMucC5BLjBKpEgwRjELMAkGA1UEBhMCSVQxDzANBgNV
+BAgMBk1pbGFubzEPMA0GA1UEBwwGQXNzYWdvMRUwEwYDVQQKDAxJVG5ldCBTLnIu
+bC4wT6RNMEsxCzAJBgNVBAYTAklUMQ8wDQYDVQQIDAZUb3Jpbm8xDzANBgNVBAcM
+BlRvcmlubzEaMBgGA1UECgwRSW4uVGUuUy5BLiBTLnAuQS4wSaRHMEUxCzAJBgNV
+BAYTAklUMQ0wCwYDVQQIDARSb21hMQ0wCwYDVQQHDARSb21hMRgwFgYDVQQKDA9J
+bmZvQ2VydCBTLnAuQS4wUqRQME4xCzAJBgNVBAYTAklUMQ0wCwYDVQQIDARCYXJp
+MRIwEAYDVQQHDAlWYWxlbnphbm8xHDAaBgNVBAoME0lubm92YVB1Z2xpYSBTLnAu
+QS4wUaRPME0xCzAJBgNVBAYTAklUMQ8wDQYDVQQIDAZBbmNvbmExEzARBgNVBAcM
+ClNlbmlnYWxsaWExGDAWBgNVBAoMD05hbWlyaWFsIFMucC5BLjBPpE0wSzELMAkG
+A1UEBhMCSVQxDTALBgNVBAgMBFJvbWExDTALBgNVBAcMBFJvbWExHjAcBgNVBAoM
+FVBvc3RlIEl0YWxpYW5lIFMucC5BLjBSpFAwTjELMAkGA1UEBhMCSVQxEDAOBgNV
+BAgMB1BvdGVuemExEDAOBgNVBAcMB1BvdGVuemExGzAZBgNVBAoMElJlZ2lvbmUg
+QmFzaWxpY2F0YTBMpEowSDELMAkGA1UEBhMCSVQxDzANBgNVBAgMBkFuY29uYTEP
+MA0GA1UEBwwGQW5jb25hMRcwFQYDVQQKDA5SZWdpb25lIE1hcmNoZTBSpFAwTjEL
+MAkGA1UEBhMCSVQxEDAOBgNVBAgMB0ZpcmVuemUxEDAOBgNVBAcMB0ZpcmVuemUx
+GzAZBgNVBAoMElJlZ2lzdGVyLml0IFMucC5BLjBGpEQwQjELMAkGA1UEBhMCSVQx
+DTALBgNVBAgMBFJvbWExDTALBgNVBAcMBFJvbWExFTATBgNVBAoMDFNvZ2VpIFMu
+cC5BLjBIpEYwRDELMAkGA1UEBhMCSVQxDzANBgNVBAgMBk1pbGFubzEPMA0GA1UE
+BwwGTWlsYW5vMRMwEQYDVQQKDApUV1QgUy5wLkEuMGWkYzBhMQswCQYDVQQGEwJJ
+VDENMAsGA1UECAwEUm9tYTEQMA4GA1UEBwwHUG9tZXppYTExMC8GA1UECgwoVGVs
+ZWNvbSBJdGFsaWEgVHJ1c3QgVGVjaG5vbG9naWVzIFMuci5sLjBqpGgwZjELMAkG
+A1UEBhMCSVQxDzANBgNVBAgMBk5hcG9saTEPMA0GA1UEBwwGTmFwb2xpMTUwMwYD
+VQQKDCxVTklWRVJTSVRBIERFR0xJIFNUVURJIERJIE5BUE9MSSBGRURFUklDTyBJ
+STBKpEgwRjELMAkGA1UEBhMCSVQxDTALBgNVBAgMBExvZGkxDTALBgNVBAcMBExv
+ZGkxGTAXBgNVBAoMEFp1Y2NoZXR0aSBTLnAuQS4wVKRSMFAxCzAJBgNVBAYTAklU
+MQ8wDQYDVQQIDAZNaWxhbm8xDzANBgNVBAcMBk1pbGFubzEfMB0GA1UECgwWS1BO
+UVdFU1QgSVRBTElBIFMuci5sLjBMpEowSDELMAkGA1UEBhMCSVQxDzANBgNVBAgM
+Bk1pbGFubzEPMA0GA1UEBwwGTWlsYW5vMRcwFQYDVQQKDA5JUklERU9TIFMucC5B
+LqEwMAqHCAAAAAAAAAAAMCKHIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAMEEGCCsGAQUFBwEBBDUwMzAxBggrBgEFBQcwAYYlaHR0cDovL29jc3AwNy5h
+Y3RhbGlzLml0L1ZBL0FVVEgtUk9PVDAdBgNVHQ4EFgQUpf2FBQ7D8dZlSiBs4ttN
+YJMriqAwEgYDVR0TAQH/BAgwBgEB/wIBADAfBgNVHSMEGDAWgBRS2Ig6yJ94Zu2J
+83s4cJTJAgI20DBOBgNVHSAERzBFMEMGBStMEAMBMDowOAYIKwYBBQUHAgEWLGh0
+dHA6Ly93d3cuYWdpZC5nb3YuaXQvY2VydGlmaWNhdGktZmlybWEtcGVjMIHjBgNV
+HR8EgdswgdgwgZaggZOggZCGgY1sZGFwOi8vbGRhcDA3LmFjdGFsaXMuaXQvY24l
+M2RBY3RhbGlzJTIwQXV0aGVudGljYXRpb24lMjBSb290JTIwQ0EsbyUzZEFjdGFs
+aXMlMjBTLnAuQS4lMmYwMzM1ODUyMDk2NyxjJTNkSVQ/Y2VydGlmaWNhdGVSZXZv
+Y2F0aW9uTGlzdDtiaW5hcnkwPaA7oDmGN2h0dHA6Ly9jcmwwNy5hY3RhbGlzLml0
+L1JlcG9zaXRvcnkvQVVUSC1ST09UL2dldExhc3RDUkwwDgYDVR0PAQH/BAQDAgEG
+MB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDBDANBgkqhkiG9w0BAQsFAAOC
+AgEAXjIvZwj3wrwJsl5N8keDn8qVjJWOjMuQwQpA+QJGFoFPcjO3ZbKLhNAC+zGL
+OqSvLwKqBRE77A6Xid3xZaIpRxjdFjimZ1y8eMcc8nzRj6EAZwd/BC6rud9K9O8t
+gynSrCZEvxwtnAyhFXOEVB6zYgQgiSuWCAOd1A7IiPjBd7Kc8rW6qYN56uzVGf73
+FPBIzcDrbgliI/Gvh0WAMfpPLKCuvscVCMG/ybDxJmVh0HoNv7n+pONpl7LlISxY
+ruz4EkHA3AC0i8ftjq8XQfnZpRk48qEaq8aQuB/ziYJHuChNAPZ78WIGwinsXRwc
+2t0loUCPSMlxUWU2fZaUfePfUM9uEzNna9nt47HhH1KwQi3do6AUcAsgf23fr6Lh
+JRaLz0XzaVLuwwGNzdp6VVOwFKoJ5pVNPNqAtJ216oeIVVxGnPFektUm2Tzpfkqm
+kGRR2rFSHtJY+npS5VB01g7AJlciP5wEauMO9dkQ+X/Ilsto0b38nOLlSfsvCSb7
+gAO8oPUBhuFAZakOQj8XBjBgJORCCARX73L8UiOtbIi4NTfaE0/FdgD3XlVr+nek
+Kg5Rn15H2B5iKxm86oh1+d1hxcOJOhKWKlGSA2R4DVy985nnKsRIde2j3J/gn44w
+TS/57FxfrCpv+KKAK2yVAWJu4Wa9OznyYY6ZJnGWDiyAGJwxggKuMIICqgIBATCB
+nTCBkDELMAkGA1UEBhMCSVQxDTALBgNVBAcMBFJvbWExJjAkBgNVBAoMHUFnZW56
+aWEgcGVyIGwnSXRhbGlhIERpZ2l0YWxlMTcwNQYDVQQLDC5BcmVhIFNvbHV6aW9u
+aSBwZXIgbGEgUHViYmxpY2EgQW1taW5pc3RyYXppb25lMREwDwYDVQQDDAhBZ0lE
+IENBMQIIRR4AfaRDtRgwCwYJYIZIAWUDBAIBoIHkMBgGCSqGSIb3DQEJAzELBgkq
+hkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE5MDcyMDExMTgwN1owLwYJKoZIhvcN
+AQkEMSIEICq+xXgKzR8SIls/JPi/sdMzUWZL+s6n9JERH2pWM5WCMHkGCSqGSIb3
+DQEJDzFsMGowCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIw
+CgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsO
+AwIHMA0GCCqGSIb3DQMCAgEoMA0GCSqGSIb3DQEBAQUABIIBAGPQK0zE/Zkxycno
+AWts9YE3ZxiVvNlOYRtpTuY8BmA0lcSnXMiVst7f5v5JMuHm+ecD2d20IOJ8o/U3
+nLT6vPVWK64eEUsuE1LDVaMQ3Z91gE7QmOTCfNRiC6H54bf0x3zv2QuernaLI9lg
+DmKQ/y0tdw0NCZpcZUPXDvUlVIG1HiwJ3kVaAKtN+3O8XUx6PxnsVIBfVliwtD01
+70A56g8L9ShUbWSMwRl2eEFidxYzJO7VnG8BN7Jnt+1e4zRWLb8TB9AHdvlnCowA
+EaaXmlKCnIQeXk626cH7Dz9cJ+tsxATKQn494RwEA1LVOGqBdYuy5qeRhDl3YZSg
+bshveZQ=
+
+------A99A9B16DDD1F7B3431A6AF8F18C862E--
+
