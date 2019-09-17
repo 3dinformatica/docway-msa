@@ -185,6 +185,22 @@ public class Docway4EntityToXmlUtils {
 			extraEl.add(fatturaPAToXml(doc.getFatturaPA()));
 		}
 		
+		// Aggiunta dei dati di rifiuto del documento in base ad allegati non supportati
+		if (doc.isRifiutato()) {
+			// <rifiuto stato="rifiutato">
+			// <actionRifiuto data="20161214" ora="11:03:03" cod_operatore="PI000008" operatore="Stagni Simone (Servizio Tecnico Bologna)" />
+			// </rifiuto>
+			
+			Element rifiutoEl = docEl.addElement("rifiuto");
+			rifiutoEl.addAttribute("stato", "da_rifiutare");
+			Element actionRifiutoEl = rifiutoEl.addElement("actionRifiuto");
+			actionRifiutoEl.addAttribute("data", doc.getRifiuto().getData());
+			actionRifiutoEl.addAttribute("ora", doc.getRifiuto().getOra());
+			if (doc.getRifiuto().getCodOperatore() != null && !doc.getRifiuto().getCodOperatore().isEmpty())
+				actionRifiutoEl.addAttribute("cod_operatore", doc.getRifiuto().getCodOperatore());
+			actionRifiutoEl.addAttribute("operatore", doc.getRifiuto().getOperatore());
+		}
+		
 		//storia
 		Element storiaEl = DocumentHelper.createElement("storia");
 		docEl.add(storiaEl);

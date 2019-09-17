@@ -1,5 +1,6 @@
 package it.tredi.msa.mailboxmanager.docway;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,6 +15,8 @@ import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
@@ -37,6 +40,8 @@ import it.tredi.msa.mailboxmanager.docway.fatturapa.FatturaPAItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoDocumentoBuilder;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.conf.OggettoParseMode;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.utils.FatturaPAUtils;
+import it.tredi.msa.mailboxmanager.docway.utils.RifiutoHandler;
+import it.tredi.msa.mailboxmanager.docway.utils.ZipManager;
 
 /**
  * Estensione della gestione delle mailbox (lettura, elaborazione messaggi, ecc.) per finalita' di gestione documentale
@@ -58,6 +63,8 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	private final static String SEGNATURA_PARSE_ERROR = "Si sono verificati degli errori in fase di importazione del messaggio di interoperabilità Segnatura.xml.\n";
 	private final static String SEGNATURA_NULL_EMPTY_FIELD = "Valore campo '%s' nullo o vuoto.\n";
 	private final static String SEGNATURA_FIELD_FORMAT_ERROR = "Valore campo '%s' in formato scorretto: %s\n";
+	
+	private final static String ERROR_ALLEGATI_NON_SUPPORTATI = "Il messaggio contiene allegati non supportati dal sistema documentale: %s";
 	
 	private final static String ORPHAN_RECEIPTS_MESSAGE = "Ricevuta Orfana: Non è stato possibile individuare il documento di origine al quale la ricevuta fa riferimento.";
 	
@@ -217,7 +224,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 				forcedType = DocTipoEnum.VARIE; // viene forzata la creazione di un documento non protocollato (generico)
 				parsedMessage.addRelevantMessage(ORPHAN_RECEIPTS_MESSAGE); // aggiunta al documento dell'annotazione relativa alla ricevuta orfana
 			}
-			DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage, forcedType);
+			DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage, forcedType, false);
 			
 			//save new document
 			Object retObj = null;
@@ -297,11 +304,12 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	 * Dato il messaggio parsato letto dalla casella di posta viene istanziato l'oggetto documento in base alle
 	 * specifiche della configurazione della casella stessa
 	 * @param parsedMessage Messaggio di posta da convertire in documento
+	 * @param fatturaPa TRUE se si tratta di un messaggio relativo ad una fatturaPA, FALSE altrimenti
 	 * @return Documento da registrare su DocWay
 	 * @throws Exception
 	 */
-	protected DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage) throws Exception {
-		return createDocwayDocumentByMessage(parsedMessage, DocTipoEnum.NOONE);
+	protected DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage, boolean fatturaPa) throws Exception {
+		return createDocwayDocumentByMessage(parsedMessage, DocTipoEnum.NOONE, fatturaPa);
 	}
 	
 	/**
@@ -309,10 +317,11 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	 * specifiche della configurazione della casella stessa
 	 * @param parsedMessage Messaggio di posta da convertire in documento
 	 * @param docAsVarie true se occorre forzare il salvataggio del documento come "non protocollato", false altrimenti (generazione del documento in base alla configurazione prevista)
+	 * @param fatturaPa TRUE se si tratta di un messaggio relativo ad una fatturaPA, FALSE altrimenti
 	 * @return Documento da registrare su DocWay
 	 * @throws Exception
 	 */
-	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage, DocTipoEnum forcedType) throws Exception {
+	private DocwayDocument createDocwayDocumentByMessage(ParsedMessage  parsedMessage, DocTipoEnum forcedType, boolean fatturaPa) throws Exception {
 		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
 		DocwayDocument doc = new DocwayDocument();
 		
@@ -424,6 +433,30 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//voce di indice
 		doc.setVoceIndice(conf.getVoceIndice());
 		
+		// Eventuale analisi dei file agganciati al doc per eventuale rifiuto per allegati non 
+		// supportati (SOLO SE NON SI TRATTA DI FATTURAPA)
+		RifiutoHandler rifiutoHandler = new RifiutoHandler(conf);
+		List<String> invalidAttachments = rifiutoHandler.getInvalidAttachments(parsedMessage);
+		if (!fatturaPa && invalidAttachments != null && !invalidAttachments.isEmpty()) {
+			Rifiuto rifiuto = new Rifiuto();
+			rifiuto.setOperatore(conf.getOperatore());
+			rifiuto.setData(currentDate);
+			rifiuto.setOra(currentDate);
+			rifiuto.setMotivazione(String.format(ERROR_ALLEGATI_NON_SUPPORTATI, StringUtils.join(invalidAttachments, ", ")));
+			
+			doc.setRifiuto(rifiuto);
+			
+			// Aggiunta dell'annotazione per allegati non supportati
+			Postit postit = new Postit();
+			postit.setText(doc.getRifiuto().getMotivazione());
+			postit.setOperatore(doc.getRifiuto().getOperatore());
+			postit.setData(doc.getRifiuto().getData());
+			postit.setOra(doc.getRifiuto().getOra());
+			doc.addPostit(postit);
+			
+			// TODO Fascicolazione per allegati non supportati
+		}
+		
 		//classif
 		doc.setClassif(conf.getClassif());
 		doc.setClassifCod(conf.getClassifCod());
@@ -469,7 +502,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//files + immagini + allegato
 		if (logger.isDebugEnabled())
 			logger.debug("[" + conf.getAddress() + "] gestione files e immagini...");
-		createDocwayFiles(parsedMessage, doc);
+		createDocwayFiles(parsedMessage, doc, conf);
 		
 		//parsedMessage.relevantMessages -> postit
 		for (String relevantMessage:parsedMessage.getRelevantMssages()) {
@@ -617,7 +650,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	protected abstract boolean containsDestinatariInterni(ParsedMessage message) throws Exception;
 	
 	
-	private void createDocwayFiles(ParsedMessage parsedMessage, DocwayDocument doc) throws Exception {
+	private void createDocwayFiles(ParsedMessage parsedMessage, DocwayDocument doc, DocwayMailboxConfiguration conf) throws Exception {
 		//email body html/text attachment
 		// mbernardini 12/06/2019 : ripristinato il salvataggio come allegato del contenuto estratto come HTML e testo semplice
 		_attachMessageContent(doc, parsedMessage.getHtmlParts(), TESTO_HTML_EMAIL_FILENAME);
@@ -630,31 +663,71 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		//email attachments (files + immagini)
 		List<MailAttach> attachments = parsedMessage.getAttachments();
 		for (MailAttach attachment:attachments) {
-			DocwayFile file = createDocwayFile();
-			
-			if (logger.isDebugEnabled())
-				logger.debug("Read content from attachment " + attachment.getFileName() + "...");
-			
-			// Se non si riesce a caricare il contenuto del file diamo per scontato che si tratti di un file danneggiato
+			// Recupero il contenuto del file da processare (allegato del messaggio)
 			boolean fileLoaded = false;
+			byte[] fileContent = null;
 			try {
-				file.setContentByProvider(new PartContentProvider(attachment.getPart()));
+				if (logger.isDebugEnabled())
+					logger.debug("Read content from attachment " + attachment.getFileName() + "...");
+				
+				fileContent = new PartContentProvider(attachment.getPart()).getContent();
 				fileLoaded = true;
 			}
 			catch(Exception e) {
+				// Se non si riesce a caricare il contenuto del file diamo per scontato che si tratti di un file danneggiato
+				
 				logger.warn("[" + attachment.getFileName() + "] Unable to read file content, damaged file... " + e.getMessage(), e);
 				logger.info("Mark file " + attachment.getFileName() + " as DAMAGED file!");
 				damagedFound = true;
 				damagedFiles.add(attachment.getFileName());
 			}
-			if (fileLoaded) {
-				file.setName(attachment.getFileName());
-				if (isImage(file.getName())) //immagine
-						doc.addImmagine(file);
-				else //file
-					doc.addFile(file);
-			}
 			
+			if (fileLoaded) {
+				if (conf.isExtractZip() && isZipAttach(attachment.getFileName())) {
+					// Rilevato file ZIP e estrazione files da ZIP abilitata...
+					
+					// mbernardini 16/09/2019 : estrazione files da allegato zip
+					ZipManager zipManager = new ZipManager(conf.getAddress());
+					List<File> files = zipManager.unzipArchive(fileContent);
+					if (files != null) {
+						for (File zipFile : files) {
+							if (zipFile != null) {
+								if (logger.isDebugEnabled())
+									logger.debug("Build document file from attachment " + zipFile.getName() + "[from zip file " + attachment.getFileName() + "]...");
+								
+								DocwayFile file = createDocwayFile();
+								file.setContent(FileUtils.readFileToByteArray(zipFile));
+								file.setName(zipFile.getName());
+								if (isImage(file.getName())) //immagine
+									doc.addImmagine(file);
+								else //file
+									doc.addFile(file);
+							}
+						}
+					}
+					else {
+						// problema in estrazione files dallo zip?... per sicurezza forziamo l'aggiunta del file EML originale
+						
+						damagedFiles.add(attachment.getFileName());
+						damagedFound = true;
+					}
+				}
+				else {
+					// Estrazione files da ZIP disabilitata o NO file ZIP...
+					
+					if (logger.isDebugEnabled())
+						logger.debug("Build document file content from attachment " + attachment.getFileName() + "...");
+					
+					DocwayFile file = createDocwayFile();
+					file.setContent(fileContent);
+					file.setName(attachment.getFileName());
+					if (isImage(file.getName())) //immagine
+						doc.addImmagine(file);
+					else //file
+						doc.addFile(file);
+				}
+			}
+				
 			//allegato
 			doc.addAllegato(attachment.getFileName());
 		}
@@ -682,6 +755,15 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			//note = "Rilevati possibili file danneggiati allegati alla mail: " + String.join(", ", damagedFiles) + "\n-----\n" + note;
 			//doc.setNote(note);
 		}
+	}
+	
+	/**
+	 * Ritorna TRUE se l'allegato corrente corrisponde ad un file ZIP (in base all'estensione del file), FALSE altrimenti
+	 * @param fileName
+	 * @return
+	 */
+	private boolean isZipAttach(String fileName) {
+		return fileName != null && fileName.trim().toLowerCase().endsWith(".zip");
 	}
 	
 	/**
@@ -936,6 +1018,33 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         }
         */
         
+        // Eventuale analisi dei file agganciati al doc per eventuale rifiuto per allegati non supportati (vengono
+        // valutati gli allegati specificati nel file segnatura.xml)
+ 		RifiutoHandler rifiutoHandler = new RifiutoHandler(conf);
+ 		List<String> invalidAttachments = rifiutoHandler.getInvalidAttachmentsSegnatura(segnaturaDocument, parsedMessage);
+ 		if (invalidAttachments != null && !invalidAttachments.isEmpty()) {
+ 			Rifiuto rifiuto = new Rifiuto();
+ 			rifiuto.setOperatore(conf.getOperatore());
+ 			rifiuto.setData(currentDate);
+ 			rifiuto.setOra(currentDate);
+ 			rifiuto.setMotivazione(String.format(ERROR_ALLEGATI_NON_SUPPORTATI, StringUtils.join(invalidAttachments, ", ")));
+ 			
+ 			doc.setRifiuto(rifiuto);
+ 			
+ 			// Aggiunta dell'annotazione per allegati non supportati
+ 			Postit postit = new Postit();
+ 			postit.setText(doc.getRifiuto().getMotivazione());
+ 			postit.setOperatore(doc.getRifiuto().getOperatore());
+ 			postit.setData(doc.getRifiuto().getData());
+ 			postit.setOra(doc.getRifiuto().getOra());
+ 			doc.addPostit(postit);
+ 			
+ 			// Notifica eccezione per procedura di interoperabilita'
+ 			motivazioneNotificaEccezione += doc.getRifiuto().getMotivazione() + "\n";
+ 			
+ 			// TODO Fascicolazione per allegati non supportati
+     	}
+        
         // mbernardini 01/07/2019 : archiviazione tramite TAGS
 		// In caso di archiviazione tramite TAGS attiva potrebbe essere necessario applicare variazioni alla costruzione 
 		// del documento in base a quanto previsto dal document model
@@ -948,7 +1057,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 					logger.debug("[" + conf.getAddress() + "] fascicolazione tramite TAGS. fascicolo = " + fascicolo.getCodFascicolo());
 			}
 			
-			// TODO In caso di email PEC di interoperabilita' non e' necessario valutare il flusso del documento perche' dovrebbe sempre trattarsi di un documento in arrivo
+			// In caso di email PEC di interoperabilita' non e' necessario valutare il flusso del documento perche' dovrebbe sempre trattarsi di un documento in arrivo
 		}
 		
 		//classif
@@ -1074,7 +1183,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			doc.addAllegato(DEFAULT_ALLEGATO);
 		
 		return motivazioneNotificaEccezione;
-	}	
+	}
 	
 	/**
 	 * Caricamento sul documento di un file specificato dalla segnatura.xml
@@ -1086,15 +1195,18 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	 * @throws Exception
 	 */
 	private String addFileFromSegnatura(Element documentoEl, DocwayDocument doc, ParsedMessage parsedMessage, boolean addAllegato) throws Exception {
+		DocwayMailboxConfiguration conf = (DocwayMailboxConfiguration)getConfiguration();
+		
 		if (documentoEl != null && !documentoEl.attributeValue("nome", "").isEmpty()) {
 			Part attachment = parsedMessage.getFirstAttachmentByName(documentoEl.attributeValue("nome"));
 			if (attachment != null) {
-				DocwayFile file = createDocwayFile();
-				
-				// mbernardini 29/03/2019 : gestione di messaggi di interoperabilita' contenenti allegati danneggiati
 				boolean fileLoaded = false;
+				byte[] fileContent = null;
 				try {
-					file.setContentByProvider(new PartContentProvider(attachment));
+					if (logger.isDebugEnabled())
+						logger.debug("segnatura.xml... Read content from attachment " + attachment.getFileName() + "...");
+					
+					fileContent = new PartContentProvider(attachment).getContent();
 					fileLoaded = true;
 				}
 				catch(Exception e) {
@@ -1102,19 +1214,50 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 				}
 				
 				if (fileLoaded) {
-					file.setName(attachment.getFileName());
-					if (isImage(file.getName())) //immagine
+					boolean unzip = false;
+					if (conf.isExtractZip() && isZipAttach(attachment.getFileName())) {
+						// Rilevato file ZIP e estrazione files da ZIP abilitata...
+						
+						// mbernardini 16/09/2019 : estrazione files da allegato zip
+						ZipManager zipManager = new ZipManager(conf.getAddress());
+						List<File> files = zipManager.unzipArchive(fileContent);
+						if (files != null) {
+							for (File zipFile : files) {
+								if (zipFile != null) {
+									if (logger.isDebugEnabled())
+										logger.debug("segnatura.xml... Build document file from attachment " + zipFile.getName() + "[from zip file " + attachment.getFileName() + "]...");
+									
+									DocwayFile file = createDocwayFile();
+									file.setContent(FileUtils.readFileToByteArray(zipFile));
+									file.setName(zipFile.getName());
+									if (isImage(file.getName())) //immagine
+										doc.addImmagine(file);
+									else //file
+										doc.addFile(file);
+								}
+							}
+							unzip = true;
+						}
+					}
+					if (!unzip) {
+						// Estrazione files da ZIP disabilitata, NO file ZIP o errore nell'estrazione dei file dallo ZIP...
+						
+						if (logger.isDebugEnabled())
+							logger.debug("segnatura.xml... Build document file content from attachment " + attachment.getFileName() + "...");
+						
+						DocwayFile file = createDocwayFile();
+						file.setContent(fileContent);
+						file.setName(attachment.getFileName());
+						if (isImage(file.getName())) //immagine
 							doc.addImmagine(file);
-					else //file
-						doc.addFile(file);
-					
-					if (addAllegato)
-						doc.addAllegato(file.getName());	
+						else //file
+							doc.addFile(file);
+					}
 					return "";
 				}
 				else {
 					// Possibile file corrotto, invio della notifica di eccezione
-					return String.format(DAMAGED_FILE_IN_SEGNATURA, documentoEl.attributeValue("nome"));					
+					return String.format(DAMAGED_FILE_IN_SEGNATURA, documentoEl.attributeValue("nome"));
 				}
 			}
 			else if (documentoEl.attributeValue("TipoRiferimento", "MIME").equals("MIME"))
@@ -1255,7 +1398,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		Document fileMetadatiDocument = dcwParsedMessage.getFileMetadatiDocument();
 
 		//costruzione standard da document model
-		DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage);
+		DocwayDocument doc = createDocwayDocumentByMessage(parsedMessage, true);
 		
 		if (doc.getTipo().equalsIgnoreCase(DocwayMailboxConfiguration.DOC_TIPO_ARRIVO)) {
 			doc.setAnno((new SimpleDateFormat("yyyy")).format(currentDate));

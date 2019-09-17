@@ -1,6 +1,7 @@
 package it.tredi.msa.configuration.docway;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.crypto.Cipher;
@@ -67,6 +68,14 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	public final static String DOCWAY4MAILBOXMANAGER_MAIL_READER_CONNECTION_ATTEMPTS = "docway4mailboxmanager.mail-reader.connection-attempts";
 	
 	public final static String DOCWAY4MAILBOXMANAGER_ASPETTO_CLASSIFICAZIONE = "docway4mailboxmanager.aspetto-classificazione";
+	
+	public final static String DOCWAY4MAILBOXMANAGER_EXTRACT_ZIP = "docway4mailboxmanager.extract-zip";
+	
+	public final static String DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_ENABLE = "docway4mailboxmanager.rifiuto-by-attachments.enable";
+	public final static String DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_ALLOWED = "docway4mailboxmanager.rifiuto-by-attachments.allowed";
+	public final static String DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_MAIL_SUBJECT = "docway4mailboxmanager.rifiuto-by-attachments.mail-rifiuto.oggetto";
+	public final static String DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_MAIL_BODY = "docway4mailboxmanager.rifiuto-by-attachments.mail-rifiuto.testo";
+		
 
 	private String host;
 	private int port;
@@ -410,6 +419,23 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		// mbernardini 02/07/2019 : formato della classificazione da utilizzare in caso di fascicolazione automatica di 
 		// documenti (rif interni in CC ereditati dal fascicolo)
 		conf.setAspettoClassificazione(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_ASPETTO_CLASSIFICAZIONE, AspettoClassificazioneUtils.DEFAULT_ASPETTO_CLASSIFICAZIONE));
+		
+		// mbernardini 16/09/2019 : estrazione files da allegato zip
+		conf.setExtractZip(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_EXTRACT_ZIP, false));
+		
+		// mbernardini 16/09/2019 : rifiuto email in base ad allegati non supportati contenuti
+		RifiutoByAttachmentsConfiguration rifiutoByAttachConfig = new RifiutoByAttachmentsConfiguration();
+		rifiutoByAttachConfig.setEnabled(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_ENABLE, false));
+		
+		// tentativo di lettura della configurazione specifica per la casella
+		String allowedExtensions = propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_ALLOWED + "." + conf.getEmail(), "");
+		if (allowedExtensions.isEmpty()) // lettura della configurazione globale
+			allowedExtensions = propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_ALLOWED, "");
+		
+		rifiutoByAttachConfig.setAllowedExtensions(Arrays.asList(allowedExtensions.split("\\,")));
+		rifiutoByAttachConfig.setMailRifiutoSubject(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_MAIL_SUBJECT, ""));
+		rifiutoByAttachConfig.setMailRifiutoBody(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_MAIL_BODY, ""));
+		conf.setRifiutoByAttachments(rifiutoByAttachConfig);
 		
 		return conf;
 	}

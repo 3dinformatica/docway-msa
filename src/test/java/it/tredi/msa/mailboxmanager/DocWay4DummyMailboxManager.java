@@ -124,8 +124,8 @@ public class DocWay4DummyMailboxManager extends Docway4MailboxManager {
 	/**
 	 * Pubblicazione del metodo createDocwayDocumentByMessage per chiamata diretta da unit-test
 	 */
-	public DocwayDocument buildDocwayDocument(ParsedMessage message) throws Exception {
-		return this.createDocwayDocumentByMessage(message);
+	public DocwayDocument buildDocwayDocument(ParsedMessage message, boolean fatturaPa) throws Exception {
+		return this.createDocwayDocumentByMessage(message, fatturaPa);
 	}
 	
 	/**

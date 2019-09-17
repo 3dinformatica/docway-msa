@@ -112,6 +112,11 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 	// mbernardini 02/07/2019 : formato della classificazione da utilizzare in caso di fascicolazione automatica di documenti (rif interni in CC ereditati dal fascicolo)
 	private String aspettoClassificazione;
 	
+	private boolean extractZip; // mbernardini 16/09/2019 : estrazione files da allegato zip
+	
+	private RifiutoByAttachmentsConfiguration rifiutoByAttachments; // mbernardini 16/09/2019 : rifiuto email in base ad allegati non supportati contenuti
+		
+
 	public boolean isStoreEml() {
 		return storeEml;
 	}
@@ -612,6 +617,21 @@ public class DocwayMailboxConfiguration extends MailboxConfiguration {
 		this.aspettoClassificazione = aspettoClassificazione;
 	}
 	
+	public boolean isExtractZip() {
+		return extractZip;
+	}
+
+	public void setExtractZip(boolean extractZip) {
+		this.extractZip = extractZip;
+	}
+
+	public RifiutoByAttachmentsConfiguration getRifiutoByAttachments() {
+		return rifiutoByAttachments;
+	}
+
+	public void setRifiutoByAttachments(RifiutoByAttachmentsConfiguration rifiutoByAttachments) {
+		this.rifiutoByAttachments = rifiutoByAttachments;
+	}
 	
 	/**
 	 * 

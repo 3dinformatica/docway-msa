@@ -42,6 +42,9 @@ public class DocwayDocument {
 	private List<String> allegato;
 	private List<Postit> postitL;
 	
+	// mbernardini 17/09/2019 : rifiuto di documenti in base ad allegati non supportati (estensioni vietate)
+	private Rifiuto rifiuto;
+	
 	//fatturaPA
 	private FatturaPAItem fatturaPA;
 	
@@ -336,6 +339,22 @@ public class DocwayDocument {
 
 	public void setFatturaPA(FatturaPAItem fatturaPA) {
 		this.fatturaPA = fatturaPA;
+	}
+
+	public Rifiuto getRifiuto() {
+		return rifiuto;
+	}
+
+	public void setRifiuto(Rifiuto rifiuto) {
+		this.rifiuto = rifiuto;
+	}
+	
+	/**
+	 * Ritorna TRUE se il documento risulta rifiutato, FALSE altrimenti
+	 * @return
+	 */
+	public boolean isRifiutato() {
+		return this.rifiuto != null && this.rifiuto.getOperatore() != null && !this.rifiuto.getOperatore().isEmpty();
 	}
 	
 }

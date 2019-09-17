@@ -1,6 +1,13 @@
 # Change Log
 
-## [3.0.16] - SNAPSHOT
+## [3.0.17] - SNAPSHOT
+
+### Added
+- Caricamento sul documento di DocWay di tutti i file estratti da uno o più file ZIP allegati al messaggio (Task #18041).
+- Rifiuto email (PEC e NON) in base al controllo di eventuali allegati non supportati dal gestionale documentale (Task #18041).
+
+
+## [3.0.16] - 2019-09-10
 
 ### Changed
 - Aggiunto il supporto al riconoscimento di fatturaPA passive ricevute in caso di ente privato (nessuna notifica attesa per la fattura, è implicita l'accettazione). (Task #19191)

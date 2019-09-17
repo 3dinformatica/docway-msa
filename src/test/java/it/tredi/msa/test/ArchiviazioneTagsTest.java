@@ -230,7 +230,7 @@ public class ArchiviazioneTagsTest extends EmlReader {
 		assertEquals(DocTipoEnum.ARRIVO, this.mailboxManager.flussoByRecipients(parsed));
 		
 		// conversione da message a document
-		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed);
+		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed, false);
 		assertNotNull(document);
 		assertEquals(DocTipoEnum.ARRIVO.getText(), document.getTipo());
 		assertEquals(1, document.getRifEsterni().size());
@@ -313,7 +313,7 @@ public class ArchiviazioneTagsTest extends EmlReader {
 		assertEquals(DocTipoEnum.PARTENZA, this.mailboxManager.flussoByRecipients(parsed));
 		
 		// conversione da message a document
-		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed);
+		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed, false);
 		assertNotNull(document);
 		assertEquals(DocTipoEnum.PARTENZA.getText(), document.getTipo());
 		assertEquals(1, document.getRifEsterni().size());
@@ -381,7 +381,7 @@ public class ArchiviazioneTagsTest extends EmlReader {
 		assertTrue(this.mailboxManager.containsDestinatariRifEst(parsed));
 		
 		// conversione da message a document
-		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed);
+		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed, false);
 		assertNotNull(document);
 		assertEquals(DocTipoEnum.ARRIVO.getText(), document.getTipo());
 		assertEquals(1, document.getRifEsterni().size());
@@ -471,7 +471,7 @@ public class ArchiviazioneTagsTest extends EmlReader {
 		assertEquals(DocTipoEnum.VARIE, this.mailboxManager.flussoByRecipients(parsed));
 		
 		// conversione da message a document
-		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed);
+		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed, false);
 		validateVarie(document);
 		
 		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
@@ -549,7 +549,7 @@ public class ArchiviazioneTagsTest extends EmlReader {
 		assertEquals(DocTipoEnum.VARIE, this.mailboxManager.flussoByRecipients(parsed));
 		
 		// conversione da message a document
-		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed);
+		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed, false);
 		validateVarie(document);
 		
 		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
@@ -627,7 +627,7 @@ public class ArchiviazioneTagsTest extends EmlReader {
 		assertEquals(DocTipoEnum.PARTENZA, this.mailboxManager.flussoByRecipients(parsed));
 		
 		// conversione da message a document
-		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed);
+		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed, false);
 		assertNotNull(document);
 		assertEquals(DocTipoEnum.PARTENZA.getText(), document.getTipo());
 		assertEquals(3, document.getRifEsterni().size());
