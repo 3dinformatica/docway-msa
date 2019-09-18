@@ -10,10 +10,10 @@ import java.sql.SQLException;
 import org.dom4j.Document;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import it.highwaytech.db.QueryResult;
@@ -25,6 +25,7 @@ import it.tredi.msa.test.conf.MsaTesterApplication;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = MsaTesterApplication.class)
+@ActiveProfiles({ "local", "jenkins" })
 public class ExtrawayClientTests {
 	
 	private static final String XWAY_HOST = "127.0.0.1";
@@ -59,7 +60,6 @@ public class ExtrawayClientTests {
 	 * @throws Exception 
 	 */
 	@Test
-	@Ignore
 	public void searchTest() throws Exception {
 		QueryResult qr = extrawayClient.search("[/comune/@nazione/]=\"italia\"");
 		assertNotNull(qr);

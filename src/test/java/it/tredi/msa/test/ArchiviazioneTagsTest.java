@@ -14,10 +14,10 @@ import java.util.List;
 import org.dom4j.Document;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ResourceUtils;
 
@@ -36,7 +36,7 @@ import it.tredi.msa.test.conf.MsaTesterApplication;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = MsaTesterApplication.class)
-@Ignore // TODO per l'attivazione richiede un archivio eXtraWay opportunamente configurato
+@ActiveProfiles({ "local" })
 public class ArchiviazioneTagsTest extends EmlReader {
 	
 	private static final String TAGS_EML_LOCATION = "tags";

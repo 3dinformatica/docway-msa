@@ -19,14 +19,9 @@ public class RifiutoByAttachmentsConfiguration {
 	private List<String> allowedExtensions;
 	
 	/**
-	 * Eventuale oggetto della mail di rifiuto da inviare al mittente del messaggio
+	 * Eventuale codice del fascicolo all'interno del quale deve essere spostato il documento rifiutato
 	 */
-	private String mailRifiutoSubject;
-	
-	/**
-	 * Eventuale corpo della mail di rifiuto da inviare al mittente del messaggio
-	 */
-	private String mailRifiutoBody;
+	private String codFascicolo;
 	
 
 	public boolean isEnabled() {
@@ -45,20 +40,12 @@ public class RifiutoByAttachmentsConfiguration {
 		this.allowedExtensions = allowedExtensions;
 	}
 
-	public String getMailRifiutoSubject() {
-		return mailRifiutoSubject;
+	public String getCodFascicolo() {
+		return codFascicolo;
 	}
 
-	public void setMailRifiutoSubject(String mailRifiutoSubject) {
-		this.mailRifiutoSubject = mailRifiutoSubject;
-	}
-
-	public String getMailRifiutoBody() {
-		return mailRifiutoBody;
-	}
-
-	public void setMailRifiutoBody(String mailRifiutoBody) {
-		this.mailRifiutoBody = mailRifiutoBody;
+	public void setCodFascicolo(String codFascicolo) {
+		this.codFascicolo = codFascicolo;
 	}
 	
 }

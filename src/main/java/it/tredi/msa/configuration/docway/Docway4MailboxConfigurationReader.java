@@ -73,8 +73,7 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 	
 	public final static String DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_ENABLE = "docway4mailboxmanager.rifiuto-by-attachments.enable";
 	public final static String DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_ALLOWED = "docway4mailboxmanager.rifiuto-by-attachments.allowed";
-	public final static String DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_MAIL_SUBJECT = "docway4mailboxmanager.rifiuto-by-attachments.mail-rifiuto.oggetto";
-	public final static String DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_MAIL_BODY = "docway4mailboxmanager.rifiuto-by-attachments.mail-rifiuto.testo";
+	public final static String DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_COD_FASCICOLO = "docway4mailboxmanager.rifiuto-by-attachments.cod_fascicolo";
 		
 
 	private String host;
@@ -426,15 +425,12 @@ public class Docway4MailboxConfigurationReader extends MailboxConfigurationReade
 		// mbernardini 16/09/2019 : rifiuto email in base ad allegati non supportati contenuti
 		RifiutoByAttachmentsConfiguration rifiutoByAttachConfig = new RifiutoByAttachmentsConfiguration();
 		rifiutoByAttachConfig.setEnabled(propertiesReader.getBooleanProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_ENABLE, false));
-		
 		// tentativo di lettura della configurazione specifica per la casella
 		String allowedExtensions = propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_ALLOWED + "." + conf.getEmail(), "");
 		if (allowedExtensions.isEmpty()) // lettura della configurazione globale
 			allowedExtensions = propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_ALLOWED, "");
-		
 		rifiutoByAttachConfig.setAllowedExtensions(Arrays.asList(allowedExtensions.split("\\,")));
-		rifiutoByAttachConfig.setMailRifiutoSubject(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_MAIL_SUBJECT, ""));
-		rifiutoByAttachConfig.setMailRifiutoBody(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_MAIL_BODY, ""));
+		rifiutoByAttachConfig.setCodFascicolo(propertiesReader.getProperty(DOCWAY4MAILBOXMANAGER_RIFIUTO_BY_ATTACH_COD_FASCICOLO, ""));
 		conf.setRifiutoByAttachments(rifiutoByAttachConfig);
 		
 		return conf;

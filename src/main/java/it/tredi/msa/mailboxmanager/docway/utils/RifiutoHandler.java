@@ -15,6 +15,7 @@ import it.tredi.mail.entity.MailAttach;
 import it.tredi.msa.configuration.docway.DocwayMailboxConfiguration;
 import it.tredi.msa.mailboxmanager.ParsedMessage;
 import it.tredi.msa.mailboxmanager.PartContentProvider;
+import it.tredi.msa.mailboxmanager.docway.DocwayParsedMessage;
 
 /**
  * Gestione del rifiuto di documenti in base ad allegati non supportati inclusi nel messaggio (estensioni vietate)
@@ -56,9 +57,21 @@ public class RifiutoHandler {
 	 * @param parsedMessage Messaggio da verificare
 	 * @return
 	 */
-	public boolean toRefuse(ParsedMessage parsedMessage) {
-		List<String> invalid = this.getInvalidAttachments(parsedMessage);
-		return (invalid == null || invalid.isEmpty());
+	public boolean toRefuse(DocwayParsedMessage parsedMessage) {
+		boolean refuse = false;
+		if (parsedMessage != null) {
+			if (parsedMessage.isSegnaturaInteropPAMessage(conf.getCodAmmInteropPA(), conf.getCodAooInteropPA())) {
+				// messaggio di interoperabilita' (segnatura.xml)
+				List<String> invalid = this.getInvalidAttachmentsSegnatura(parsedMessage.getSegnaturaInteropPADocument(), parsedMessage);
+				return (invalid == null || invalid.isEmpty());
+			}
+			else {
+				// messaggio classico (PEC o non)
+				List<String> invalid = this.getInvalidAttachments(parsedMessage);
+				refuse = invalid != null && !invalid.isEmpty();
+			}
+		}
+		return refuse;
 	}
 	
 	/**
@@ -216,7 +229,7 @@ public class RifiutoHandler {
 	private boolean isInvalidExtension(String extension) {
 		return !extension.isEmpty() 
 				&& !Arrays.asList(ACCEPTED_EXTENSIONS).contains(extension) 
-				&& conf.getRifiutoByAttachments().getAllowedExtensions().contains(extension);
+				&& !conf.getRifiutoByAttachments().getAllowedExtensions().contains(extension);
 	}
 	
 	/**
