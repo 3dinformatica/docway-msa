@@ -95,6 +95,7 @@ public class RifiutoAllegatiTest extends EmlReader {
 		configuration.setUffOper("unit-test");
 		
 		configuration.setTipoDoc("arrivo");
+		configuration.setNumProt(true); // FORZO LA PROTOCOLLAZIONE... IN CASO DI RIFIUTO QUESTA CONFIGURAZIONE DEVE ESSERE IGNORATA
 		
 		configuration.setExtractZip(true);
 		
@@ -163,6 +164,10 @@ public class RifiutoAllegatiTest extends EmlReader {
 		System.out.println("RIFIUTO = " + document.getRifiuto().getMotivazione());
 		
 		assertNull(parsed.getMotivazioneNotificaEccezioneToSend());
+		
+		// controllo su stato in bozza del documento
+		assertTrue(document.isBozza());
+		assertEquals("", document.getNumProt());
 		
 		// controllo su allegati estratti dal documento
 		assertEquals(1, document.getAllegato().size());
@@ -255,6 +260,10 @@ public class RifiutoAllegatiTest extends EmlReader {
 		System.out.println("NOTIFICA ECCEZIONE = " + notificaEccezione);
 		assertTrue(notificaEccezione.contains(document.getRifiuto().getMotivazione()));
 		
+		// controllo su stato in bozza del documento
+		assertTrue(document.isBozza());
+		assertEquals("", document.getNumProt());
+		
 		// controllo su allegati estratti dal documento
 		assertNotNull(document.getFiles());
 		for (DocwayFile dwfile : document.getFiles())
@@ -315,6 +324,10 @@ public class RifiutoAllegatiTest extends EmlReader {
 		// controllo su stato di rifiuto
 		assertFalse(document.isRifiutato());
 		assertNull(document.getRifiuto());
+		
+		// controllo su protocollazione del documento
+		assertFalse(document.isBozza());
+		assertEquals(document.getAnno() + "-" + document.getCodAmmAoo() + "-.", document.getNumProt());
 		
 		// controllo su allegati estratti dal documento
 		assertEquals(3, document.getAllegato().size());

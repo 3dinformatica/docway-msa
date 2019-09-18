@@ -362,6 +362,39 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		else
 			doc.setTipo(conf.getTipoDoc());
 		
+		// Eventuale analisi dei file agganciati al doc per eventuale rifiuto per allegati non 
+		// supportati (SOLO SE NON SI TRATTA DI FATTURAPA)
+		RifiutoHandler rifiutoHandler = new RifiutoHandler(conf);
+		List<String> invalidAttachments = rifiutoHandler.getInvalidAttachments(parsedMessage);
+		if (!fatturaPa && invalidAttachments != null && !invalidAttachments.isEmpty()) {
+			Rifiuto rifiuto = new Rifiuto();
+			rifiuto.setOperatore(conf.getOperatore());
+			rifiuto.setData(currentDate);
+			rifiuto.setOra(currentDate);
+			rifiuto.setMotivazione(String.format(ERROR_ALLEGATI_NON_SUPPORTATI, StringUtils.join(invalidAttachments, ", ")));
+			
+			doc.setRifiuto(rifiuto);
+			
+			// Aggiunta dell'annotazione per allegati non supportati
+			Postit postit = new Postit();
+			postit.setText(doc.getRifiuto().getMotivazione());
+			postit.setOperatore(doc.getRifiuto().getOperatore());
+			postit.setData(doc.getRifiuto().getData());
+			postit.setOra(doc.getRifiuto().getOra());
+			doc.addPostit(postit);
+			
+			// Eventuale fascicolazione per allegati non supportati
+ 			String codFascicoloRifiuto = conf.getRifiutoByAttachments().getCodFascicolo();
+ 			if (codFascicoloRifiuto != null && !codFascicoloRifiuto.isEmpty()) {
+	 			fascicolo = this.findFascicoloByCod(codFascicoloRifiuto);
+				
+				if (isValidFolderReference(fascicolo)) {
+					if (logger.isDebugEnabled())
+						logger.debug("[" + conf.getAddress() + "] fascicolazione per RIFIUTO. fascicolo = " + fascicolo.getCodFascicolo());
+				}
+ 			}
+		}
+		
 		//cod_amm_aoo
 		doc.setCodAmmAoo(conf.getCodAmmAoo());
 		
@@ -370,10 +403,10 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		if (!doc.getTipo().equalsIgnoreCase(DocwayMailboxConfiguration.DOC_TIPO_VARIE)) {
 			//bozza
-			doc.setBozza(conf.isBozza());
+			doc.setBozza(conf.isBozza() || doc.isRifiutato()); // mbernardini 18/09/2019 : in caso di doc rifiutato occorre forzare la bozza
 			
 			//num_prot
-			doc.setNumProt((conf.isNumProt()) ? doc.getAnno() + "-" + doc.getCodAmmAoo() + "-." : "");
+			doc.setNumProt((conf.isNumProt() && !doc.isRifiutato()) ? doc.getAnno() + "-" + doc.getCodAmmAoo() + "-." : "");
 			// mbernardini 18/07/2019 : in caso di num_prot non settato occorre forzare la bozza
 			if (doc.getNumProt().equals(""))
 				doc.setBozza(true);
@@ -432,39 +465,6 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		
 		//voce di indice
 		doc.setVoceIndice(conf.getVoceIndice());
-		
-		// Eventuale analisi dei file agganciati al doc per eventuale rifiuto per allegati non 
-		// supportati (SOLO SE NON SI TRATTA DI FATTURAPA)
-		RifiutoHandler rifiutoHandler = new RifiutoHandler(conf);
-		List<String> invalidAttachments = rifiutoHandler.getInvalidAttachments(parsedMessage);
-		if (!fatturaPa && invalidAttachments != null && !invalidAttachments.isEmpty()) {
-			Rifiuto rifiuto = new Rifiuto();
-			rifiuto.setOperatore(conf.getOperatore());
-			rifiuto.setData(currentDate);
-			rifiuto.setOra(currentDate);
-			rifiuto.setMotivazione(String.format(ERROR_ALLEGATI_NON_SUPPORTATI, StringUtils.join(invalidAttachments, ", ")));
-			
-			doc.setRifiuto(rifiuto);
-			
-			// Aggiunta dell'annotazione per allegati non supportati
-			Postit postit = new Postit();
-			postit.setText(doc.getRifiuto().getMotivazione());
-			postit.setOperatore(doc.getRifiuto().getOperatore());
-			postit.setData(doc.getRifiuto().getData());
-			postit.setOra(doc.getRifiuto().getOra());
-			doc.addPostit(postit);
-			
-			// Eventuale fascicolazione per allegati non supportati
- 			String codFascicoloRifiuto = conf.getRifiutoByAttachments().getCodFascicolo();
- 			if (codFascicoloRifiuto != null && !codFascicoloRifiuto.isEmpty()) {
-	 			fascicolo = this.findFascicoloByCod(codFascicoloRifiuto);
-				
-				if (isValidFolderReference(fascicolo)) {
-					if (logger.isDebugEnabled())
-						logger.debug("[" + conf.getAddress() + "] fascicolazione per RIFIUTO. fascicolo = " + fascicolo.getCodFascicolo());
-				}
- 			}
-		}
 		
 		//classif
 		doc.setClassif(conf.getClassif());
