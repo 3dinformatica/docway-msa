@@ -1,4 +1,4 @@
-package it.tredi.msa.test;
+package it.tredi.msa.test.extraway;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -13,7 +13,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ResourceUtils;
 
@@ -25,6 +24,7 @@ import it.tredi.msa.mailboxmanager.docway.DocTipoEnum;
 import it.tredi.msa.mailboxmanager.docway.DocwayDocument;
 import it.tredi.msa.mailboxmanager.docway.DocwayFile;
 import it.tredi.msa.mailboxmanager.docway.DocwayParsedMessage;
+import it.tredi.msa.test.EmlReader;
 import it.tredi.msa.test.conf.MsaTesterApplication;
 
 /**
@@ -32,7 +32,6 @@ import it.tredi.msa.test.conf.MsaTesterApplication;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = MsaTesterApplication.class)
-@ActiveProfiles({ "local" })
 public class ExtractZipTest extends EmlReader {
 	
 	private static final String ZIP_EML_LOCATION = "extract_zip";

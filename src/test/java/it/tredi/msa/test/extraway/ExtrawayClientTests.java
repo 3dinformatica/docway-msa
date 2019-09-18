@@ -1,4 +1,4 @@
-package it.tredi.msa.test;
+package it.tredi.msa.test.extraway;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -13,7 +13,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import it.highwaytech.db.QueryResult;
@@ -25,7 +24,6 @@ import it.tredi.msa.test.conf.MsaTesterApplication;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = MsaTesterApplication.class)
-@ActiveProfiles({ "local", "jenkins" })
 public class ExtrawayClientTests {
 	
 	private static final String XWAY_HOST = "127.0.0.1";
