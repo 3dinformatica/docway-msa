@@ -683,48 +683,11 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			}
 			
 			if (fileLoaded) {
-				if (conf.isExtractZip() && isZipAttach(attachment.getFileName())) {
-					// Rilevato file ZIP e estrazione files da ZIP abilitata...
-					
-					// mbernardini 16/09/2019 : estrazione files da allegato zip
-					ZipManager zipManager = new ZipManager(conf.getAddress());
-					List<File> files = zipManager.unzipArchive(fileContent);
-					if (files != null) {
-						for (File zipFile : files) {
-							if (zipFile != null) {
-								if (logger.isDebugEnabled())
-									logger.debug("Build document file from attachment " + zipFile.getName() + "[from zip file " + attachment.getFileName() + "]...");
-								
-								DocwayFile file = createDocwayFile();
-								file.setContent(FileUtils.readFileToByteArray(zipFile));
-								file.setName(zipFile.getName());
-								if (isImage(file.getName())) //immagine
-									doc.addImmagine(file);
-								else //file
-									doc.addFile(file);
-							}
-						}
-					}
-					else {
-						// problema in estrazione files dallo zip?... per sicurezza forziamo l'aggiunta del file EML originale
-						
-						damagedFiles.add(attachment.getFileName());
-						damagedFound = true;
-					}
-				}
-				else {
-					// Estrazione files da ZIP disabilitata o NO file ZIP...
-					
-					if (logger.isDebugEnabled())
-						logger.debug("Build document file content from attachment " + attachment.getFileName() + "...");
-					
-					DocwayFile file = createDocwayFile();
-					file.setContent(fileContent);
-					file.setName(attachment.getFileName());
-					if (isImage(file.getName())) //immagine
-						doc.addImmagine(file);
-					else //file
-						doc.addFile(file);
+				boolean attachDone = this.attachFileToDocument(doc, conf, attachment.getFileName(), fileContent);
+				if (!attachDone) {
+					// Possibile problema riscontrato nell'upload di un file o estrazione files da ZIP...
+					damagedFiles.add(attachment.getFileName());
+					damagedFound = true;
 				}
 			}
 				
@@ -755,6 +718,65 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			//note = "Rilevati possibili file danneggiati allegati alla mail: " + String.join(", ", damagedFiles) + "\n-----\n" + note;
 			//doc.setNote(note);
 		}
+	}
+	
+	/**
+	 * Aggiunta di un file al documento... In caso di estrazione file da ZIP abilitata, verranno allegati al documento tutti i file
+	 * inclusi nell'archivo ZIP. Il metodo ritorna TRUE in caso di esecuzione completata correttamente, FALSE altrimenti.
+	 * @param doc Documento da aggiornare (al quale devono essere allegati i files)
+	 * @param conf Configurazione della mailbox
+	 * @param fileName Nome del file da processare
+	 * @param fileContent Contenuto del file da processare
+	 * @return TRUE in caso di esecuzione completata correttamente, FALSE altrimenti
+	 * @throws Exception
+	 */
+	private boolean attachFileToDocument(DocwayDocument doc, DocwayMailboxConfiguration conf, String fileName, byte[] fileContent) throws Exception {
+		boolean done = false;
+		boolean toUnzip = false;
+		if (conf.isExtractZip() && isZipAttach(fileName)) {
+			toUnzip = true;
+			// Rilevato file ZIP e estrazione files da ZIP abilitata...
+			ZipManager zipManager = new ZipManager(conf.getAddress());
+			List<File> files = zipManager.unzipArchive(fileContent);
+			
+			if (files != null) {
+				for (File zipFile : files) {
+					if (zipFile != null) {
+						if (logger.isDebugEnabled())
+							logger.debug("Build document file from attachment " + zipFile.getName() + "[from zip file " + fileName + "]...");
+						
+						DocwayFile file = createDocwayFile();
+						file.setContent(FileUtils.readFileToByteArray(zipFile));
+						file.setName(zipFile.getName());
+						if (isImage(file.getName())) //immagine
+							doc.addImmagine(file);
+						else //file
+							doc.addFile(file);
+					}
+				}
+				done = true; // file estratti dall'archivio ZIP e caricati sul documento
+			}
+		}
+		if (!done) {
+			// Estrazione files da ZIP disabilitata, NO file ZIP o errore nell'estrazione dei file dallo ZIP...
+			
+			if (logger.isDebugEnabled())
+				logger.debug("Build document file content from attachment " + fileName + "...");
+			
+			DocwayFile file = createDocwayFile();
+			file.setContent(fileContent);
+			file.setName(fileName);
+			if (isImage(file.getName())) //immagine
+				doc.addImmagine(file);
+			else //file
+				doc.addFile(file);
+			
+			// Se il file non corrisponde ad un archivio dal quale estrarre i files, setto il caricamento come completato
+			// con successo
+			if (!toUnzip)  
+				done = true;
+		}
+		return done;
 	}
 	
 	/**
@@ -1214,45 +1236,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 				}
 				
 				if (fileLoaded) {
-					boolean unzip = false;
-					if (conf.isExtractZip() && isZipAttach(attachment.getFileName())) {
-						// Rilevato file ZIP e estrazione files da ZIP abilitata...
-						
-						// mbernardini 16/09/2019 : estrazione files da allegato zip
-						ZipManager zipManager = new ZipManager(conf.getAddress());
-						List<File> files = zipManager.unzipArchive(fileContent);
-						if (files != null) {
-							for (File zipFile : files) {
-								if (zipFile != null) {
-									if (logger.isDebugEnabled())
-										logger.debug("segnatura.xml... Build document file from attachment " + zipFile.getName() + "[from zip file " + attachment.getFileName() + "]...");
-									
-									DocwayFile file = createDocwayFile();
-									file.setContent(FileUtils.readFileToByteArray(zipFile));
-									file.setName(zipFile.getName());
-									if (isImage(file.getName())) //immagine
-										doc.addImmagine(file);
-									else //file
-										doc.addFile(file);
-								}
-							}
-							unzip = true;
-						}
-					}
-					if (!unzip) {
-						// Estrazione files da ZIP disabilitata, NO file ZIP o errore nell'estrazione dei file dallo ZIP...
-						
-						if (logger.isDebugEnabled())
-							logger.debug("segnatura.xml... Build document file content from attachment " + attachment.getFileName() + "...");
-						
-						DocwayFile file = createDocwayFile();
-						file.setContent(fileContent);
-						file.setName(attachment.getFileName());
-						if (isImage(file.getName())) //immagine
-							doc.addImmagine(file);
-						else //file
-							doc.addFile(file);
-					}
+					this.attachFileToDocument(doc, conf, attachment.getFileName(), fileContent);
 					return "";
 				}
 				else {
