@@ -87,10 +87,17 @@ public class DocWay4DummyMailboxManager extends Docway4MailboxManager {
     }
 	
 	/**
-	 * Pubblicazione del metodo findCodFascicoloByTags per chiamata diretta da unit-test
+	 * Pubblicazione del metodo findFascicoloByTags per chiamata diretta da unit-test
 	 */
 	public FascicoloReference fascicoloByTags(String codammaoo, List<String> tags) throws MultipleFoldersException, Exception {
-		return this.findCodFascicoloByTags(codammaoo, tags);
+		return this.findFascicoloByTags(codammaoo, tags);
+	}
+	
+	/**
+	 * Pubblicazione del metodo findFascicoloByCod per chiamata diretta da unit-test
+	 */
+	public FascicoloReference fascicoloByCod(String codFascicolo) throws MultipleFoldersException, Exception {
+		return this.findFascicoloByCod(codFascicolo);
 	}
 	
 	/**

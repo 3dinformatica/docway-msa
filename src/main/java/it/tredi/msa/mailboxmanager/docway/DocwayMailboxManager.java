@@ -335,7 +335,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		FascicoloReference fascicolo = null;
 		
 		if (conf.isArchiviazioneByTags() && parsedMessage.containsTags()) {
-			fascicolo = this.findCodFascicoloByTags(conf.getCodAmmAoo(), parsedMessage.getSubjectTags());
+			fascicolo = this.findFascicoloByTags(conf.getCodAmmAoo(), parsedMessage.getSubjectTags());
 			
 			if (isValidFolderReference(fascicolo)) {
 				if (logger.isDebugEnabled())
@@ -454,7 +454,16 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			postit.setOra(doc.getRifiuto().getOra());
 			doc.addPostit(postit);
 			
-			// TODO Fascicolazione per allegati non supportati
+			// Eventuale fascicolazione per allegati non supportati
+ 			String codFascicoloRifiuto = conf.getRifiutoByAttachments().getCodFascicolo();
+ 			if (codFascicoloRifiuto != null && !codFascicoloRifiuto.isEmpty()) {
+	 			fascicolo = this.findFascicoloByCod(codFascicoloRifiuto);
+				
+				if (isValidFolderReference(fascicolo)) {
+					if (logger.isDebugEnabled())
+						logger.debug("[" + conf.getAddress() + "] fascicolazione per RIFIUTO. fascicolo = " + fascicolo.getCodFascicolo());
+				}
+ 			}
 		}
 		
 		//classif
@@ -621,7 +630,16 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	 * @throws MultipleFoldersException in caso di piu' fascicoli trovati in base ai TAGS specificati
 	 * @throws Exception in caso di altra eccezione
 	 */
-	protected abstract FascicoloReference findCodFascicoloByTags(String codammaoo, List<String> tags) throws MultipleFoldersException, Exception;
+	protected abstract FascicoloReference findFascicoloByTags(String codammaoo, List<String> tags) throws MultipleFoldersException, Exception;
+	
+	/**
+	 * Ricerca di un fascicolo in base al proprio codice. Deve essere recuperato uno ed un solo fascicolo.
+	 * @param codFascicolo Codice del fascicolo da caricare
+	 * @return Fascicolo trovato in base al codice (set di informazioni utili alla costruzione del documento)
+	 * @throws MultipleFoldersException in caso di piu' fascicoli trovati in base al codice (non si dovrebbe MAI verificare)
+	 * @throws Exception in caso di altra eccezione
+	 */
+	protected abstract FascicoloReference findFascicoloByCod(String codFascicolo) throws MultipleFoldersException, Exception;
 	
 	/**
 	 * Verifica se il mittente del messaggio corrisponde ad un utente interno o ad uno esterno. Ritorna true se l'utente che risulta essere
@@ -1040,7 +1058,22 @@ public abstract class DocwayMailboxManager extends MailboxManager {
         }
         */
         
-        // Eventuale analisi dei file agganciati al doc per eventuale rifiuto per allegati non supportati (vengono
+        // mbernardini 01/07/2019 : archiviazione tramite TAGS
+		// In caso di archiviazione tramite TAGS attiva potrebbe essere necessario applicare variazioni alla costruzione 
+		// del documento in base a quanto previsto dal document model
+		FascicoloReference fascicolo = null;
+		if (conf.isArchiviazioneByTags() && parsedMessage.containsTags()) {
+			fascicolo = this.findFascicoloByTags(conf.getCodAmmAoo(), parsedMessage.getSubjectTags());
+			
+			if (isValidFolderReference(fascicolo)) {
+				if (logger.isDebugEnabled())
+					logger.debug("[" + conf.getAddress() + "] fascicolazione tramite TAGS. fascicolo = " + fascicolo.getCodFascicolo());
+			}
+			
+			// In caso di email PEC di interoperabilita' non e' necessario valutare il flusso del documento perche' dovrebbe sempre trattarsi di un documento in arrivo
+		}
+		
+		// Eventuale analisi dei file agganciati al doc per eventuale rifiuto per allegati non supportati (vengono
         // valutati gli allegati specificati nel file segnatura.xml)
  		RifiutoHandler rifiutoHandler = new RifiutoHandler(conf);
  		List<String> invalidAttachments = rifiutoHandler.getInvalidAttachmentsSegnatura(segnaturaDocument, parsedMessage);
@@ -1064,23 +1097,17 @@ public abstract class DocwayMailboxManager extends MailboxManager {
  			// Notifica eccezione per procedura di interoperabilita'
  			motivazioneNotificaEccezione += doc.getRifiuto().getMotivazione() + "\n";
  			
- 			// TODO Fascicolazione per allegati non supportati
+ 			// Eventuale fascicolazione per allegati non supportati
+ 			String codFascicoloRifiuto = conf.getRifiutoByAttachments().getCodFascicolo();
+ 			if (codFascicoloRifiuto != null && !codFascicoloRifiuto.isEmpty()) {
+	 			fascicolo = this.findFascicoloByCod(codFascicoloRifiuto);
+				
+				if (isValidFolderReference(fascicolo)) {
+					if (logger.isDebugEnabled())
+						logger.debug("[" + conf.getAddress() + "] fascicolazione per RIFIUTO. fascicolo = " + fascicolo.getCodFascicolo());
+				}
+ 			}
      	}
-        
-        // mbernardini 01/07/2019 : archiviazione tramite TAGS
-		// In caso di archiviazione tramite TAGS attiva potrebbe essere necessario applicare variazioni alla costruzione 
-		// del documento in base a quanto previsto dal document model
-		FascicoloReference fascicolo = null;
-		if (conf.isArchiviazioneByTags() && parsedMessage.containsTags()) {
-			fascicolo = this.findCodFascicoloByTags(conf.getCodAmmAoo(), parsedMessage.getSubjectTags());
-			
-			if (isValidFolderReference(fascicolo)) {
-				if (logger.isDebugEnabled())
-					logger.debug("[" + conf.getAddress() + "] fascicolazione tramite TAGS. fascicolo = " + fascicolo.getCodFascicolo());
-			}
-			
-			// In caso di email PEC di interoperabilita' non e' necessario valutare il flusso del documento perche' dovrebbe sempre trattarsi di un documento in arrivo
-		}
 		
 		//classif
 		doc = changeDocClassifByFascicolo(doc, fascicolo); // eventuale archiviazione in fascicolo tramite TAGS estratti dall'oggetto del messaggio

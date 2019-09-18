@@ -211,7 +211,12 @@ public class DocWayDummyMailboxManager extends DocwayMailboxManager {
 	}
 
 	@Override
-	protected FascicoloReference findCodFascicoloByTags(String codammaoo, List<String> tags) throws MultipleFoldersException, Exception {
+	protected FascicoloReference findFascicoloByTags(String codammaoo, List<String> tags) throws MultipleFoldersException, Exception {
+		return null;
+	}
+	
+	@Override
+	protected FascicoloReference findFascicoloByCod(String codFascicolo) throws MultipleFoldersException, Exception {
 		return null;
 	}
 

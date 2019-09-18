@@ -1693,11 +1693,18 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 			throw e;
 		}				
 	}
+	
+	@Override
+	protected FascicoloReference findFascicoloByCod(String codFascicolo) throws MultipleFoldersException, Exception {
+		String query = "";
+		if (codFascicolo != null && !codFascicolo.isEmpty())
+			query = "[fasc_numero]=\"" + codFascicolo + "\"";
+		
+		return findFascicoloByQuery(query);
+	}
 
 	@Override
-	protected FascicoloReference findCodFascicoloByTags(String codammaoo, List<String> tags) throws MultipleFoldersException, Exception {
-		FascicoloReference fascicolo = null;
-		
+	protected FascicoloReference findFascicoloByTags(String codammaoo, List<String> tags) throws MultipleFoldersException, Exception {
 		// costruzione della query extraway in base ai TAGS indicati
 		String query = "";
 		if (tags != null && !tags.isEmpty()) {
@@ -1713,7 +1720,20 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				query += " AND [/fascicolo/@cod_amm_aoo]=\"" + codammaoo + "\"";
 		}
 		
-		if (!query.isEmpty()) {
+		return findFascicoloByQuery(query);
+	}
+	
+	/**
+	 * Caricamento di tutti i riferimenti ad uno specifico fascicolo in base ad una query su eXtraWay
+	 * @param query Query da utilizzare per il recupero del fascicolo
+	 * @return Informazioni relative al fascicolo cercato
+	 * @throws MultipleFoldersException
+	 * @throws Exception
+	 */
+	private FascicoloReference findFascicoloByQuery(String query) throws MultipleFoldersException, Exception {
+		FascicoloReference fascicolo = null;
+		
+		if (query != null && !query.isEmpty()) {
 			QueryResult qr = xwClient.search(query);
 			if (qr.elements == 1) {
 				
@@ -1762,8 +1782,8 @@ public class Docway4MailboxManager extends DocwayMailboxManager {
 				}
 			}
 			else if (qr.elements > 1) {
-				// trovati piu' fascicoli in base ai TAGS specificati
-				throw new MultipleFoldersException(tags);
+				// trovati piu' fascicoli in base alla query specificata
+				throw new MultipleFoldersException(query, qr.elements);
 			}
 		}
 		

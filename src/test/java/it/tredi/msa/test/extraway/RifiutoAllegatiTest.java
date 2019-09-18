@@ -46,6 +46,9 @@ public class RifiutoAllegatiTest extends EmlReader {
 	private static final String XW_DOCWAY_DB = "xdocwaydoc";
 	private static final String XW_ACL_DB = "acl";
 	
+	private static final String COD_FASCICOLO_RIFIUTO = "2019-3DINBOL-01/02.00001";
+	private static final List<String> ESTENSIONI_AMMESSE_RIFIUTO = Arrays.asList(new String[] { "doc", "pdf", "txt" });
+	
 	/**
 	 * Manager di test per DocWay4
 	 */
@@ -97,7 +100,8 @@ public class RifiutoAllegatiTest extends EmlReader {
 		
 		RifiutoByAttachmentsConfiguration rifiutoByAttachments = new RifiutoByAttachmentsConfiguration();
 		rifiutoByAttachments.setEnabled(true);
-		rifiutoByAttachments.setAllowedExtensions(Arrays.asList(new String[] { "doc", "pdf", "txt" }));
+		rifiutoByAttachments.setAllowedExtensions(ESTENSIONI_AMMESSE_RIFIUTO);
+		rifiutoByAttachments.setCodFascicolo(COD_FASCICOLO_RIFIUTO);
 		configuration.setRifiutoByAttachments(rifiutoByAttachments);
 		
 		AssegnatarioMailboxConfiguration responsabile = new AssegnatarioMailboxConfiguration();
@@ -161,7 +165,6 @@ public class RifiutoAllegatiTest extends EmlReader {
 		assertNull(parsed.getMotivazioneNotificaEccezioneToSend());
 		
 		// controllo su allegati estratti dal documento
-		
 		assertEquals(1, document.getAllegato().size());
 		assertEquals("test.zip", document.getAllegato().get(0));
 		
@@ -176,9 +179,36 @@ public class RifiutoAllegatiTest extends EmlReader {
 			System.out.println("image name (from zip) = " + dwfile.getName());
 		assertEquals(1, document.getImmagini().size());
 		
+		// controllo su fascicolazione da rifiuto
+		this.checkFascicolazioneDocumentoDaRifiuto(document);
+		
 		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
 				
 		assertEquals(0, parsed.getRelevantMssages().size());
+	}
+	
+	/**
+	 * Validazione dei dati derivanti dalla fascicolazione del documento
+	 * @param document
+	 * @throws Exception
+	 */
+	private void checkFascicolazioneDocumentoDaRifiuto(DocwayDocument document) throws Exception {
+		assertEquals(4, document.getRifInterni().size());
+		assertEquals(COD_FASCICOLO_RIFIUTO, document.getRifInterni().get(0).getCodFasc());
+		assertEquals("PI000008", document.getRifInterni().get(0).getCodPersona());
+		assertEquals("RPA", document.getRifInterni().get(0).getDiritto());
+		assertEquals(COD_FASCICOLO_RIFIUTO, document.getRifInterni().get(1).getCodFasc());
+		assertEquals("tutti_SI000010", document.getRifInterni().get(1).getCodPersona());
+		assertEquals("CC", document.getRifInterni().get(1).getDiritto());
+		assertFalse(document.getRifInterni().get(1).isIntervento());
+		assertEquals(COD_FASCICOLO_RIFIUTO, document.getRifInterni().get(2).getCodFasc());
+		assertEquals("PI000060", document.getRifInterni().get(2).getCodPersona());
+		assertEquals("CC", document.getRifInterni().get(2).getDiritto());
+		assertFalse(document.getRifInterni().get(2).isIntervento());
+		assertNull(document.getRifInterni().get(3).getCodFasc());
+		assertEquals("PI000102", document.getRifInterni().get(3).getCodPersona());
+		assertEquals("CC", document.getRifInterni().get(3).getDiritto());
+		assertTrue(document.getRifInterni().get(3).isIntervento());
 	}
 	
 	/**
@@ -226,7 +256,6 @@ public class RifiutoAllegatiTest extends EmlReader {
 		assertTrue(notificaEccezione.contains(document.getRifiuto().getMotivazione()));
 		
 		// controllo su allegati estratti dal documento
-		
 		assertNotNull(document.getFiles());
 		for (DocwayFile dwfile : document.getFiles())
 			if (!dwfile.getName().startsWith("testo email"))
@@ -239,16 +268,77 @@ public class RifiutoAllegatiTest extends EmlReader {
 			System.out.println("image name (from zip) = " + dwfile.getName());
 		assertEquals(20, document.getImmagini().size());
 		
+		// controllo su fascicolazione da rifiuto
+		this.checkFascicolazioneDocumentoDaRifiuto(document);
+		
 		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
 		
-		// controllo su messaggio di notifica eccezione
-		
+		// controllo su messaggio di notifica eccezione		
 		assertEquals(1, parsed.getRelevantMssages().size());
 		assertEquals(notificaEccezione, parsed.getRelevantMssages().get(0));
 	}
 	
-	// TODO TEST di MAIL ACCETTATA (NESSUN FILE NON AMMESSO INCLUSO) 
-	
+	/**
+	 * Test di messaggio di posta accettato (nessun file non ammesso incluso)
+	 * @throws Exception
+	 */
+	@Test
+	public void arrivoAccettatoTest() throws Exception {
+		String fileName = " java.lang.ClassCastException.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file), false);
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		assertTrue(parsed.isPecMessage());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(3, parsed.getAttachments().size());
+		
+		// conversione da message a document
+		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed, false);
+		assertNotNull(document);
+		assertEquals(DocTipoEnum.ARRIVO.getText(), document.getTipo());
+		
+		// controllo su stato di rifiuto
+		assertFalse(document.isRifiutato());
+		assertNull(document.getRifiuto());
+		
+		// controllo su allegati estratti dal documento
+		assertEquals(3, document.getAllegato().size());
+		
+		assertNotNull(document.getFiles());
+		for (DocwayFile dwfile : document.getFiles())
+			System.out.println("attach name = " + dwfile.getName());
+		assertEquals(4, document.getFiles().size());
+		
+		assertNotNull(document.getImmagini());
+		for (DocwayFile dwfile : document.getImmagini())
+			System.out.println("image name = " + dwfile.getName());
+		assertEquals(0, document.getImmagini().size());
+		
+		// controllo su fascicolazione da rifiuto NON eseguita
+		assertEquals(1, document.getRifInterni().size());
+		assertNull(document.getRifInterni().get(0).getCodFasc());
+		assertEquals("PI000102", document.getRifInterni().get(0).getCodPersona());
+		assertEquals("RPA", document.getRifInterni().get(0).getDiritto());
+		
+		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
+				
+		assertEquals(0, parsed.getRelevantMssages().size());
+	}
 	
 	
 }
