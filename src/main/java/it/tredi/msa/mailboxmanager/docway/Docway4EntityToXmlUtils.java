@@ -194,6 +194,7 @@ public class Docway4EntityToXmlUtils {
 			Element rifiutoEl = docEl.addElement("rifiuto");
 			rifiutoEl.addAttribute("stato", "da_rifiutare");
 			Element actionRifiutoEl = rifiutoEl.addElement("actionRifiuto");
+			actionRifiutoEl.addAttribute("tipo_azione", "set_da_rifiutare");
 			actionRifiutoEl.addAttribute("data", doc.getRifiuto().getData());
 			actionRifiutoEl.addAttribute("ora", doc.getRifiuto().getOra());
 			if (doc.getRifiuto().getCodOperatore() != null && !doc.getRifiuto().getCodOperatore().isEmpty())
