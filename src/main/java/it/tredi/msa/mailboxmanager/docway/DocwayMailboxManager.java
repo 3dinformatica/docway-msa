@@ -64,7 +64,7 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 	private final static String SEGNATURA_NULL_EMPTY_FIELD = "Valore campo '%s' nullo o vuoto.\n";
 	private final static String SEGNATURA_FIELD_FORMAT_ERROR = "Valore campo '%s' in formato scorretto: %s\n";
 	
-	private final static String ERROR_ALLEGATI_NON_SUPPORTATI = "Il messaggio contiene allegati non supportati dal sistema documentale: %s";
+	private final static String ERROR_ALLEGATI_NON_SUPPORTATI = "Il messaggio contiene allegati non supportati dal sistema documentale: %s.\nElenco delle estensioni ammesse: %s";
 	
 	private final static String ORPHAN_RECEIPTS_MESSAGE = "Ricevuta Orfana: Non è stato possibile individuare il documento di origine al quale la ricevuta fa riferimento.";
 	
@@ -371,7 +371,12 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 			rifiuto.setOperatore(conf.getOperatore());
 			rifiuto.setData(currentDate);
 			rifiuto.setOra(currentDate);
-			rifiuto.setMotivazione(String.format(ERROR_ALLEGATI_NON_SUPPORTATI, StringUtils.join(invalidAttachments, ", ")));
+			rifiuto.setMotivazione(
+					String.format(
+							ERROR_ALLEGATI_NON_SUPPORTATI,
+							StringUtils.join(invalidAttachments, ", "),
+							StringUtils.join(conf.getRifiutoByAttachments().getAllowedExtensions(), ", ")
+					));
 			
 			doc.setRifiuto(rifiuto);
 			
@@ -1082,7 +1087,12 @@ public abstract class DocwayMailboxManager extends MailboxManager {
  			rifiuto.setOperatore(conf.getOperatore());
  			rifiuto.setData(currentDate);
  			rifiuto.setOra(currentDate);
- 			rifiuto.setMotivazione(String.format(ERROR_ALLEGATI_NON_SUPPORTATI, StringUtils.join(invalidAttachments, ", ")));
+ 			rifiuto.setMotivazione(
+ 					String.format(
+ 							ERROR_ALLEGATI_NON_SUPPORTATI,
+ 							StringUtils.join(invalidAttachments, ", "),
+ 							StringUtils.join(conf.getRifiutoByAttachments().getAllowedExtensions(), ", ")
+ 					));
  			
  			doc.setRifiuto(rifiuto);
  			

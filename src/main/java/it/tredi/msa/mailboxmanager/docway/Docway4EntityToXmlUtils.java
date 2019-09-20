@@ -143,9 +143,6 @@ public class Docway4EntityToXmlUtils {
 		for(String allegato:doc.getAllegato())
 			docEl.add(allegatoToXml(allegato));
 		
-		//fascicolo
-//TODO		
-
 		//note
 		if (doc.getNote() != null && !doc.getNote().isEmpty()) {
 			Element noteEl = DocumentHelper.createElement("note");
