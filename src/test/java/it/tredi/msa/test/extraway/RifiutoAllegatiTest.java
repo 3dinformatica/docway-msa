@@ -175,14 +175,13 @@ public class RifiutoAllegatiTest extends EmlReader {
 		
 		assertNotNull(document.getFiles());
 		for (DocwayFile dwfile : document.getFiles())
-			if (!dwfile.getName().startsWith("testo email"))
-				System.out.println("attach name (from zip) = " + dwfile.getName());
-		assertEquals(4, document.getFiles().size());
+			System.out.println("attach name = " + dwfile.getName());
+		assertEquals(3, document.getFiles().size()); // estrazione da file zip non effettuata per allegati non ammessi all'interno
 		
 		assertNotNull(document.getImmagini());
 		for (DocwayFile dwfile : document.getImmagini())
-			System.out.println("image name (from zip) = " + dwfile.getName());
-		assertEquals(1, document.getImmagini().size());
+			System.out.println("image name = " + dwfile.getName());
+		assertEquals(0, document.getImmagini().size()); // estrazione da file zip non effettuata per allegati non ammessi all'interno
 		
 		// controllo su fascicolazione da rifiuto
 		this.checkFascicolazioneDocumentoDaRifiuto(document);
@@ -214,6 +213,73 @@ public class RifiutoAllegatiTest extends EmlReader {
 		assertEquals("PI000102", document.getRifInterni().get(3).getCodPersona());
 		assertEquals("CC", document.getRifInterni().get(3).getDiritto());
 		assertTrue(document.getRifInterni().get(3).isIntervento());
+	}
+	
+	/**
+	 * Test di rifiuto con file ZIP (completamente accettato) su classica mail in arrivo
+	 * @throws Exception
+	 */
+	@Test
+	public void rifiutoZip2ArrivoTest() throws Exception {
+		String fileName = "zip2.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/extract_zip/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file), false);
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		assertFalse(parsed.isPecMessage());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(3, parsed.getAttachments().size());
+		
+		// conversione da message a document
+		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed, false);
+		assertNotNull(document);
+		assertEquals(DocTipoEnum.ARRIVO.getText(), document.getTipo());
+		
+		// controllo su stato di rifiuto
+		assertTrue(document.isRifiutato());
+		assertNotNull(document.getRifiuto().getMotivazione());
+		System.out.println("RIFIUTO = " + document.getRifiuto().getMotivazione());
+		
+		assertNull(parsed.getMotivazioneNotificaEccezioneToSend());
+		
+		// controllo su stato in bozza del documento
+		assertTrue(document.isBozza());
+		assertEquals("", document.getNumProt());
+		
+		// controllo su allegati estratti dal documento
+		assertEquals(3, document.getAllegato().size());
+		assertEquals("zippo.zip", document.getAllegato().get(2));
+		
+		assertNotNull(document.getFiles());
+		for (DocwayFile dwfile : document.getFiles())
+			System.out.println("attach name = " + dwfile.getName());
+		assertEquals(5, document.getFiles().size()); // eseguita estrazione da file zip (tutti i file ammessi)
+		
+		assertNotNull(document.getImmagini());
+		for (DocwayFile dwfile : document.getImmagini())
+			System.out.println("image name = " + dwfile.getName());
+		assertEquals(1, document.getImmagini().size());
+		
+		// controllo su fascicolazione da rifiuto
+		this.checkFascicolazioneDocumentoDaRifiuto(document);
+		
+		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
+				
+		assertEquals(0, parsed.getRelevantMssages().size());
 	}
 	
 	/**
@@ -267,15 +333,14 @@ public class RifiutoAllegatiTest extends EmlReader {
 		// controllo su allegati estratti dal documento
 		assertNotNull(document.getFiles());
 		for (DocwayFile dwfile : document.getFiles())
-			if (!dwfile.getName().startsWith("testo email"))
-				System.out.println("attach name (from zip) = " + dwfile.getName());
-		assertEquals(1, document.getFiles().size());
-		assertEquals("guidadiangular5.html", document.getFiles().get(0).getName());
+			System.out.println("attach name = " + dwfile.getName());
+		assertEquals(1, document.getFiles().size()); // estrazione da file zip non effettuata per allegati non ammessi all'interno
+		assertEquals("guida-di-angular-5.zip", document.getFiles().get(0).getName());
 		
 		assertNotNull(document.getImmagini());
 		for (DocwayFile dwfile : document.getImmagini())
-			System.out.println("image name (from zip) = " + dwfile.getName());
-		assertEquals(20, document.getImmagini().size());
+			System.out.println("image name = " + dwfile.getName());
+		assertEquals(1, document.getImmagini().size()); // estrazione da file zip non effettuata per allegati non ammessi all'interno
 		
 		// controllo su fascicolazione da rifiuto
 		this.checkFascicolazioneDocumentoDaRifiuto(document);

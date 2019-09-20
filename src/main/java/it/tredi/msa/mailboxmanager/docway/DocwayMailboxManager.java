@@ -757,27 +757,36 @@ public abstract class DocwayMailboxManager extends MailboxManager {
 		boolean done = false;
 		boolean toUnzip = false;
 		if (conf.isExtractZip() && isZipAttach(fileName)) {
-			toUnzip = true;
-			// Rilevato file ZIP e estrazione files da ZIP abilitata...
-			ZipManager zipManager = new ZipManager(conf.getAddress());
-			List<File> files = zipManager.unzipArchive(fileContent);
 			
-			if (files != null) {
-				for (File zipFile : files) {
-					if (zipFile != null) {
-						if (logger.isDebugEnabled())
-							logger.debug("Build document file from attachment " + zipFile.getName() + "[from zip file " + fileName + "]...");
-						
-						DocwayFile file = createDocwayFile();
-						file.setContent(FileUtils.readFileToByteArray(zipFile));
-						file.setName(zipFile.getName());
-						if (isImage(file.getName())) //immagine
-							doc.addImmagine(file);
-						else //file
-							doc.addFile(file);
+			// Nel caso di richiesta di estrazione files da archivio ZIP occorre verificare che all'interno
+			// dell'archivio non siano presenti dei file non ammessi dal sistema (caso di abilitazione del rifiuto messaggi per 
+			// allegati non supportati)
+			RifiutoHandler rifiutoHandler = new RifiutoHandler(conf);
+			if (!rifiutoHandler.hasArchiveInvalidFiles(fileContent)) {
+				
+				toUnzip = true;
+				
+				// Rilevato file ZIP e estrazione files da ZIP abilitata...
+				ZipManager zipManager = new ZipManager(conf.getAddress());
+				List<File> files = zipManager.unzipArchive(fileContent);
+				
+				if (files != null) {
+					for (File zipFile : files) {
+						if (zipFile != null) {
+							if (logger.isDebugEnabled())
+								logger.debug("Build document file from attachment " + zipFile.getName() + "[from zip file " + fileName + "]...");
+							
+							DocwayFile file = createDocwayFile();
+							file.setContent(FileUtils.readFileToByteArray(zipFile));
+							file.setName(zipFile.getName());
+							if (isImage(file.getName())) //immagine
+								doc.addImmagine(file);
+							else //file
+								doc.addFile(file);
+						}
 					}
+					done = true; // file estratti dall'archivio ZIP e caricati sul documento
 				}
-				done = true; // file estratti dall'archivio ZIP e caricati sul documento
 			}
 		}
 		if (!done) {

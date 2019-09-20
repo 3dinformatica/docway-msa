@@ -168,6 +168,61 @@ public class ExtractZipTest extends EmlReader {
 	}
 	
 	/**
+	 * Test di archiviazione di un messaggio contenente un file ZIP da estrarre
+	 * @throws Exception
+	 */
+	@Test
+	public void arrivo2Tags() throws Exception {
+		String fileName = "zip2.eml";
+		File file = ResourceUtils.getFile("classpath:" + EML_LOCATION + "/" + ZIP_EML_LOCATION + "/" + fileName);
+		
+		System.out.println("input file = " + fileName);
+		
+		DocwayParsedMessage parsed = new DocwayParsedMessage(readEmlFile(file), false);
+		
+		assertNotNull(parsed);
+		assertNotNull(parsed.getMessageId());
+		
+		assertFalse(parsed.isPecMessage());
+		
+		System.out.println("messageId = " + parsed.getMessageId());
+		System.out.println("subject = " + parsed.getSubject());
+		System.out.println("from address = " + parsed.getFromAddress());
+		
+		List<String> attachments = parsed.getAttachmentsName();
+		System.out.println("attachments count = " + attachments.size());
+		for (String name : attachments)
+			System.out.println("\tattach name = " + name);
+		
+		assertEquals(3, parsed.getAttachments().size());
+		
+		// conversione da message a document
+		DocwayDocument document = this.mailboxManager.buildDocwayDocument(parsed, false);
+		assertNotNull(document);
+		assertEquals(DocTipoEnum.ARRIVO.getText(), document.getTipo());
+		
+		// controllo su allegati estratti dal documento
+		
+		assertEquals(3, document.getAllegato().size());
+		assertEquals("zippo.zip", document.getAllegato().get(2));
+		
+		assertNotNull(document.getFiles());
+		for (DocwayFile dwfile : document.getFiles())
+			if (!dwfile.getName().startsWith("testo email"))
+				System.out.println("attach name (from zip) = " + dwfile.getName());
+		assertEquals(5, document.getFiles().size());
+		
+		assertNotNull(document.getImmagini());
+		for (DocwayFile dwfile : document.getImmagini())
+			System.out.println("image name (from zip) = " + dwfile.getName());
+		assertEquals(1, document.getImmagini().size());
+		
+		this.mailboxManager.processMessage(parsed); // chiamo il metodo di processMessage solo per verificare che non vengano restituite eccezioni
+				
+		assertEquals(0, parsed.getRelevantMssages().size());
+	}
+	
+	/**
 	 * Test di archiviazione di un messaggio di INTEROPERABILITA' contenente un file ZIP da estrarre
 	 * @throws Exception
 	 */

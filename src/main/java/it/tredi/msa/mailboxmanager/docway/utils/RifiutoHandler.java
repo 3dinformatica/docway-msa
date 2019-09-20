@@ -247,4 +247,23 @@ public class RifiutoHandler {
 		return ext;
 	}
 	
+	/**
+	 * Ritorna TRUE se l'archivio ZIP passato come parametro contiene dei file non supportati dal
+	 * sistema, FALSE altrimenti
+	 * @param zipContent
+	 * @return
+	 */
+	public boolean hasArchiveInvalidFiles(byte[] zipContent) {
+		List<String> invalidFiles = null;
+		if (this.isRifiutoEnabled()) {
+			try {
+				invalidFiles = this.listInvalidFilesFromArchive(zipContent);				
+			}
+			catch(Exception e) {
+				logger.warn("[" + this.conf.getAddress() + "] Unable to extract invalid files from ZIP archive... " + e.getMessage(), e);
+			}
+		}
+		return invalidFiles != null && invalidFiles.size() > 0;
+	}
+	
 }
