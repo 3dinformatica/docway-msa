@@ -200,6 +200,10 @@ public class Docway4EntityToXmlUtils {
 			if (doc.getRifiuto().getCodOperatore() != null && !doc.getRifiuto().getCodOperatore().isEmpty())
 				actionRifiutoEl.addAttribute("cod_operatore", doc.getRifiuto().getCodOperatore());
 			actionRifiutoEl.addAttribute("operatore", doc.getRifiuto().getOperatore());
+			if (doc.getRifiuto().getMotivazione() != null) {
+				Element motivazioneEl = actionRifiutoEl.addElement("motivazione");
+				motivazioneEl.addText(doc.getRifiuto().getMotivazione());
+			}
 		}
 		
 		//storia
