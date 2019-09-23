@@ -7,6 +7,8 @@ import java.util.regex.Pattern;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 
 import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiDDTItem;
 import it.tredi.msa.mailboxmanager.docway.fatturapa.DatiFatturaContainer;
@@ -199,6 +201,8 @@ public class Docway4EntityToXmlUtils {
 			actionRifiutoEl.addAttribute("operatore", doc.getRifiuto().getOperatore());
 			if (doc.getRifiuto().getMotivazione() != null) {
 				Element motivazioneEl = actionRifiutoEl.addElement("motivazione");
+				motivazioneEl.addAttribute(QName.get("space", Namespace.XML_NAMESPACE), "preserve");
+				
 				motivazioneEl.addText(doc.getRifiuto().getMotivazione());
 			}
 		}
